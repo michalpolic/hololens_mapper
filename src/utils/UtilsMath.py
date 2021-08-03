@@ -5,8 +5,9 @@ from numpy import linalg
 import numpy.matlib
 from scipy.io import savemat
 import scipy.spatial as spatial
+import os
 import sys
-sys.path.append('/local/artwin/mapping/codes/mapper/src/utils')
+sys.path.append(os.path.dirname(__file__) )
 import renderDepth
 from multiprocessing import Pool
 
