@@ -26,8 +26,20 @@ class UtilsMath:
 
 
     def r2q(self, R):
-        pass 
-
+        c = np.trace(R) + 1
+        if np.abs(c) < 10^-10:
+            S = R + np.eye(3)
+            nS = np.linalg.norm(S, axis=0)
+            col_id = np.argmax(nS)
+            q = np.append([0], S[::,col_id] / nS[col_id])
+        else:
+            r = np.sqrt(c)/2
+            q = np.matrix([[r],
+                [(R[2,1]-R[1,2])/r],
+                [(R[0,2]-R[2,0])/r],
+                [(R[1,0]-R[0,1])/r]])
+            q = q / np.linalg.norm(q, 2)
+        return q
 
     def compose_coresponding_camera_centers(self, colmap_cameras, holo_cameras):
         colmap_C = np.array([]).reshape(3,0)
@@ -160,7 +172,7 @@ class UtilsMath:
     def estimate_visibility(self, camera, images, xyz):
         distance_threshold = 0.1
         chunksize = 20
-        t = np.array([[8.0, 5.6, 3.2, 0.8, 0],[1, 3, 5, 7, 9]])
+        t = np.array([[8.0, 5.6, 3.2, 0.8, 0],[1, 3, 5, 7, 9]])  # TODO: d1 / d * f ... px size for d, d1 is size of radius in space
 
         # get visibility estimate
         w = camera["width"]
