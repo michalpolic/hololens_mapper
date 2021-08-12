@@ -19,7 +19,7 @@ class Meshroom():
         self._meshroom_sif.command_dict("aliceVision_convertSfMFormat", 
             {"input": input_path, 
             "output": output_path,
-            "describerTypes": "sift",
+            "describerTypes": "unknown,sift",
             "views": True,
             "intrinsics": True,
             "extrinsics": True,
@@ -115,7 +115,7 @@ class Meshroom():
             "invertTetrahedronBasedOnNeighborsNbIterations": 0,
             "minSolidAngleRatio": 0.2,
             "nbSolidAngleFilteringIterations": 0,
-            "colorizeOutput": False,
+            "colorizeOutput": True,
             "maxNbConnectedHelperPoints": 50,
             "saveRawDensePointCloud": True,
             "exportDebugTetrahedralization": False,
@@ -124,6 +124,18 @@ class Meshroom():
         if deptmaps_path:
             params["depthMapsFolder"] = deptmaps_path
 
+        self._meshroom_sif.command_dict("aliceVision_meshing", params)
+
+    def meshing2(self, input_path, output_path, mesh_path):
+        self.create_cache_folders(output_path)
+        params = {"input": input_path, 
+            "output": output_path,
+            "outputMesh": mesh_path,
+            "estimateSpaceFromSfM": True,
+            "addLandmarksToTheDensePointCloud": True,
+            "colorizeOutput": True,
+            "saveRawDensePointCloud": True,
+            "verboseLevel": "info"}
         self._meshroom_sif.command_dict("aliceVision_meshing", params)
 
     def texturing(self, input_path, images_folder, mesh_path, output_path):
@@ -145,10 +157,10 @@ class Meshroom():
             "useScore": True,
             "bestScoreThreshold": 0.1,
             "angleHardThreshold": 140.0,
-            "processColorspace": sRGB,
+            "processColorspace": "sRGB",
             "correctEV": False,
             "forceVisibleByAllVertices": False,
             "flipNormals": False,
-            "visibilityRemappingMethod": PullPush,
+            "visibilityRemappingMethod": "PullPush",
             "subdivisionTargetRatio": 0.8,
             "verboseLevel": "trace"})

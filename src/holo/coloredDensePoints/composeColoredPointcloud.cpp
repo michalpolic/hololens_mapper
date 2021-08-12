@@ -5,6 +5,9 @@
 
 namespace py = pybind11;
 
+
+// TODO: this file has to 1) load images, 2) load and transform pointcloud into common coordinate system, 3) load camera params, 4) project points into images, 5) return colored dense pointcloud
+
 inline void applyKernel(double* img, int w, int h, int uv0, int uv1, int r, double val) {
     for (int i = -r; i <= +r; i++){
         for (int j = -r; j <= +r; j++){
