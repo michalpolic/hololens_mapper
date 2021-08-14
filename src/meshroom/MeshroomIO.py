@@ -180,7 +180,7 @@ class MeshroomIO:
         sfm_dict = self.init_sfm_structure(camera)
         sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, camera)
         sfm_dict = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
-        with open(out_path, 'w') as outfile:
+        with open(out_path, 'w', buffering=2048) as outfile:
             json.dump(sfm_dict, outfile)
 
 

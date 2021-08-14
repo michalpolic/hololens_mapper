@@ -56,38 +56,23 @@ class Mapper():
         out_dir_abs = self._data_dir + out_dir
         out_cache_dir_abs = out_dir_abs + "/MeshroomCache"
 
-        # 1) read dense pointcloud in world coordinates from HoloLens depthmaps 
+        # # 1) read dense pointcloud in world coordinates from HoloLens depthmaps 
         holo_io = HoloIO()
         holo_cameras = holo_io.read_cameras(recoring_dir_abs + "/pv.csv")
-        # holo_xyz = holo_io.read_dense_pointcloud(recoring_dir_abs + "/long_throw_depth", uvdata_path_abs, recoring_dir_abs + "/long_throw_depth.csv") 
-        # holo_io.write_pointcloud_to_file(holo_xyz, out_dir_abs + "/desk.obj")
+        holo_xyz = holo_io.read_dense_pointcloud(recoring_dir_abs + "/long_throw_depth", uvdata_path_abs, recoring_dir_abs + "/long_throw_depth.csv") 
+        # # holo_io.write_pointcloud_to_file(holo_xyz, out_dir_abs + "/desk.obj")
 
         # 1b) keyframe selection
-        # keyframe_selector = UtilsKeyframes()
-        # keyframe_selector.copy_keyframes(recoring_dir_abs + "/pv", out_dir_abs + "/pv", 25, 13)
+        keyframe_selector = UtilsKeyframes()
+        keyframe_selector.copy_keyframes(recoring_dir_abs + "/pv", out_dir_abs + "/pv", 25, 13)
 
-        # 2) run COLMAP to find "correct" camera poses
-        matcher = UtilsMatcher()
+        # # # 2) run COLMAP to find "correct" camera poses
+        matcher = UtilsMatcher("SuperGlue")
+        obs_for_images, matches = matcher.holo_matcher(out_dir_abs + "/pv", holo_cameras)    
         Path(out_dir_abs + "/colmap/sparse").mkdir(parents=True, exist_ok=True)
         # colmap.extract_features(out_dir + "/colmap/database.db", out_dir + "/pv")     # COLMAP feature extractor
         # colmap.exhaustive_matcher(out_dir + "/colmap/database.db")                    # COLMAP matcher
-        # obs_for_images, patch2pix_matches = matcher.patch2pix_holo_matcher(out_dir_abs + "/pv", holo_cameras)     # find and cluster the patch2pix matches
-        # self.save_obj(obs_for_images, out_dir_abs + "obs_for_images.pkl")             # just for testing
-        # self.save_obj(patch2pix_matches, out_dir_abs + "patch2pix_matches.pkl")       # just for testing
-        obs_for_images = self.load_obj(out_dir_abs + "obs_for_images.pkl")              # just for testing
-        patch2pix_matches = self.load_obj(out_dir_abs + "patch2pix_matches.pkl")        # just for testing  
-
-        # plot a pair of matches
-        Path(f'{out_dir_abs}/patch2pix').mkdir(parents=True, exist_ok=True)
-        img1_name = "00132595722640683874"
-        img2_name = "00132595722638019500"
-        matches = patch2pix_matches[img1_name + "-" + img2_name]
-        print_matches = np.concatenate( (obs_for_images[img1_name][matches["obs_ids1"],::], obs_for_images[img2_name][matches["obs_ids2"],::]), axis=1)
-        inls = [i for i in range(len(matches['inliers'])) if matches['inliers'][i]]     # range(np.shape(matches)[0])]
-        plot_matches(f'{out_dir_abs}/pv/{img1_name}.jpg', f'{out_dir_abs}/pv/{img2_name}.jpg', print_matches, inliers=inls, lines=True, radius=1, sav_fig=f'{out_dir_abs}/patch2pix/{img1_name}__{img2_name}.jpg')
-
-
-        colmap.save_matches_into_database(self._data_dir, out_dir + "/colmap/database.db", holo_cameras, patch2pix_matches, obs_for_images)
+        colmap.save_matches_into_database(self._data_dir, out_dir + "/colmap/database.db", holo_cameras, matches, obs_for_images)
         colmap.mapper(out_dir + "/colmap/database.db", out_dir + "/pv", out_dir + "/colmap/sparse")
 
         # 3) load COLMAP & load HoloLens camera poses
@@ -102,7 +87,7 @@ class Mapper():
 
         # 5) save SfM results to Meshroom SfM JSON file
         meshroom_io = MeshroomIO()
-        meshroom_io.save_colmap_to_json(out_dir_abs + "/sfm.json", out_dir_abs + "/pv/", colmap_cameras, colmap_images, colmap_points)
+        meshroom_io.save_colmap_to_json(out_dir_abs + "/sfm.json", out_dir + "/pv/", colmap_cameras, colmap_images, colmap_points)
 
         # 6) run Meshroom: undistortion, depthmap estimation, depth filtering, meshing with output dense pointcloud, convert resluts to obj
         out_cache_dir = out_dir + "/MeshroomCache"
@@ -134,5 +119,16 @@ class Mapper():
         # 11) run Meshroom: meshing and texturing
         meshroom.convert_sfm(out_dir + "/holo_and_mvs.json", out_cache_dir + "/ConvertSfMFormat/test_merged/sfm.abc")
         meshroom.undistort_imgs(out_cache_dir + "/ConvertSfMFormat/test_merged/sfm.abc", out_cache_dir + "/PrepareDenseScene/test_merged")
+
+        # # old one solution
+        # Path(out_cache_dir_abs + "/Meshing/test_merged").mkdir(parents=True, exist_ok=True)
+        # alice_vision_bin = "/local/artwin/mapping/codes/Meshroom-2021.1.0-av2.4.0-centos7-cuda10.2/aliceVision/bin"
+        # os.system(f"{alice_vision_bin}/aliceVision_meshing --input {out_cache_dir_abs}/ConvertSfMFormat/test_merged/sfm_old.abc --output {out_cache_dir_abs}/Meshing/test_merged/densePointCloud_old.abc --outputMesh {out_cache_dir_abs}/Meshing/test_merged/mesh_old.obj --estimateSpaceFromSfM True --saveRawDensePointCloud True --verboseLevel info")
+
+        # # new solution
+        # meshroom.meshing2(out_cache_dir + "/ConvertSfMFormat/test_merged/sfm_old.abc", out_cache_dir + "/Meshing/test_merged/densePointCloud_old.abc", out_cache_dir + "/Meshing/test_merged/mesh_old.obj")
+
+        # new solution - new data
         meshroom.meshing2(out_cache_dir + "/ConvertSfMFormat/test_merged/sfm.abc", out_cache_dir + "/Meshing/test_merged/densePointCloud.abc", out_cache_dir + "/Meshing/test_merged/mesh.obj")
+
         meshroom.texturing(out_cache_dir + "/Meshing/test_merged/densePointCloud.abc", out_cache_dir + "/PrepareDenseScene/test_merged", out_cache_dir + "/Meshing/test_merged/mesh.obj", out_cache_dir + "/Texturing/test_merged")

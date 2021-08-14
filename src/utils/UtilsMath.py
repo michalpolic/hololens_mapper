@@ -41,13 +41,16 @@ class UtilsMath:
             q = q / np.linalg.norm(q, 2)
         return q
 
+    def extract_camera_name(self, cameara_path):
+        return cameara_path.replace("pv/","").replace(".jpg","")
+
     def compose_coresponding_camera_centers(self, colmap_cameras, holo_cameras):
         colmap_C = np.array([]).reshape(3,0)
         holo_C = np.array([]).reshape(3,0)
 
         for i in range(0,len(colmap_cameras)):
             colmap_camera = colmap_cameras[i]
-            holo_camera = holo_cameras[colmap_camera["name"][0:-4]]
+            holo_camera = holo_cameras[self.extract_camera_name(colmap_camera["name"])]
             colmap_C = np.concatenate((colmap_C, colmap_camera["C"]), axis=1)
             holo_C = np.concatenate((holo_C, holo_camera["C"]), axis=1)
         

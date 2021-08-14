@@ -116,7 +116,7 @@ class Meshroom():
             "minSolidAngleRatio": 0.2,
             "nbSolidAngleFilteringIterations": 0,
             "colorizeOutput": True,
-            "maxNbConnectedHelperPoints": 50,
+            "maxNbConnectedHelperPoints": 50,   # this is important try -1
             "saveRawDensePointCloud": True,
             "exportDebugTetrahedralization": False,
             "seed": 0,
@@ -128,13 +128,14 @@ class Meshroom():
 
     def meshing2(self, input_path, output_path, mesh_path):
         self.create_cache_folders(output_path)
-        params = {"input": input_path, 
-            "output": output_path,
-            "outputMesh": mesh_path,
+        params = {"input": "/host_pwd/" + input_path, 
+            "output": "/host_pwd/" + output_path,
+            "outputMesh": "/host_pwd/" + mesh_path,
             "estimateSpaceFromSfM": True,
             "addLandmarksToTheDensePointCloud": True,
-            "colorizeOutput": True,
+            "colorizeOutput": False,
             "saveRawDensePointCloud": True,
+            "maxNbConnectedHelperPoints": -1,  
             "verboseLevel": "info"}
         self._meshroom_sif.command_dict("aliceVision_meshing", params)
 
