@@ -1,7 +1,10 @@
 import os
 import sys
 import numpy as np
-import json
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 
 class MeshroomIO:
@@ -180,8 +183,9 @@ class MeshroomIO:
         sfm_dict = self.init_sfm_structure(camera)
         sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, camera)
         sfm_dict = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
-        with open(out_path, 'w', buffering=2048) as outfile:
-            json.dump(sfm_dict, outfile)
+        outfile = open(out_path, 'w', buffering=4096)
+        outfile.write(json.dumps(sfm_dict))
+        outfile.close()
 
 
     def load_obj_vertices(self, obj_file_path):

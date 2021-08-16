@@ -28,7 +28,7 @@ class UtilsMatcher:
     _device = "cpu"
     _pvK = np.matrix([[1038.135254, 0, 664.387146],[0, 1036.468140, 396.142090],[0, 0, 1]])
 
-    def __init__(self, matcher_name):
+    def __init__(self, matcher_name, colmap=None):
         self._root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         self._device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -55,6 +55,10 @@ class UtilsMatcher:
             }
             self._matcher = Matching(config).eval().to(self._device)
         
+        if matcher_name == "SIFT" and colmap != None:
+            known_matcher = True
+            self._matcher = colmap
+
         assert known_matcher, "The matcher is not defined properly ..."
 
 
@@ -132,7 +136,7 @@ class UtilsMatcher:
         return (obs_for_image, all_matches)
 
 
-    def holo_matcher(self, images_dir, holo_cameras, radius = 4, err_threshold = 10):
+    def holo_matcher(self, images_dir, holo_cameras, radius = 4, err_threshold = 10, database_path=""):
         all_matches = {}
         filenames = os.listdir(images_dir)
         for i in range(len(filenames)):
@@ -159,6 +163,12 @@ class UtilsMatcher:
 
                 if self._matcher_name == "patch2pix":
                     matches, _, _ = self._matcher(im1_path, im2_path)
+
+                if self._matcher_name == "SIFT":
+                    matches = self._matcher.load_matches_from_db(database_path, filenames[i], filenames[j])
+
+                if np.shape(matches)[0] < 4:
+                    continue
 
                 # verify matches by hololens geometry
                 inls, E, F = self.holo_verificator(matches[:, 0:2], matches[:, 2:4], holo_cameras[filenames[i][:-4]], holo_cameras[filenames[j][:-4]], err_threshold)

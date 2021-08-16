@@ -60,18 +60,19 @@ class Mapper():
         holo_io = HoloIO()
         holo_cameras = holo_io.read_cameras(recoring_dir_abs + "/pv.csv")
         holo_xyz = holo_io.read_dense_pointcloud(recoring_dir_abs + "/long_throw_depth", uvdata_path_abs, recoring_dir_abs + "/long_throw_depth.csv") 
-        # # holo_io.write_pointcloud_to_file(holo_xyz, out_dir_abs + "/desk.obj")
+        # holo_io.write_pointcloud_to_file(holo_xyz, out_dir_abs + "/desk.obj")
 
         # 1b) keyframe selection
         keyframe_selector = UtilsKeyframes()
         keyframe_selector.copy_keyframes(recoring_dir_abs + "/pv", out_dir_abs + "/pv", 25, 13)
 
-        # # # 2) run COLMAP to find "correct" camera poses
-        matcher = UtilsMatcher("SuperGlue")
-        obs_for_images, matches = matcher.holo_matcher(out_dir_abs + "/pv", holo_cameras)    
+        # 2) run COLMAP to find "correct" camera poses
         Path(out_dir_abs + "/colmap/sparse").mkdir(parents=True, exist_ok=True)
-        # colmap.extract_features(out_dir + "/colmap/database.db", out_dir + "/pv")     # COLMAP feature extractor
-        # colmap.exhaustive_matcher(out_dir + "/colmap/database.db")                    # COLMAP matcher
+        matcher = UtilsMatcher("SIFT", colmap)         # patch2pix / SuperGlue / SIFT
+        if matcher._matcher_name == "SIFT":
+            colmap.extract_features(out_dir + "/colmap/database.db", out_dir + "/pv")     # COLMAP feature extractor
+            colmap.exhaustive_matcher(out_dir + "/colmap/database.db")                    # COLMAP matcher
+        obs_for_images, matches = matcher.holo_matcher(out_dir_abs + "/pv", holo_cameras, database_path=out_dir_abs + "/colmap/database.db")    
         colmap.save_matches_into_database(self._data_dir, out_dir + "/colmap/database.db", holo_cameras, matches, obs_for_images)
         colmap.mapper(out_dir + "/colmap/database.db", out_dir + "/pv", out_dir + "/colmap/sparse")
 
@@ -106,7 +107,7 @@ class Mapper():
         common_xyz = np.concatenate((holo_xyz, mvs_xyz), axis=1)
         holo_io.write_pointcloud_to_file(common_xyz, out_dir_abs + "/common_pointcloud.obj")
 
-        # 9) filter out noise
+        # # 9) filter out noise
         # common_xyz = meshroom_io.load_obj_vertices(out_dir_abs + "/common_pointcloud.obj")  # just for testing
         common_xyz_fitered = utils_math.filter_dense_pointcloud_noise_KDtree(common_xyz, 0.05, 50)
         holo_io.write_pointcloud_to_file(common_xyz_fitered, out_dir_abs + "/common_pointcloud_filtered.obj")
@@ -119,14 +120,6 @@ class Mapper():
         # 11) run Meshroom: meshing and texturing
         meshroom.convert_sfm(out_dir + "/holo_and_mvs.json", out_cache_dir + "/ConvertSfMFormat/test_merged/sfm.abc")
         meshroom.undistort_imgs(out_cache_dir + "/ConvertSfMFormat/test_merged/sfm.abc", out_cache_dir + "/PrepareDenseScene/test_merged")
-
-        # # old one solution
-        # Path(out_cache_dir_abs + "/Meshing/test_merged").mkdir(parents=True, exist_ok=True)
-        # alice_vision_bin = "/local/artwin/mapping/codes/Meshroom-2021.1.0-av2.4.0-centos7-cuda10.2/aliceVision/bin"
-        # os.system(f"{alice_vision_bin}/aliceVision_meshing --input {out_cache_dir_abs}/ConvertSfMFormat/test_merged/sfm_old.abc --output {out_cache_dir_abs}/Meshing/test_merged/densePointCloud_old.abc --outputMesh {out_cache_dir_abs}/Meshing/test_merged/mesh_old.obj --estimateSpaceFromSfM True --saveRawDensePointCloud True --verboseLevel info")
-
-        # # new solution
-        # meshroom.meshing2(out_cache_dir + "/ConvertSfMFormat/test_merged/sfm_old.abc", out_cache_dir + "/Meshing/test_merged/densePointCloud_old.abc", out_cache_dir + "/Meshing/test_merged/mesh_old.obj")
 
         # new solution - new data
         meshroom.meshing2(out_cache_dir + "/ConvertSfMFormat/test_merged/sfm.abc", out_cache_dir + "/Meshing/test_merged/densePointCloud.abc", out_cache_dir + "/Meshing/test_merged/mesh.obj")
