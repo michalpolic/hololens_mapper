@@ -55,7 +55,7 @@ class Mapper():
         uvdata_path_abs = self._data_dir + uvdata_path
         out_dir_abs = self._data_dir + out_dir
         out_cache_dir_abs = out_dir_abs + "/MeshroomCache"
-
+ 
         # # 1) read dense pointcloud in world coordinates from HoloLens depthmaps 
         holo_io = HoloIO()
         holo_cameras = holo_io.read_cameras(recoring_dir_abs + "/pv.csv")
