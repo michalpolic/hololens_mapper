@@ -1,0 +1,42 @@
+# temporary files
+*~
+# vim
+.*.swp
+# emacs
+*.flc
+\#*\#
+.\#*
+# xemacs
+# MacOS
+.DS_Store
+# Windows
+Thumbs.db
+
+# python
+*.pyc
+*.pyo
+__pycache__
+
+# backup files
+*.json
+
+# datas or personal files
+/data
+/scripts
+/build
+/dist
+/dl
+
+# tests
+/.tests
+/.pytest_cache
+
+# IDEs folders
+*.qmlproject*
+/nbproject
+.idea
+.cache
+.nfs*
+
+*.qmlc
+*.jsc
