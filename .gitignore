@@ -3,3 +3,4 @@ build*/
 tmp*/
 *.so
 *.sif
+launch.json
