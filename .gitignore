@@ -1,4 +1,5 @@
-__pycache__/*
-build/*
-tmp/*
+__pycache__*/
+build*/
+tmp*/
 *.so
+*.sif
