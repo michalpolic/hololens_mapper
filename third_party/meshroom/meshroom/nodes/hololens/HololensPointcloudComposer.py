@@ -6,29 +6,38 @@ from meshroom.core import desc
 import shutil
 import glob
 import os
+import sys
 
+# import mapper packages
+dir_path = __file__
+for i in range(6):
+    dir_path = os.path.dirname(dir_path)
+sys.path.append(dir_path)
+from src.holo.HoloIO import HoloIO
 
 class HololensPointcloudComposer(desc.Node):
-    size = desc.DynamicNodeSize('inputFiles')
 
-    category = 'Export'
+    category = 'ARTwin'
     documentation = '''
-This node allows to copy files into a specific folder.
+This node transform the depthmaps from hololens recording into one coordinate system.
 '''
 
     inputs = [
-        desc.ListAttribute(
-            elementDesc=desc.File(
-                name="input",
-                label="Input",
-                description="",
-                value="",
-                uid=[0],
-            ),
-            name="inputFiles",
-            label="Input Files",
-            description="Input Files to publish.",
-            group="",
+        desc.File(
+            name="recording_dir",
+            label="Recording Folder",
+            description="HoloLens recording directory (images in pv/*.jpg, " \
+                "depth in long_throw_depth/*.pgm, + related .csv).",
+            value="",
+            uid=[0],
+        ),
+        desc.File(
+            name="uv_file",
+            label="UV decoding file",
+            description="Text file with transformation data from depthmap to " \
+                "depth camera coordinte system (uvdata.txt).",
+            value="",
+            uid=[0],
         ),
         desc.File(
             name="output",
@@ -59,26 +68,30 @@ This node allows to copy files into a specific folder.
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             
-            if not chunk.node.inputFiles:
-                chunk.logger.warning('Nothing to publish')
+            if not chunk.node.recording_dir:
+                chunk.logger.warning('Nothing to process')
+                return
+            if not chunk.node.uv_file:
+                chunk.logger.warning('Missing depth decoding file (uvdata.txt)')
                 return
             if not chunk.node.output.value:
                 return
 
-            outFiles = self.resolvedPaths(chunk.node.inputFiles.value, chunk.node.output.value)
-
-            if not outFiles:
-                error = 'Publish: input files listed, but nothing to publish'
-                chunk.logger.error(error)
-                chunk.logger.info('Listed input files: {}'.format([i.value for i in chunk.node.inputFiles.value]))
-                raise RuntimeError(error)
+            # process
+            holo_io = HoloIO()
+            
+            chunk.logger.info('Reading HoloLens depthmaps.')
+            holo_xyz = holo_io.read_dense_pointcloud(chunk.node.recording_dir.value + "/long_throw_depth", 
+                chunk.node.uv_file.value, chunk.node.recording_dir.value + "/long_throw_depth.csv",
+                logger=chunk.logger) 
 
             if not os.path.exists(chunk.node.output.value):
                 os.mkdir(chunk.node.output.value)
+            chunk.logger.info('Saving model.obj')
+            holo_io.write_pointcloud_to_file(holo_xyz, chunk.node.output.value + "/model.obj")
+            chunk.logger.info('Hololens pointcloud composer is done.')
 
-            for iFile, oFile in outFiles.items():
-                chunk.logger.info('Publish file {} into {}'.format(iFile, oFile))
-                shutil.copyfile(iFile, oFile)
-            chunk.logger.info('Publish end')
+        except AssertionError as err:
+            chunk.logger.error("Error in HoloLens dense pointlcoud composer: " + err)
         finally:
             chunk.logManager.end()
