@@ -25,7 +25,7 @@ from src.utils.UtilsMath import UtilsMath
 from src.utils.UtilsSingularity import UtilsSingularity
 from src.utils.UtilsKeyframes import UtilsKeyframes
 from src.utils.UtilsMatcher import UtilsMatcher
-from lib.patch2pix.utils.common.plotting import plot_matches
+from third_party.patch2pix.utils.common.plotting import plot_matches
 
 class Mapper():
 
