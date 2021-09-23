@@ -24,7 +24,7 @@ This node select subset of images (keyframes) and copy them to output path.
 
     inputs = [
         desc.File(
-            name="input",
+            name="recordingDir",
             label="Recording directory",
             description="The directory containing input images in /pv folder",
             value="",
@@ -45,7 +45,14 @@ This node select subset of images (keyframes) and copy them to output path.
             value=13,
             range=(0, 100, 1),
             uid=[0],
-            ),
+            ),            
+        desc.BoolParam(
+            name='copyCSVs', 
+            label='Copy pv.csv',
+            description='Copy the camera CSV with tracking info.',
+            value=True, 
+            uid=[0]
+        ),
         desc.ChoiceParam(
             name='verboseLevel',
             label='Verbose Level',
@@ -71,7 +78,7 @@ This node select subset of images (keyframes) and copy them to output path.
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             
-            if not chunk.node.input:
+            if not chunk.node.recordingDir:
                 chunk.logger.warning('Nothing to process')
                 return
             if not chunk.node.output.value:
@@ -83,10 +90,15 @@ This node select subset of images (keyframes) and copy them to output path.
             chunk.logger.info('Start keyframe selector.')
             if not os.path.exists(chunk.node.output.value):
                 os.mkdir(chunk.node.output.value)
-            keyframe_selector.copy_keyframes(chunk.node.input.value + "/pv", chunk.node.output.value + "/pv", 
+            keyframe_selector.copy_keyframes(chunk.node.recordingDir.value + "/pv", chunk.node.output.value + "/pv", 
                 chunk.node.blurThreshold.value, chunk.node.minFrameOffset.value, logger = chunk.logger)
-            chunk.logger.info('Keyframe selector is done.')    
-          
+               
+            if chunk.node.copyCSVs.value:
+                chunk.logger.info('Copy pv.csv')
+                shutil.copy(chunk.node.recordingDir.value + "/pv.csv", chunk.node.output.value + "/pv.csv") 
+
+            chunk.logger.info('Keyframe selector is done.') 
+
         except AssertionError as err:
             chunk.logger.error("Error in keyframe selector: " + err)
         finally:

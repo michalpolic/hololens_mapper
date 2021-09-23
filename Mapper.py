@@ -22,7 +22,7 @@ from src.colmap.Colmap import Colmap
 from src.meshroom.MeshroomIO import MeshroomIO
 from src.meshroom.Meshroom import Meshroom
 from src.utils.UtilsMath import UtilsMath
-from src.utils.UtilsSingularity import UtilsSingularity
+from src.utils.UtilsSingularity import UtilsContainers
 from src.utils.UtilsKeyframes import UtilsKeyframes
 from src.utils.UtilsMatcher import UtilsMatcher
 from third_party.patch2pix.utils.common.plotting import plot_matches
@@ -43,8 +43,8 @@ class Mapper():
 
     def run(self, recoring_dir, uvdata_path, out_dir):
         # init the communication layer with Singularity images
-        alicevision_sif = UtilsSingularity(os.path.dirname(__file__) + "/alicevision.sif", self._data_dir, "/opt/AliceVision_install/bin/")
-        colmap_sif = UtilsSingularity(os.path.dirname(__file__) + "/colmap.sif", self._data_dir)
+        alicevision_sif = UtilsContainers(os.path.dirname(__file__) + "/alicevision.sif", self._data_dir, "/opt/AliceVision_install/bin/")
+        colmap_sif = UtilsContainers(os.path.dirname(__file__) + "/colmap.sif", self._data_dir)
 
         # init the Meshroom and Colmap objects
         meshroom = Meshroom(alicevision_sif)

@@ -7,6 +7,7 @@ import shutil
 import glob
 import os
 import sys
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 # import mapper packages
 dir_path = __file__
@@ -24,7 +25,7 @@ This node transform the depthmaps from hololens recording into one coordinate sy
 
     inputs = [
         desc.File(
-            name="recording_dir",
+            name="recordingDir",
             label="Recording Folder",
             description="HoloLens recording directory (images in pv/*.jpg, " \
                 "depth in long_throw_depth/*.pgm, + related .csv).",
@@ -32,7 +33,7 @@ This node transform the depthmaps from hololens recording into one coordinate sy
             uid=[0],
         ),
         desc.File(
-            name="uv_file",
+            name="UVfile",
             label="UV decoding file",
             description="Text file with transformation data from depthmap to " \
                 "depth camera coordinte system (uvdata.txt).",
@@ -64,10 +65,10 @@ This node transform the depthmaps from hololens recording into one coordinate sy
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             
-            if not chunk.node.recording_dir:
+            if not chunk.node.recordingDir:
                 chunk.logger.warning('Nothing to process')
                 return
-            if not chunk.node.uv_file:
+            if not chunk.node.UVfile:
                 chunk.logger.warning('Missing depth decoding file (uvdata.txt)')
                 return
             if not chunk.node.output.value:
@@ -77,8 +78,8 @@ This node transform the depthmaps from hololens recording into one coordinate sy
             holo_io = HoloIO()
             
             chunk.logger.info('Reading HoloLens depthmaps.')
-            holo_xyz = holo_io.read_dense_pointcloud(chunk.node.recording_dir.value + "/long_throw_depth", 
-                chunk.node.uv_file.value, chunk.node.recording_dir.value + "/long_throw_depth.csv",
+            holo_xyz = holo_io.read_dense_pointcloud(chunk.node.recordingDir.value + "/long_throw_depth", 
+                chunk.node.UVfile.value, chunk.node.recordingDir.value + "/long_throw_depth.csv",
                 logger=chunk.logger) 
 
             if not os.path.exists(chunk.node.output.value):
