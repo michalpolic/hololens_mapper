@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from src.utils.UtilsSingularity import UtilsSingularity
+from src.utils.UtilsContainers import UtilsContainers
 
 class Meshroom():
 
@@ -133,7 +133,7 @@ class Meshroom():
             "outputMesh": "/host_pwd/" + mesh_path,
             "estimateSpaceFromSfM": True,
             "addLandmarksToTheDensePointCloud": True,
-            "colorizeOutput": False,
+            "colorizeOutput": True,
             "saveRawDensePointCloud": True,
             "maxNbConnectedHelperPoints": -1,  
             "verboseLevel": "info"}

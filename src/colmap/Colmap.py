@@ -2,21 +2,21 @@ import os
 from ctypes import *
 import numpy as np
 import sqlite3
-from src.utils.UtilsSingularity import UtilsSingularity
+from src.utils.UtilsContainers import UtilsContainers
 from src.utils.UtilsMath import UtilsMath
 
 class Colmap():
 
-    _colmap_sif = None
+    _colmap_container = None
     _utils_math = None
 
-    def __init__(self, colmap_sif):
+    def __init__(self, colmap_container):
         """Init colmap object to run predefined commands"""
-        self._colmap_sif = colmap_sif
+        self._colmap_container = colmap_container
         self._utils_math = UtilsMath()
 
     def extract_features(self, database_path, image_path):
-        self._colmap_sif.command_dict("colmap feature_extractor", 
+        self._colmap_container.command_dict("colmap feature_extractor", 
             {"database_path": database_path, 
             "image_path": image_path,
             "ImageReader.camera_model": "RADIAL",
@@ -24,11 +24,11 @@ class Colmap():
             })
 
     def exhaustive_matcher(self, database_path):
-        self._colmap_sif.command_dict("colmap exhaustive_matcher", 
+        self._colmap_container.command_dict("colmap exhaustive_matcher", 
             {"database_path": database_path})
 
     def mapper(self, database_path, image_path, output_path):
-        self._colmap_sif.command_dict("colmap mapper", 
+        self._colmap_container.command_dict("colmap mapper", 
             {"database_path": database_path, 
             "image_path": image_path,
             "output_path": output_path,
@@ -38,7 +38,7 @@ class Colmap():
     def prepare_database(self, data_dir, database_path):
         if os.path.exists(data_dir + database_path):
             os.remove(data_dir + database_path)
-        self._colmap_sif.command_dict("colmap database_creator", {"database_path": database_path})
+        self._colmap_container.command_dict("colmap database_creator", {"database_path": database_path})
 
     def insert_pv_camera_into_database(self, database_path):   # use predefined parameters
         con = sqlite3.connect(database_path)
