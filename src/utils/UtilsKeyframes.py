@@ -20,15 +20,17 @@ class UtilsKeyframes():
     def kyeframe_selector_simple(self, dir_path, blur_threshold, min_frame_offset):
         blur_filer = []
         filenames = os.listdir(dir_path)
+        filenames_jpg = []
         for filename in filenames:
-            print(f"Image {dir_path + '/' + filename} has score: ")
-            image = cv2.imread(dir_path + '/' + filename)
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            blur_filer.append(self.blur_clasifyer_laplacian(gray, blur_threshold))
-        
+            if filename[-4::] == ".jpg":
+                filenames_jpg.append(filename)
+                image = cv2.imread(dir_path + '/' + filename)
+                gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                blur_filer.append(self.blur_clasifyer_laplacian(gray, blur_threshold))
+
         k = 0
         set_zero = False
-        for i in range(len(filenames)):
+        for i in range(len(filenames_jpg)):
             k += 1
             if not set_zero:
                 if blur_filer[i]:
@@ -42,7 +44,7 @@ class UtilsKeyframes():
                     if blur_filer[i]:
                         set_zero = True
                         k = 0
-        return list(compress(filenames, blur_filer))
+        return list(compress(filenames_jpg, blur_filer))
 
 
 
