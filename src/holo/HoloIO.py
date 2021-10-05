@@ -35,17 +35,17 @@ class HoloIO:
         return uvdata
 
 
-    def read_csv(self, csvfilepath):
+    def read_csv(self, file_path):
         """ Read csv file with camera poses.
         Input: 
-            csvfilepath - path to camera info file 
+            file_path - path to camera info file 
         Output: 
             camerainfo - dictionary camerainfo['name'] -> {array of camera parameters} 
         """
-        assert os.path.isfile(csvfilepath), f"the csv file {csvfilepath} does not exist"
+        assert os.path.isfile(file_path), f"the csv file {file_path} does not exist"
 
         try:
-            csvfile = open(csvfilepath, 'r')
+            csvfile = open(file_path, 'r')
             csvheader = csvfile.readline()
             csvdata = csvfile.read()
             parsedcsvdata = csvdata.split("\n")
@@ -62,6 +62,46 @@ class HoloIO:
             csvfile.close()
 
         return camerainfo
+
+    def write_csv(self, csv_dict, file_path):
+        """ Write csv file to disk.
+        Input: 
+            csv_dict - the dictionary with csv row to be saved
+            file_path - path to file where to write csv records
+        """
+        assert csv_dict, f"the csv is empty"
+
+        try:
+            Path(file_path).parent.mkdir(parents=True, exist_ok=True)
+            csvfile = open(file_path, 'w')
+            csvfile.write('Timestamp,ImageFileName,Position.X,Position.Y,Position.Z,' + \
+                'Orientation.W,Orientation.X,Orientation.Y,Orientation.Z,FrameToOrigin.m11,' + \
+                'FrameToOrigin.m12,FrameToOrigin.m13,FrameToOrigin.m14,FrameToOrigin.m21,' + \
+                'FrameToOrigin.m22,FrameToOrigin.m23,FrameToOrigin.m24,FrameToOrigin.m31,' + \
+                'FrameToOrigin.m32,FrameToOrigin.m33,FrameToOrigin.m34,FrameToOrigin.m41,' + \
+                'FrameToOrigin.m42,FrameToOrigin.m43,FrameToOrigin.m44,CameraViewTransform.m11,' + \
+                'CameraViewTransform.m12,CameraViewTransform.m13,CameraViewTransform.m14,' + \
+                'CameraViewTransform.m21,CameraViewTransform.m22,CameraViewTransform.m23,' + \
+                'CameraViewTransform.m24,CameraViewTransform.m31,CameraViewTransform.m32,' + \
+                'CameraViewTransform.m33,CameraViewTransform.m34,CameraViewTransform.m41,' + \
+                'CameraViewTransform.m42,CameraViewTransform.m43,CameraViewTransform.m44,' + \
+                'CameraProjectionTransform.m11,CameraProjectionTransform.m12,' + \
+                'CameraProjectionTransform.m13,CameraProjectionTransform.m14,' + \
+                'CameraProjectionTransform.m21,CameraProjectionTransform.m22,' + \
+                'CameraProjectionTransform.m23,CameraProjectionTransform.m24,' + \
+                'CameraProjectionTransform.m31,CameraProjectionTransform.m32,' + \
+                'CameraProjectionTransform.m33,CameraProjectionTransform.m34,' + \
+                'CameraProjectionTransform.m41,CameraProjectionTransform.m42,' + \
+                'CameraProjectionTransform.m43,CameraProjectionTransform.m44\n')
+            list_of_rows = [f"{item}\n" for key, item in csv_dict.items()]
+            csvfile.write(''.join(list_of_rows))
+
+        except:
+            assert False, "failed writing the csv file"
+        finally:
+            csvfile.close()
+
+
 
 
     def parse_poseinfo_to_cameras(self, poseinfo):
@@ -236,3 +276,65 @@ class HoloIO:
         """
         csv = self.read_csv(csv_file_path)
         return self.parse_poseinfo_to_cameras(csv)
+
+    def load_model(self, csv_file_path):
+        """Transform cameras parameters from CSV file into standard model structures
+        Input: 
+            csv_file_path - path where to save the pointcloud (ext. .obj)
+        Output: 
+            cameras - the Colmap structure with camera info
+            images - the Colmap structure with images info
+            points3D - the Colmap structure with points in 3D
+        """
+        cameras_dict = self.read_cameras(csv_file_path)
+        cameras = self.get_hololens_camera()
+        images = self.get_hololens_images(cameras_dict)
+        points3D = self.get_hololens_points3D()
+        
+        return (cameras, images, points3D)
+
+
+    def get_hololens_camera(self):
+        """Create hololens camera with standard parameters
+        Output: 
+            camera_dict - the Colmap structure with camera info
+        """
+        camera = {}
+        camera['camera_id'] = int(0)
+        camera['width'] = int(1344)
+        camera['height'] = int(756)
+        camera['f'] = float((1038.135254 + 1036.468140) / 2)
+        camera['pp'] = [664.387146, 396.142090]
+        camera['rd'] = [0., 0.]
+        return camera
+
+    def get_hololens_images(self, cameras_dict):
+        """Create hololens images dict. with parameters from parsed pv.csv
+        Output: 
+            images - the Colmap structure with images parameters
+        """
+        images = []
+        image_id = 0
+        for image_csv in cameras_dict.items():
+            images.append({
+                'image_id': int(image_id),
+                'camera_id': int(0),
+                'R': image_csv[1]['R'],
+                'C': image_csv[1]['C'],
+                'name': image_csv[1]['file_path'],
+                'uvs': [],
+                'point3D_ids': []
+            })
+            image_id += 1
+        return images
+
+    def get_hololens_points3D(self):
+        """Create hololens points3D (empty dictionary)
+        Output: 
+            points_list - empty dict
+        """
+        points3D = []
+        return points3D
+
+
+

@@ -7,9 +7,11 @@ from scipy.io import savemat
 import scipy.spatial as spatial
 import os
 import sys
+import multiprocessing as mp
+
 sys.path.append(os.path.dirname(__file__) )
 import renderDepth
-from multiprocessing import Pool
+
 
 
 class UtilsMath:
@@ -99,20 +101,16 @@ class UtilsMath:
         return colmap_cameras 
 
 
-    def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts):
+    def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts, rgb = None):
         print('Filter noise in dense pointcloud using KDtree.')
         xyzT = xyz.T
         point_tree = spatial.cKDTree(xyzT)
-        xyz_filter = []
-        for i in range(0,np.shape(xyz)[1]):
-            pts_ids = point_tree.query_ball_point(xyzT[i,::], radius)
-            if np.max(np.shape(pts_ids)) > npts:
-                xyz_filter.append(True)
-            else:
-                xyz_filter.append(False)
-        
-        xyz = xyz[::,xyz_filter]
-        return xyz
+        num_neighbours = point_tree.query_ball_point(xyzT, radius, workers = -1, return_length = True)
+        filter = [num_neighbours[i] > npts for i in range(np.shape(xyz)[1])]
+        xyz = xyz[::,filter]
+        if rgb != None and rgb.any():
+            rgb = rgb[::,filter]
+        return (xyz, rgb)
 
 
     def estimate_visibility_for_image(self, data):
@@ -136,11 +134,12 @@ class UtilsMath:
         depth = np.linalg.norm(xyz - C, axis=0)
 
         # get data in image
-        filter = [(uv[0,j] > 0 and uv[1,j] > 0 and uv[0,j] < w and uv[1,j] < h) for j in range(0,np.shape(uv)[1])]
+        filter = np.array(renderDepth.is_visible(h, w, np.shape(uv)[1], uv), dtype=np.bool8)
         depth_filtered = depth[filter]
         uv_filtered = uv[::,filter]
         xyz_filtered = xyz[::,filter]
-        xyz_ids = np.array([j for j in range(0,np.shape(uv)[1])])
+        xyz_ids = renderDepth.get_ids(np.shape(uv)[1])
+
         xyz_ids_filtered = xyz_ids[filter]
         
         # sort points wrt. depth
@@ -151,30 +150,24 @@ class UtilsMath:
         xyz_ids_sorted = xyz_ids_filtered[depth_order]
 
         # run cpp to render visibility information
-        holo_depth_img = renderDepth.render(h, w, np.shape(uv_sorted)[1], \
-                np.shape(t)[1], uv_sorted.reshape(1,-1), depth_sorted, t.reshape(1,-1)) 
-        holo_depth_img = holo_depth_img.reshape(h,w)
+        holo_depth_img = renderDepth.render(h, w, np.shape(uv_sorted)[1], np.shape(t)[1], \
+                 uv_sorted.reshape(1,-1), depth_sorted, t.reshape(1,-1)) 
         
-        # # test
-        # mdic = {"holo_depth_img": holo_depth_img, "uv": uv_sorted, "depth": depth_sorted, "t": t}
+        #  test
+        # holo_depth_img2 = holo_depth_img.reshape(h,w)
+        # mdic = {"holo_depth_img": holo_depth_img2, "uv": uv_sorted, "depth": depth_sorted, "t": t}
         # savemat("/local/artwin/mapping/codes/mapper/src/utils/renderDepth/matlab_matrix.mat", mdic)
-
-        # save the visibility information to observations
-        for j in range(0,np.shape(uv_sorted)[1]):
-            loc_uv = np.floor(uv_sorted[::,j]).tolist()
-            loc_depth = depth_sorted[j]
-            if ( np.abs(holo_depth_img[int(loc_uv[1][0]),int(loc_uv[0][0])] - loc_depth) < distance_threshold ):
-                visibility_xyz.append(xyz_ids_sorted[j])
-                visibility_xyz.append(img_id)
-                visibility_xyz.append(loc_uv[0][0])
-                visibility_xyz.append(loc_uv[1][0])
         
+        visibility_xyz = renderDepth.compose_visibility(int(img_id), w, np.shape(uv_sorted)[1], \
+            np.floor(uv_sorted).reshape(1,-1), depth_sorted, holo_depth_img, \
+            xyz_ids_sorted, distance_threshold)
+
         return visibility_xyz
 
 
     def estimate_visibility(self, camera, images, xyz):
         distance_threshold = 0.1
-        chunksize = 20
+        chunksize = 1 #mp.cpu_count()
         t = np.array([[8.0, 5.6, 3.2, 0.8, 0],[1, 3, 5, 7, 9]])  # TODO: d1 / d * f ... px size for d, d1 is size of radius in space
 
         # get visibility estimate
@@ -185,9 +178,11 @@ class UtilsMath:
         
         all_data = []
         for image in images:
-            all_data.append({"image_id": image["image_id"], "K": K, "R": image["R"], "C": image["C"], "h": h, "w": w, "xyz": xyz, "t": t, "dt": distance_threshold})
+            all_data.append({"image_id": image["image_id"], "K": K, "R": image["R"], \
+                "C": image["C"], "h": h, "w": w, "xyz": xyz, "t": t, "dt": distance_threshold})
+        #test = self.estimate_visibility_for_image(all_data[0])
 
-        with Pool() as pool:
+        with mp.Pool(chunksize) as pool:
             for ind, res in enumerate(pool.imap(self.estimate_visibility_for_image, all_data), chunksize):
                 for i in range(0,len(res)):
                     visibility_xyz.append(res[i])       # pt3d_id = res[4*i + 0]    img_id = res[4*i + 1]    u = res[4*i + 2]    v = res[4*i + 3]

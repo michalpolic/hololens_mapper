@@ -5,7 +5,7 @@ try:
     import ujson as json
 except ImportError:
     import json
-
+import src.meshroom.MeshroomCpp as MeshroomCpp
 
 class MeshroomIO:
 
@@ -125,6 +125,7 @@ class MeshroomIO:
         print("Finding obs for feature point and num. of images.") 
         max_img_id = 0
         obs_for_feature = [[] for _ in range(0,np.shape(xyz)[1])]
+        visibility_map = visibility_map.astype(dtype=int)
         for i in range(0,int(len(visibility_map)/4)):
             k = visibility_map[4*i]
             obs_for_feature[k].append(visibility_map[4*i + 1])
@@ -134,8 +135,8 @@ class MeshroomIO:
                 max_img_id = visibility_map[4*i + 1]
         
         print("Setting the observations ids.") 
-        images_obs = [{} for _ in range(0,max_img_id+1)]
-        images_obs_max = [0 for _ in range(0,max_img_id+1)]
+        images_obs = [{} for _ in range(max_img_id+1)]
+        images_obs_max = [0 for _ in range(max_img_id+1)]
         for i in range(0,int(len(visibility_map)/4)):
             img_id = visibility_map[4*i + 1]
             images_obs[img_id][self.get_obs_hash(visibility_map[4*i+2],visibility_map[4*i+3])] = images_obs_max[img_id]
@@ -178,13 +179,21 @@ class MeshroomIO:
             json.dump(sfm_dict, outfile)
 
 
-    def save_merged_mvs_to_json(self, out_path, pv_path, camera, images, xyz, visibility_map):
+    def save_merged_mvs_to_json(self, out_path, pv_path, camera, images, xyz, visibility_map, rgb):
         print("Saving Holo + MVS to Meshroom JSON.")
         sfm_dict = self.init_sfm_structure(camera)
         sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, camera)
-        sfm_dict = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
-        outfile = open(out_path, 'w', buffering=4096)
-        outfile.write(json.dumps(sfm_dict))
+        # visibility_map = np.array(visibility_map)
+        # sfm_dict2 = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
+        
+        rgb2 = np.ndarray.tolist(np.ndarray.flatten(rgb.astype(dtype=np.float64).T))
+        xyz2 = np.ndarray.tolist(np.ndarray.flatten(np.array(xyz).T))
+        str_structure = MeshroomCpp.encode_structure(np.shape(xyz)[1], \
+            int(np.shape(visibility_map)[0] / 4), xyz2, rgb2, visibility_map)
+
+        str_dict = json.dumps(sfm_dict)
+        outfile = open(out_path, 'w')
+        outfile.write(str_dict[0:-3] + str_structure + "}")
         outfile.close()
 
 

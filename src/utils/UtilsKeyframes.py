@@ -1,4 +1,5 @@
 import os
+from types import new_class
 import cv2
 import shutil
 from itertools import compress
@@ -74,10 +75,11 @@ class UtilsKeyframes():
             min_frame_offset - min. number of skipped consequtive frames from input sequece
             logger - object for Meshroom loging
         """
-        assert(os.path.isdir(source_dir), f"the recording images dir does not exist")
-        assert(os.path.isdir(destination_dir), f"the destination dir does not exist")
-
+        assert os.path.isdir(source_dir), f"the recording images dir does not exist"
+        
         Path(destination_dir).mkdir(parents=True, exist_ok=True)
+        assert os.path.isdir(destination_dir), f"the destination dir does not exist"
+
         images_to_copy = self.kyeframe_selector_simple(source_dir, blur_threshold, min_frame_offset)
 
         try:
@@ -90,4 +92,38 @@ class UtilsKeyframes():
                 shutil.copy(path_from, path_to) 
 
         except:
-            assert(False, "failed to copy selected keyframes into output directory")
+            assert False, "failed to copy selected keyframes into output directory"
+
+        return images_to_copy
+
+
+    def filter_pv_csv(self, images_to_copy, pv_csv):
+        """ Select the keyframes from a pv dictionary and cerate new pv with keyframes
+        Input: 
+            images_to_copy - keyframe names
+            pv_csv - the dictionary with original pv records
+        Output:
+            new_pv_csv - dictionary with keyframe records
+        """
+        new_pv_csv = {}
+        for img_name in images_to_copy:
+            img_id = img_name.replace(".jpg","")
+            new_pv_csv[img_id] = pv_csv[img_id]
+
+        return new_pv_csv
+        
+    def update_img_names(self, pv_csv, replace_from, replace_to):
+        """ Select the keyframes from a pv dictionary and cerate new pv with keyframes
+        Input: 
+            pv_csv - the dictionary with original pv records
+            replace_from - replace from the part of filename
+            replace_to - replace to the part of filename
+        Output:
+            new_pv_csv - dictionary with adjusted keyframe records
+        """
+        new_pv_csv = {}
+        for img_key, img_record in pv_csv.items():
+            new_pv_csv[img_key] = img_record.replace(replace_from,replace_to)
+
+        return new_pv_csv
+        
