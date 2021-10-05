@@ -4,3 +4,4 @@ tmp*/
 *.so
 *.sif
 launch.json
+settings.json
