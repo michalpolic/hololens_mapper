@@ -5,6 +5,7 @@ import math
 import os
 import psutil
 import ast
+import sys
 
 class Attribute(BaseObject):
     """
@@ -492,10 +493,23 @@ class CommandLineNode(Node):
             except psutil.NoSuchProcess:
                 pass
 
+    def updateComandLineForContianers(self, cmd):
+        if 'MESHROOM_WORKING_DIR' in os.environ:
+            
+
+            working_dir = os.environ.get('MESHROOM_WORKING_DIR')
+            cmd.replace(working_dir,"/data")
+            if sys.platform == 'win32':
+                cmd = f"docker run --gpus all -v {working_dir}:/data alicevision/meshroom:2021.1.0-av2.4.0-centos7-cuda10.2 {cmd}"
+            else:
+                cmd = f"singularity exec --nv -B {working_dir}:/data ./alicevision.sif /opt/AliceVision_install/bin/{cmd}"
+        return cmd
+
     def processChunk(self, chunk):
         try:
             with open(chunk.logFile, 'w') as logF:
                 cmd = self.buildCommandLine(chunk)
+                cmd = self.updateComandLineForContianers(cmd)
                 chunk.status.commandLine = cmd
                 chunk.saveStatusFile()
                 print(' - commandLine: {}'.format(cmd))
