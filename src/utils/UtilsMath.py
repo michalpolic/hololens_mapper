@@ -135,6 +135,7 @@ class UtilsMath:
 
         # get data in image
         filter = np.array(renderDepth.is_visible(h, w, np.shape(uv)[1], uv), dtype=np.bool8)
+        filter = filter & (np.array(uvl[2,:])[0] < 0)
         depth_filtered = depth[filter]
         uv_filtered = uv[::,filter]
         xyz_filtered = xyz[::,filter]
@@ -167,7 +168,7 @@ class UtilsMath:
 
     def estimate_visibility(self, camera, images, xyz):
         distance_threshold = 0.1
-        chunksize = 1 #mp.cpu_count()
+        chunksize = mp.cpu_count()
         t = np.array([[8.0, 5.6, 3.2, 0.8, 0],[1, 3, 5, 7, 9]])  # TODO: d1 / d * f ... px size for d, d1 is size of radius in space
 
         # get visibility estimate

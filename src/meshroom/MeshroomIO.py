@@ -60,12 +60,13 @@ class MeshroomIO:
                 "viewId": str(img['image_id']),
                 "poseId": str(img['image_id']),
                 "intrinsicId": str(img['camera_id']),
-                "path": pv_path + img['name'],
+                "path": pv_path + img['name'].replace('\\','/'),
                 "width": str(camera['width']),
                 "height": str(camera['height'])
             })
 
             R = img['R']
+            R = R * np.linalg.det(R)
             C = img['C']
             sfm_dict["poses"].append({
                 "poseId": str(img['image_id']),
@@ -183,18 +184,22 @@ class MeshroomIO:
         print("Saving Holo + MVS to Meshroom JSON.")
         sfm_dict = self.init_sfm_structure(camera)
         sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, camera)
-        # visibility_map = np.array(visibility_map)
-        # sfm_dict2 = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
         
         rgb2 = np.ndarray.tolist(np.ndarray.flatten(rgb.astype(dtype=np.float64).T))
         xyz2 = np.ndarray.tolist(np.ndarray.flatten(np.array(xyz).T))
         str_structure = MeshroomCpp.encode_structure(np.shape(xyz)[1], \
             int(np.shape(visibility_map)[0] / 4), xyz2, rgb2, visibility_map)
-
         str_dict = json.dumps(sfm_dict)
         outfile = open(out_path, 'w')
         outfile.write(str_dict[0:-3] + str_structure + "}")
         outfile.close()
+
+        # visibility_map = np.array(visibility_map)
+        # sfm_dict = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
+        # str_dict = json.dumps(sfm_dict)
+        # outfile = open(out_path, 'w')
+        # outfile.write(str_dict)
+        # outfile.close()
 
 
     def load_obj_vertices(self, obj_file_path):

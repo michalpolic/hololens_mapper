@@ -121,7 +121,7 @@ class HoloIO:
                 D2C = np.matrix([float(num_str) for num_str in vals[25:41]]).reshape((4, 4)).T
                 D2O = np.matrix([float(num_str) for num_str in vals[9:25]]).reshape((4, 4)).T
                 O2D = np.linalg.inv(D2O)
-                Rt = np.matrix([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) * D2C * O2D
+                Rt = np.diag([-1, 1, 1, 1]) * D2C * O2D
                 R = Rt[0:3, 0:3]
                 C = - R.T * Rt[0:3, 3]
                 cameras[k] = {

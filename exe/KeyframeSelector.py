@@ -11,10 +11,10 @@ from src.holo.HoloIO import HoloIO
 from src.utils.UtilsKeyframes import UtilsKeyframes
 
 # setting 
-recordingDir = "/local/artwin/data/Munich/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1"
-output = "/local/artwin/data/Munich/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1_keyframes"
+recordingDir = "/local1/projects/artwin/datasets/Munich/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1"
+output = "/local1/projects/artwin/datasets/Munich/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1_keyframes2"
 blurThreshold = 23
-minFrameOffset = 10
+minFrameOffset = 5
 
 # process
 keyframe_selector = UtilsKeyframes()

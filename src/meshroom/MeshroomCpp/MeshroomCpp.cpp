@@ -42,26 +42,26 @@ class Landmark{
 
 std::ostream& operator<<(std::ostream& os, const Observation& o)
 {
-    os << "{\"observationId\": \"" << std::to_string(o.observationId) << "\",";
-    os << "\"featureId\": \"" << std::to_string(o.featureId) << "\",";
-    os << "\"x\": [\"" <<  std::to_string(o.x[0]) << "\"," 
+    os << "{\"observationId\":\"" << std::to_string(o.observationId) << "\",";
+    os << "\"featureId\":\"" << std::to_string(o.featureId) << "\",";
+    os << "\"x\":[\"" <<  std::to_string(o.x[0]) << "\"," 
         << "\"" <<  std::to_string(o.x[1]) << "\"],";
-    os << "\"scale\": \"0\"}";    
+    os << "\"scale\":\"0\"}";    
     return os;
 }
 
 
 std::ostream& operator<<(std::ostream& os, const Landmark& lm)
 {
-    os << "{\"landmarkId\": \"" << std::to_string(lm.landmarkId) << "\",";
-    os << "\"descType\": \"sift\"," ;
-    os << "\"color\": [\"" <<  std::to_string(lm.color[0]) << "\"," 
+    os << "{\"landmarkId\":\"" << std::to_string(lm.landmarkId) << "\",";
+    os << "\"descType\":\"sift\"," ;
+    os << "\"color\":[\"" <<  std::to_string(lm.color[0]) << "\"," 
         << "\"" <<  std::to_string(lm.color[1]) << "\"," 
         << "\"" <<  std::to_string(lm.color[2]) << "\"],";
-    os << "\"X\": [\"" <<  std::to_string(lm.X[0]) << "\"," 
+    os << "\"X\":[\"" <<  std::to_string(lm.X[0]) << "\"," 
         << "\"" <<  std::to_string(lm.X[1]) << "\"," 
         << "\"" <<  std::to_string(lm.X[2]) << "\"],";
-    os << "\"observations\": [";
+    os << "\"observations\":[";
     for(int i = 0; i < lm.observations.size(); ++i){
         os << lm.observations[i];
         if (i < lm.observations.size()-1){
@@ -116,7 +116,7 @@ std::string encode_structure(int num_xyz, int num_visibility_map_records,
 
     py::print(std::string("Num. of images: " + std::to_string(max_img_id)).c_str());
     std::map<std::string, int> images_obs[max_img_id+1];
-    int images_obs_max[max_img_id+1];
+    int images_obs_max[max_img_id+1] = { 0 };
     proc = 0;
     for (int i = 0; i < num_visibility_map_records; ++i){
         if (proc < int((double(i) / double(num_visibility_map_records))*100)){
@@ -125,7 +125,7 @@ std::string encode_structure(int num_xyz, int num_visibility_map_records,
         }
         int img_id = int(vmap_ptr[4*i + 1]);
         images_obs[img_id][get_obs_hash(int(vmap_ptr[4*i+2]),int(vmap_ptr[4*i+3]))] = images_obs_max[img_id];
-        images_obs_max[img_id]++;
+        images_obs_max[img_id] = images_obs_max[img_id] + 1;
     }
     py::print(std::string("Composing unique obs. ids ... 100 proc").c_str());
     
@@ -136,17 +136,19 @@ std::string encode_structure(int num_xyz, int num_visibility_map_records,
     for (int i = 0; i < num_xyz; ++i){
         Landmark pt3D(i, rgb_ptr + 3*i, xyz_ptr + 3*i);
         std::vector<int> obs_array = obs_for_feature[i];
-        for (int j = 0; j < int(obs_array.size()/3); ++j){
-            int img_id = obs_array[j*3];
-            int u = obs_array[j*3 + 1];
-            int v =  obs_array[j*3 + 2];
-            int fid = images_obs[img_id][get_obs_hash(u,v)];
-            Observation obs(img_id, fid, u, v);
-            pt3D.observations.push_back(obs);
-        }
-        ss << pt3D;
-        if (i < (num_xyz - 1)){
-            ss << ",";
+        if (int(obs_array.size()/3) > 1){
+            for (int j = 0; j < int(obs_array.size()/3); ++j){
+                int img_id = obs_array[j*3];
+                int u = obs_array[j*3 + 1];
+                int v =  obs_array[j*3 + 2];
+                int fid = images_obs[img_id][get_obs_hash(u,v)];
+                Observation obs(img_id, fid, u, v);
+                pt3D.observations.push_back(obs);
+            }
+            ss << pt3D;
+            if (i < (num_xyz - 1)){
+                ss << ",";
+            }
         }
     }
     ss << "]";
