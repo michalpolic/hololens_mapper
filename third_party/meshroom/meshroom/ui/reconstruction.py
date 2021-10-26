@@ -345,9 +345,7 @@ class ViewpointWrapper(QObject):
             return None
         pp = self.solvedIntrinsics["principalPoint"]
         # compute principal point offset in UV space
-        uvPP = QVector2D(float(pp[0]) / self.imageSize.width(), float(pp[1]) / self.imageSize.height())
-        # convert to offset
-        offset = uvPP - QVector2D(0.5, 0.5)
+        offset = QVector2D(float(pp[0]) / self.imageSize.width(), float(pp[1]) / self.imageSize.height())
         # apply orientation to principal point correction
         if self.orientation == 6:
             offset = QVector2D(-offset.y(), offset.x())
@@ -413,9 +411,13 @@ class Reconstruction(UIGraph):
     Specialization of a UIGraph designed to manage a 3D reconstruction.
     """
     activeNodeCategories = {
+        # All nodes generating a sfm scene (3D reconstruction or panorama)
         "sfm": ["StructureFromMotion", "GlobalSfM", "PanoramaEstimation", "SfMTransfer", "SfMTransform",
                 "SfMAlignment"],
-        "undistort": ["PrepareDenseScene", "PanoramaWarping"],
+        # All nodes generating a sfmData file
+        "sfmData": ["CameraInit", "DistortionCalibration", "StructureFromMotion", "GlobalSfM", "PanoramaEstimation", "SfMTransfer", "SfMTransform",
+                "SfMAlignment"],
+        # All nodes generating depth map files
         "allDepthMap": ["DepthMap", "DepthMapFilter"],
     }
 
@@ -496,6 +498,9 @@ class Reconstruction(UIGraph):
         elif p.lower() == "cameratracking":
             # default camera tracking pipeline
             self.setGraph(multiview.cameraTracking())
+        elif p.lower() == "photogrammetrydraft":
+            # photogrammetry pipeline in draft mode (no cuda)
+            self.setGraph(multiview.photogrammetryDraft())
         else:
             # use the user-provided default photogrammetry project file
             self.load(p, setupProjectFile=False)

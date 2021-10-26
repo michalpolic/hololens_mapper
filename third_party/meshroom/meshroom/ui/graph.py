@@ -477,12 +477,14 @@ class UIGraph(QObject):
         """
         return commands.GroupedGraphModification(self._graph, self._undoStack, title, disableUpdates)
 
+    @Slot(str)
     def beginModification(self, name):
         """ Begin a Graph modification. Calls to beginModification and endModification may be nested, but
         every call to beginModification must have a matching call to endModification. """
         self._modificationCount += 1
         self._undoStack.beginMacro(name)
 
+    @Slot()
     def endModification(self):
         """ Ends a Graph modification. Must match a call to beginModification. """
         assert self._modificationCount > 0
@@ -618,14 +620,14 @@ class UIGraph(QObject):
     @Slot(Attribute, Attribute)
     def addEdge(self, src, dst):
         if isinstance(dst, ListAttribute) and not isinstance(src, ListAttribute):
-            with self.groupedGraphModification("Insert and Add Edge on {}".format(dst.getFullName())):
+            with self.groupedGraphModification("Insert and Add Edge on {}".format(dst.getFullNameToNode())):
                 self.appendAttribute(dst)
                 self._addEdge(src, dst.at(-1))
         else:
             self._addEdge(src, dst)
 
     def _addEdge(self, src, dst):
-        with self.groupedGraphModification("Connect '{}'->'{}'".format(src.getFullName(), dst.getFullName())):
+        with self.groupedGraphModification("Connect '{}'->'{}'".format(src.getFullNameToNode(), dst.getFullNameToNode())):
             if dst in self._graph.edges.keys():
                 self.removeEdge(self._graph.edge(dst))
             self.push(commands.AddEdgeCommand(self._graph, src, dst))
@@ -633,7 +635,7 @@ class UIGraph(QObject):
     @Slot(Edge)
     def removeEdge(self, edge):
         if isinstance(edge.dst.root, ListAttribute):
-            with self.groupedGraphModification("Remove Edge and Delete {}".format(edge.dst.getFullName())):
+            with self.groupedGraphModification("Remove Edge and Delete {}".format(edge.dst.getFullNameToNode())):
                 self.push(commands.RemoveEdgeCommand(self._graph, edge))
                 self.removeAttribute(edge.dst)
         else:
