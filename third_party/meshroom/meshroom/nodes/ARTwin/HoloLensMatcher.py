@@ -43,6 +43,22 @@ This node compute matches between all pairs of HoloLens rgb images.
             uid=[0],
             exclusive=True,
             ),
+        desc.IntParam(
+            name='clusteringRadius',
+            label='Clustering radius',
+            description='The radius for clustering the observations (Patch2Pix).',
+            value=1,
+            range=(1, 10, 1),
+            uid=[0],
+            ),  
+        desc.FloatParam(
+            name='matchingTreshold',
+            label='Matching threshold',
+            description='The reprojection threshold for mathces verification using the HoloLens tracking poses.',
+            value=10,
+            range=(0.1, 30, 0.1),
+            uid=[0],
+            ),  
         desc.ChoiceParam(
             name='verboseLevel',
             label='Verbose Level',
@@ -101,7 +117,8 @@ This node compute matches between all pairs of HoloLens rgb images.
             
             chunk.logger.info('Matcher --> run hololens matching')
             obs_for_images, matches = matcher.holo_matcher(chunk.node.input.value + "/pv", holo_cameras, 
-                database_path=out_dir + "/colmap/database.db")    
+                database_path=out_dir + "/colmap/database.db", radius = chunk.node.clusteringRadius.value, 
+                err_threshold = chunk.node.matchingTreshold.value)    
             
             chunk.logger.info('Save matches into database')
             colmap.save_matches_into_database(chunk.node.input.value, out_dir + "/colmap/database.db", 
