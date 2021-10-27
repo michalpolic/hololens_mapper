@@ -30,7 +30,7 @@ class UtilsContainers:
             Working directory is mounted to /data dir. You have to use path to data in format /data/<rel_path>.
         """
         if self._container_type == "docker":
-            command_line = f"docker run --gpus all --rm -v {self._working_dir}:/data {self._image} {self._lib_prefix}{command}"
+            command_line = f"docker run --rm -v {self._working_dir}:/data {self._image} {self._lib_prefix}{command}"    # --gpus all 
         if self._container_type == "singularity":
             command_line = f"singularity exec --nv -B {self._working_dir}:/data {self._image} {self._lib_prefix}{command}"
 
