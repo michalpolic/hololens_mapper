@@ -587,13 +587,13 @@ ApplicationWindow {
                 id: imageViewerVisibilityCB
                 text: "Image Viewer"
                 checkable: true
-                checked: true
+                checked: false
             }
             MenuItem {
                 id: viewer3DVisibilityCB
                 text: "3D Viewer"
                 checkable: true
-                checked: true
+                checked: false
             }
             MenuSeparator {}
             Action {
