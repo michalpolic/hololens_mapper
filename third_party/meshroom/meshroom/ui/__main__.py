@@ -1,7 +1,13 @@
 import signal
 import sys
-import meshroom
+import os
 
+dir_path = __file__
+dir_path = os.path.dirname(dir_path)
+dir_path = os.path.dirname(dir_path)
+dir_path = os.path.dirname(dir_path)
+sys.path.append(dir_path)
+import meshroom
 
 if __name__ == "__main__":
     meshroom.setupEnvironment()
