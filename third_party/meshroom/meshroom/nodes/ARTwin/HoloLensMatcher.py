@@ -8,6 +8,7 @@ import glob
 import os
 import sys
 from pathlib import Path
+from distutils.dir_util import copy_tree
 
 # import mapper packages
 dir_path = __file__
@@ -98,30 +99,30 @@ This node compute matches between all pairs of HoloLens rgb images.
             # 2) run matching
             chunk.logger.info('Start matching.')
             out_dir = chunk.node.output.value
-            Path(chunk.node.input.value + "/colmap/sparse").mkdir(parents=True, exist_ok=True)
+            Path(out_dir + "/colmap/sparse").mkdir(parents=True, exist_ok=True)
+            copy_tree(chunk.node.input.value, out_dir)
 
             chunk.logger.info('Init COLMAP container')
             if sys.platform == 'win32':
-                colmap_container = UtilsContainers("docker", "uodcvip/colmap", "/host_mnt/" + \
-                    chunk.node.input.value.replace(":",""))
+                colmap_container = UtilsContainers("docker", "uodcvip/colmap", "/data/" + out_dir.replace(":",""))
             else:
-                colmap_container = UtilsContainers("singularity", dir_path + "/colmap.sif", chunk.node.input.value)
+                colmap_container = UtilsContainers("singularity", dir_path + "/colmap.sif", out_dir)
             colmap = Colmap(colmap_container)
             matcher = UtilsMatcher(chunk.node.algorithm.value, colmap)      # patch2pix / SuperGlue / SIFT
             
             if matcher._matcher_name == "SIFT":
                 chunk.logger.info('COLMAP --> compute SIFT features')
-                colmap.extract_features("/data/colmap/database.db", "/pv")           # COLMAP feature extractor
+                colmap.extract_features("/data/colmap/database.db", "/data/pv")     # COLMAP feature extractor
                 chunk.logger.info('COLMAP --> exhaustive matching')
-                colmap.exhaustive_matcher("/data/colmap/database.db")                # COLMAP matcher
-            
+                colmap.exhaustive_matcher("/data/colmap/database.db")               # COLMAP matcher
+
             chunk.logger.info('Matcher --> run hololens matching')
-            obs_for_images, matches = matcher.holo_matcher(chunk.node.input.value + "/pv", holo_cameras, 
-                database_path=out_dir + "/colmap/database.db", radius = chunk.node.clusteringRadius.value, 
+            obs_for_images, matches = matcher.holo_matcher(out_dir + "/pv", holo_cameras, 
+                database_path = out_dir + "/colmap/database.db", radius = chunk.node.clusteringRadius.value, 
                 err_threshold = chunk.node.matchingTreshold.value)    
             
             chunk.logger.info('Save matches into database')
-            colmap.save_matches_into_database(chunk.node.input.value, out_dir + "/colmap/database.db", 
+            colmap.save_matches_into_database(out_dir, "/colmap/database.db", 
                 holo_cameras, matches, obs_for_images)
             chunk.logger.info('Matches saved into database.')    
           

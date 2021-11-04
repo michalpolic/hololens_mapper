@@ -38,7 +38,7 @@ class Colmap():
     def prepare_database(self, data_dir, database_path):
         if os.path.exists(data_dir + database_path):
             os.remove(data_dir + database_path)
-        self._colmap_container.command_dict("colmap database_creator", {"database_path": database_path})
+        self._colmap_container.command_dict("colmap database_creator", {"database_path": "/data" + database_path})
 
     def insert_pv_camera_into_database(self, database_path):   # use predefined parameters
         con = sqlite3.connect(database_path)

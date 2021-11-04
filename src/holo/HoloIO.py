@@ -195,7 +195,7 @@ class HoloIO:
         Output: 
             wold_xyz - pointcloud in HoloLens world coorinate system
         """
-        assert xyz1, "no points to transform"
+        assert xyz1.any(), "no points to transform"
         assert poseinfo, "no camera parameters available"
 
         pi = poseinfo.split(",")
@@ -256,7 +256,7 @@ class HoloIO:
             Path(file_path).parent.mkdir(parents=True, exist_ok=True)
             objfile = open(file_path, 'w')
             objfile.write("o Object.1\n")
-            if rgb.any():
+            if rgb != None:
                 list_of_rows = [f"v {xyz[0,i]} {xyz[1,i]} {xyz[2,i]} {rgb[0,i]} {rgb[1,i]} {rgb[2,i]}\n" for i in range(np.shape(xyz)[1])]
             else:
                 list_of_rows = [f"v {xyz[0,i]} {xyz[1,i]} {xyz[2,i]}\n" for i in range(np.shape(xyz)[1])]

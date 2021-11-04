@@ -26,8 +26,8 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "recordingDir": "D:/tmp/ex_models/benchmark/desk",
-                "UVfile": "D:/tmp/ex_models/benchmark/uvdata.txt",
+                "recordingDir": "/local1/projects/artwin/datasets/Desk_01",
+                "UVfile": "/local1/projects/artwin/datasets/uvdata.txt",
                 "verboseLevel": "info"
             },
             "outputs": {
@@ -72,12 +72,14 @@
                 "split": 1
             },
             "uids": {
-                "0": "272dd76796796c5019fa30ab1f312f5c39054a24"
+                "0": "fc348efcec96b98d388073406dc4cc997b61b412"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "input": "{KeyframeSelector_1.output}",
                 "algorithm": "SIFT",
+                "clusteringRadius": 1,
+                "matchingTreshold": 10,
                 "verboseLevel": "info"
             },
             "outputs": {
