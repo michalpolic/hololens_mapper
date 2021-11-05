@@ -26,12 +26,14 @@ class UtilsKeyframes():
         return False
     
 
-    def kyeframe_selector_simple(self, source_dir, blur_threshold, min_frame_offset):
+    def keyframe_selector_simple(self, source_dir, blur_threshold, min_frame_offset, images_extension = ".jpg"):
         """ Check which images are keyframes based on blur threshold and minimal frame offset
         Input: 
             source_dir - path to images folder
-            blur_threshold - the threshold for variation of the Laplacian (higher threshold meand sharper images)
+            blur_threshold - the threshold for variation of the Laplacian (higher threshold meand sharper images),
+                            for negative values is the blur evaluation skiped
             min_frame_offset - min. number of skipped consequtive frames from input sequece
+            images_extension - filter other image formats than selected, e.g., ".jpg"
         Output: 
             keyframe_paths (list) - paths to keyframe images 
         """
@@ -40,11 +42,14 @@ class UtilsKeyframes():
         filenames = os.listdir(source_dir)
         filenames_jpg = []
         for filename in filenames:
-            if filename[-4::] == ".jpg":
+            if filename[-len(images_extension)::] == images_extension:
                 filenames_jpg.append(filename)
-                image = cv2.imread(source_dir + '/' + filename)
-                gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                blur_filer.append(self.blur_clasifyer_laplacian(gray, blur_threshold))
+                if blur_threshold > 0:
+                    image = cv2.imread(source_dir + '/' + filename)
+                    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                    blur_filer.append(self.blur_clasifyer_laplacian(gray, blur_threshold))
+                else:
+                    blur_filer.append(True)
 
         k = 0
         set_zero = False
@@ -65,34 +70,44 @@ class UtilsKeyframes():
         return list(compress(filenames_jpg, blur_filer))
 
 
-    def copy_keyframes(self, source_dir, destination_dir, blur_threshold = 25, 
-        min_frame_offset = 13, logger = None):
+    def copy_keyframes(self, source_dirs, destination_dirs, blur_thresholds, min_frame_offsets, \
+        images_extensions, logger = None):
         """ Select and copy the keyframes from a set of imges in recording directory
         Input: 
-            source_dir - path to images folder
-            destination_dir - path where to save keyframes
-            blur_threshold - the threshold for variation of the Laplacian (higher threshold meand sharper images)
-            min_frame_offset - min. number of skipped consequtive frames from input sequece
+            source_dirs - path to images folders
+            destination_dirs - path where to save keyframes
+            blur_thresholds - the threshold for variation of the Laplacian (higher threshold meand sharper images),
+                              for negative values is the blur evaluation skiped
+            min_frame_offsets - min. number of skipped consequtive frames from input sequece
+            images_extensions - filter other image formats than selected, e.g., ".jpg"
             logger - object for Meshroom loging
         """
-        assert os.path.isdir(source_dir), f"the recording images dir does not exist"
-        
-        Path(destination_dir).mkdir(parents=True, exist_ok=True)
-        assert os.path.isdir(destination_dir), f"the destination dir does not exist"
+        images_to_copy = [[] for i in range(len(source_dirs))]
+        for i in range(len(source_dirs)):
+            source_dir = source_dirs[i]
+            destination_dir = destination_dirs[i]
+            blur_threshold = blur_thresholds[i]
+            min_frame_offset = min_frame_offsets[i]
+            images_extension = images_extensions[i]
 
-        images_to_copy = self.kyeframe_selector_simple(source_dir, blur_threshold, min_frame_offset)
+            assert os.path.isdir(source_dir), f"the recording images dir does not exist"
+            Path(destination_dir).mkdir(parents=True, exist_ok=True)
+            assert os.path.isdir(destination_dir), f"the destination dir does not exist"
 
-        try:
-            for image_path_src in images_to_copy:
-                path_from = source_dir + '/' + image_path_src
-                path_to = destination_dir + '/' + image_path_src
-                if logger:
-                    logger.info(f'Copy: {path_from} --> {path_to}')
+            images_to_copy[i] = self.keyframe_selector_simple(source_dir, blur_threshold, \
+                min_frame_offset, images_extension)
 
-                shutil.copy(path_from, path_to) 
+            try:
+                for image_path_src in images_to_copy[i]:
+                    path_from = source_dir + '/' + image_path_src
+                    path_to = destination_dir + '/' + image_path_src
+                    if logger:
+                        logger.info(f'Copy: {path_from} --> {path_to}')
 
-        except:
-            assert False, "failed to copy selected keyframes into output directory"
+                    shutil.copy(path_from, path_to) 
+
+            except:
+                assert False, "failed to copy selected keyframes into output directory"
 
         return images_to_copy
 

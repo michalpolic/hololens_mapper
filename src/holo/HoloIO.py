@@ -2,6 +2,8 @@ import sys
 import math
 import os
 from pathlib import Path
+import re
+import multiprocessing as mp
 
 import numpy as np
 
@@ -22,11 +24,12 @@ class HoloIO:
         try:
             uvfile = open(uvdata_path, 'r')
             uvlines = uvfile.read().split("\n")
-            uvdata = {}
+            uvdata = [-np.ones((448,450)), -np.ones((448,450))]
             for line in uvlines:
                 if not "inf, inf" in line:
-                    parsed = line.split(" ")
-                    uvdata[parsed[1] + parsed[2]] = (float(parsed[4].split(",")[0]), float(parsed[5]))
+                    parsed = re.findall('[0-9.]+', line)
+                    uvdata[0][int(parsed[0]), int(parsed[1])] = float(parsed[2])
+                    uvdata[1][int(parsed[0]), int(parsed[1])] = float(parsed[3])
         except:
             assert(False, "failed parsing the UV data file")
         finally:
@@ -143,18 +146,23 @@ class HoloIO:
 
         return cameras
 
-
-    def read_depthmap(self, depthmap_path, uvdata):   
+    def read_depthmap(self, params):   
         """Read and decode the depthmaps using the UV data.
         Input: 
-            depthmap_path - path to depthmap file in .pgm format
-            uvdata - dictionary uvdata['u'+'v'] -> (new u, new v) 
+            params['depthmap_path']- path to depthmap file in .pgm format
+            params['uvdata'] - dictionary uvdata['u'+'v'] -> (new u, new v) 
         Output: 
             xyz1 - pointcloud in camera coordinate systems 
         """
+        assert 'depthmap_path' in params, "missing depthmap_path in params"
+        assert 'uvdata' in params, "missing uvdata in params"
+        depthmap_path = params['depthmap_path']
+        uvdata = params['uvdata']
         assert os.path.isfile(depthmap_path), f"the depthmaps file {depthmap_path} does not exist"
         assert ".pgm" in depthmap_path, f"the depthmaps file {depthmap_path} is in wrong format"
         assert uvdata, "UV data are empty"
+
+        print(f'Reading depthmap {depthmap_path}')
 
         try:
             file = open(depthmap_path, 'rb')
@@ -172,11 +180,12 @@ class HoloIO:
             for i in range(0, 450):
                 for j in range(0, 448):
                     r = values[i, j]
-                    if not r == 0:
-                        uv = uvdata["(" + str(j) + "," + str(i) + ")"]
-                        d = r / (math.sqrt(uv[0] * uv[0] + uv[1] * uv[1] + 1) * -1000)
-                        xyz1.append(d * uv[0])
-                        xyz1.append(d * uv[1])
+                    u = uvdata[0][j,i]
+                    v = uvdata[1][j,i]
+                    if not r == 0 and not (u == -1 or v == -1):
+                        d = r / (math.sqrt(u * u + v * v + 1) * -1000)
+                        xyz1.append(d * u)
+                        xyz1.append(d * v)
                         xyz1.append(d) 
                         xyz1.append(1)
         except:
@@ -184,7 +193,7 @@ class HoloIO:
         finally:
             file.close()
 
-        return xyz1
+        return {"timestamp": params["timestamp"], "xyz1": xyz1}
 
 
     def transform_depthmap_to_world(self, xyz1, poseinfo):
@@ -226,19 +235,37 @@ class HoloIO:
             logger.info(f'Reading camera poses from file: {depthmap_poses_path}')
         csv = self.read_csv(depthmap_poses_path)
 
+        chunksize = mp.cpu_count()
         wold_xyz = np.array([]).reshape(3,0)
         for r, d, f in os.walk(depthmaps_dir):
+            data = []
             for filename in f:
                 if ".pgm" in filename:
-                    timestamp = filename.split(".")[0]
-                    if logger:
-                        logger.info(f'Reading depthmap {filename}')
-                    xyz1 = self.read_depthmap(depthmaps_dir + filename, uvdata)
-                    xyz1 = np.matrix(np.reshape(xyz1, (-1, 4)).T)
-                    if logger:
-                        logger.info(f'Transforming depthmap {filename} into common coordinate system')
+                    data.append({"timestamp": filename.split(".")[0], "depthmap_path": depthmaps_dir + filename, \
+                        "uvdata": uvdata})
+            # test = self.read_depthmap(data[0])
+
+            with mp.Pool(chunksize) as pool:
+                for _, res in enumerate(pool.imap(self.read_depthmap, data), chunksize):
+                    timestamp = res["timestamp"]
+                    xyz1 = np.matrix(np.reshape(res["xyz1"], (-1, 4)).T)    
                     xyz1 = np.array(self.transform_depthmap_to_world(xyz1, csv[timestamp]))
                     wold_xyz = np.concatenate((wold_xyz, xyz1[0:3,::]), axis=1)
+
+            # pool = mp.Pool(mp.cpu_count())
+            # results = [pool.apply(self.read_depthmap, args=(depthmaps_dir + filename, uvdata, logger)) for filename in f]
+
+            # for filename in f:
+            #     if ".pgm" in filename:
+            #         timestamp = filename.split(".")[0]
+            #         if logger:
+            #             logger.info(f'Reading depthmap {filename}')
+            #         xyz1 = self.read_depthmap(depthmaps_dir + filename, uvdata)
+            #         xyz1 = np.matrix(np.reshape(xyz1, (-1, 4)).T)
+            #         if logger:
+            #             logger.info(f'Transforming depthmap {filename} into common coordinate system')
+            #         xyz1 = np.array(self.transform_depthmap_to_world(xyz1, csv[timestamp]))
+            #         wold_xyz = np.concatenate((wold_xyz, xyz1[0:3,::]), axis=1)
 
         return wold_xyz
 

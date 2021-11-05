@@ -68,7 +68,7 @@ class Mapper():
 
         # 1b) keyframe selection
         keyframe_selector = UtilsKeyframes()
-        keyframe_selector.copy_keyframes(recoring_dir_abs + "/pv", out_dir_abs + "/pv", 23, 8, logger=logger)
+        keyframe_selector.copy_pv_keyframes(recoring_dir_abs + "/pv", out_dir_abs + "/pv", 23, 8, logger=logger)
 
         # 2) run COLMAP to find "correct" camera poses
         Path(out_dir_abs + "/colmap/sparse").mkdir(parents=True, exist_ok=True)

@@ -28,7 +28,7 @@ This node transform the depthmaps from hololens recording into one coordinate sy
             name="recordingDir",
             label="Recording Folder",
             description="HoloLens recording directory (images in pv/*.jpg, " \
-                "depth in long_throw_depth/*.pgm, + related .csv).",
+                "depth in long_throw_depth/*.pgm, etc. + related .csv).",
             value="",
             uid=[0],
         ),

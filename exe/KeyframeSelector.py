@@ -26,7 +26,7 @@ logger.info('Start keyframe selector.')
 if not os.path.exists(output):
     os.mkdir(output)
 
-keframe_names = keyframe_selector.copy_keyframes(recordingDir + "/pv", output + "/pv", 
+keframe_names = keyframe_selector.copy_pv_keyframes(recordingDir + "/pv", output + "/pv", 
     blurThreshold, minFrameOffset, logger = logger)
     
 logger.info('Compose new pv.csv in output directory')
