@@ -202,6 +202,14 @@ class MeshroomIO:
         # outfile.close()
 
 
+    def load_vertices(self, file_path):
+        if file_path[-4::] == ".obj":
+            return self.load_obj_vertices(file_path)
+        if file_path[-4::] == ".ply":
+            return self.load_ply_vertices(file_path)
+        return np.array((0,3))
+
+
     def load_obj_vertices(self, obj_file_path):
         print("Load OBJ vertices: " + obj_file_path)
         f = open(obj_file_path, 'r')

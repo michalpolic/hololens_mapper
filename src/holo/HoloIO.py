@@ -304,7 +304,8 @@ class HoloIO:
         csv = self.read_csv(csv_file_path)
         return self.parse_poseinfo_to_cameras(csv)
 
-    def load_model(self, csv_file_path):
+
+    def load_model(self, csv_file_paths):
         """Transform cameras parameters from CSV file into standard model structures
         Input: 
             csv_file_path - path where to save the pointcloud (ext. .obj)
@@ -313,7 +314,7 @@ class HoloIO:
             images - the Colmap structure with images info
             points3D - the Colmap structure with points in 3D
         """
-        cameras_dict = self.read_cameras(csv_file_path)
+        cameras_dict = self.read_cameras(csv_file_paths)
         cameras = self.get_hololens_camera()
         images = self.get_hololens_images(cameras_dict)
         points3D = self.get_hololens_points3D()

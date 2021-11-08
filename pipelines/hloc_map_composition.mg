@@ -4,6 +4,7 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
+            "HoloLensIO": "0.1",
             "HololensPointcloudComposer": "0.1",
             "KeyframeSelector": "0.1"
         }
@@ -36,8 +37,8 @@
         "KeyframeSelector_1": {
             "nodeType": "KeyframeSelector",
             "position": [
-                65,
-                34
+                64,
+                -11
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -53,6 +54,32 @@
                 "pvBlurThreshold": 25.0,
                 "pvMinFrameOffset": 13,
                 "vlcMinFrameOffset": 30,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "HoloLensIO_1": {
+            "nodeType": "HoloLensIO",
+            "position": [
+                242,
+                4
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 0,
+                "split": 1
+            },
+            "uids": {
+                "0": "5786b9024db059761a5f69115609351f43cfbef1"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "recordingDir": "{KeyframeSelector_1.output}",
+                "pointcloudFile": "{HololensPointcloudComposer_1.output}",
+                "intrinsics": [],
+                "outputSfMFormat": "COLMAP",
                 "verboseLevel": "info"
             },
             "outputs": {

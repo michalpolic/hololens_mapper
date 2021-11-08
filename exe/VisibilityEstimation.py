@@ -34,8 +34,7 @@ logger.info('Loading HoloLens model.')
 holo_cameras, holo_images, holo_points3D = holo_io.load_model(recordingDir + "/pv.csv")
 
 # logger.info('Loading dense pointcloud.')
-# xyz, rgb = meshroom_io.load_obj_vertices(inputPointcloud)  
-xyz, rgb = meshroom_io.load_ply_vertices(inputPointcloud)  
+xyz, rgb = meshroom_io.load_vertices(inputPointcloud)  
 
 logger.info('Estimating visibility.')
 visibility_map = utils_math.estimate_visibility(holo_cameras, holo_images, xyz)
