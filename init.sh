@@ -10,5 +10,6 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(una
     docker pull uodcvip/colmap:latest
 fi
 
-
+# create common conda enviroment
+conda env create -f environment.yml
 
