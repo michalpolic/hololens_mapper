@@ -13,3 +13,8 @@ fi
 # create common conda enviroment
 conda env create -f environment.yml
 
+# compile the C++ codes
+# renderDepth.cpp
+mkdir ./src/utils/renderDepth/build
+cd ./src/utils/renderDepth/build
+cmake --build . --config Release --target install
