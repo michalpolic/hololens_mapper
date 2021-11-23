@@ -4,9 +4,9 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "HoloLensIO": "0.1",
+            "KeyframeSelector": "0.1",
             "HololensPointcloudComposer": "0.1",
-            "KeyframeSelector": "0.1"
+            "HoloLensIO": "0.1"
         }
     },
     "graph": {
@@ -31,7 +31,7 @@
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
+                "output": "{cache}/{nodeType}/{uid0}//model.obj"
             }
         },
         "KeyframeSelector_1": {
@@ -68,17 +68,109 @@
             ],
             "parallelization": {
                 "blockSize": 0,
-                "size": 0,
+                "size": 5,
                 "split": 1
             },
             "uids": {
-                "0": "5786b9024db059761a5f69115609351f43cfbef1"
+                "0": "2ebf61aaed8b3576c89817f30a2f415198899b64"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "recordingDir": "{KeyframeSelector_1.output}",
                 "pointcloudFile": "{HololensPointcloudComposer_1.output}",
-                "intrinsics": [],
+                "hashScale": 10,
+                "allPoints": false,
+                "intrinsics": [
+                    {
+                        "intrinsicId": 0,
+                        "csvPrefixes": [
+                            "pv"
+                        ],
+                        "width": 1344,
+                        "height": 756,
+                        "pxFocalLength": {
+                            "x": 1038.14,
+                            "y": 1036.47
+                        },
+                        "principalPoint": {
+                            "x": 664.39,
+                            "y": 396.14
+                        },
+                        "distortionParams": [
+                            0.1825,
+                            -0.1615,
+                            -0.2845
+                        ]
+                    },
+                    {
+                        "intrinsicId": 1,
+                        "csvPrefixes": [
+                            "vlc_ll"
+                        ],
+                        "width": 640,
+                        "height": 480,
+                        "pxFocalLength": {
+                            "x": 450.07207,
+                            "y": 450.274345
+                        },
+                        "principalPoint": {
+                            "x": 320.0,
+                            "y": 240.0
+                        },
+                        "distortionParams": []
+                    },
+                    {
+                        "intrinsicId": 2,
+                        "csvPrefixes": [
+                            "vlc_lf"
+                        ],
+                        "width": 640,
+                        "height": 480,
+                        "pxFocalLength": {
+                            "x": 448.189452,
+                            "y": 452.47809
+                        },
+                        "principalPoint": {
+                            "x": 320.0,
+                            "y": 240.0
+                        },
+                        "distortionParams": []
+                    },
+                    {
+                        "intrinsicId": 3,
+                        "csvPrefixes": [
+                            "vlc_rf"
+                        ],
+                        "width": 640,
+                        "height": 480,
+                        "pxFocalLength": {
+                            "x": 449.435779,
+                            "y": 453.332057
+                        },
+                        "principalPoint": {
+                            "x": 320.0,
+                            "y": 240.0
+                        },
+                        "distortionParams": []
+                    },
+                    {
+                        "intrinsicId": 4,
+                        "csvPrefixes": [
+                            "vlc_rr"
+                        ],
+                        "width": 640,
+                        "height": 480,
+                        "pxFocalLength": {
+                            "x": 450.301002,
+                            "y": 450.244147
+                        },
+                        "principalPoint": {
+                            "x": 320.0,
+                            "y": 240.0
+                        },
+                        "distortionParams": []
+                    }
+                ],
                 "outputSfMFormat": "COLMAP",
                 "verboseLevel": "info"
             },

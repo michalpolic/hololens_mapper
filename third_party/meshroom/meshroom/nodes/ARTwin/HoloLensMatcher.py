@@ -94,7 +94,7 @@ This node compute matches between all pairs of HoloLens rgb images.
             # 1) read the cameras 
             chunk.logger.info('Read camera info.')
             holo_io = HoloIO()
-            holo_cameras = holo_io.read_cameras(chunk.node.input.value + "/pv.csv")
+            holo_cameras = holo_io.read_hololens_csv(chunk.node.input.value + "/pv.csv")
 
             # 2) run matching
             chunk.logger.info('Start matching.')

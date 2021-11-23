@@ -232,9 +232,9 @@ class MeshroomIO:
                 xyz[1][count2] = float(pt_str[1])
                 xyz[2][count2] = float(pt_str[2])
                 if len(pt_str) >= 6:
-                    rgb[0][count2] = np.uint8(pt_str[3])
-                    rgb[1][count2]  = np.uint8(pt_str[4])
-                    rgb[2][count2] = np.uint8(pt_str[5])  
+                    rgb[0][count2] = np.uint8(float(pt_str[3]))
+                    rgb[1][count2]  = np.uint8(float(pt_str[4]))
+                    rgb[2][count2] = np.uint8(float(pt_str[5]))
                 else:
                     rgb[0][count2] = np.uint8(255)
                     rgb[1][count2]  = np.uint8(255)

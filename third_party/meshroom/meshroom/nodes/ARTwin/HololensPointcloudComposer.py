@@ -54,9 +54,9 @@ This node transform the depthmaps from hololens recording into one coordinate sy
     outputs = [
         desc.File(
             name="output",
-            label="Output Folder",
+            label="Output File",
             description="",
-            value=desc.Node.internalFolder,
+            value=desc.Node.internalFolder + "/model.obj",
             uid=[],
             ),
     ]
@@ -85,7 +85,7 @@ This node transform the depthmaps from hololens recording into one coordinate sy
             if not os.path.exists(chunk.node.output.value):
                 os.mkdir(chunk.node.output.value)
             chunk.logger.info('Saving model.obj')
-            holo_io.write_pointcloud_to_file(holo_xyz, chunk.node.output.value + "/model.obj")
+            holo_io.write_pointcloud_to_file(holo_xyz, chunk.node.output.value)
             chunk.logger.info('Hololens pointcloud composer is done.')
 
         except AssertionError as err:

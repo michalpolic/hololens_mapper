@@ -249,7 +249,7 @@ class ViewpointWrapper(QObject):
             self._undistortedImagePath = os.path.join(self._activeNode_PrepareDenseScene.node.output.value, filename)
         self.denseSceneParamsChanged.emit()
 
-    @Property(type=QObject, constant=True)
+    #@Property(type=QObject, constant=True)
     def attribute(self):
         """ Get the underlying Viewpoint attribute wrapped by this Viewpoint. """
         return self._viewpoint

@@ -62,7 +62,7 @@ class Mapper():
  
         # # 1) read dense pointcloud in world coordinates from HoloLens depthmaps 
         holo_io = HoloIO()
-        holo_cameras = holo_io.read_cameras(recoring_dir_abs + "/pv.csv")
+        holo_cameras = holo_io.read_hololens_csv(recoring_dir_abs + "/pv.csv")
         holo_xyz = holo_io.read_dense_pointcloud(recoring_dir_abs + "/long_throw_depth", uvdata_path_abs, recoring_dir_abs + "/long_throw_depth.csv", logger=logger) 
         # holo_io.write_pointcloud_to_file(holo_xyz, out_dir_abs + "/desk.obj")
 

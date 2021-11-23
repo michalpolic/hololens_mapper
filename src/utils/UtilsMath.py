@@ -9,6 +9,8 @@ import os
 import sys
 import multiprocessing as mp
 
+from src.holo.HoloIO import HoloIO
+
 sys.path.append(os.path.dirname(__file__) )
 import renderDepth
 
@@ -166,23 +168,110 @@ class UtilsMath:
         return visibility_xyz
 
 
-    def estimate_visibility(self, camera, images, xyz):
-        distance_threshold = 0.1
-        chunksize = mp.cpu_count()
+    def get_calibration_matrix(self, camera):
+        return np.matrix([[camera["f"], 0, camera["pp"][0]],[0, camera["f"], camera["pp"][1]],[0, 0, 1]])
+
+    def hash_points(self,  xyz, xyz_hash_scale = -1.):
+        new_xyz_mean = []
+        new_xyz_grid = []
+        ids_old_to_new_xyz = []
+        if xyz_hash_scale > 0:
+            xyz_hashed = np.round(xyz * xyz_hash_scale).astype(dtype=int)
+            for t in range(3):
+                index_array = np.argsort(xyz_hashed[2-t,::], kind='stable')
+                xyz = xyz[::,index_array]
+                xyz_hashed = xyz_hashed[::,index_array]
+
+            num_pts = 1.0
+            pt = xyz_hashed[::,0]
+            pt_sum = xyz[::,0]
+            j = 0
+            ids_old_to_new_xyz.append(j)
+            for i in range(1,np.shape(xyz_hashed)[1]):
+                if xyz_hashed[0,i] == pt[0] and xyz_hashed[1,i] == pt[1] and xyz_hashed[2,i] == pt[2]:
+                    num_pts += 1.0
+                    pt_sum += xyz[::,i]
+                else:
+                    new_pt = pt_sum / num_pts
+                    new_xyz_grid.append(float(xyz_hashed[0,i-1]) / float(xyz_hash_scale))
+                    new_xyz_grid.append(float(xyz_hashed[1,i-1]) / float(xyz_hash_scale))
+                    new_xyz_grid.append(float(xyz_hashed[2,i-1]) / float(xyz_hash_scale))
+                    new_xyz_mean.append(new_pt[0])
+                    new_xyz_mean.append(new_pt[1])
+                    new_xyz_mean.append(new_pt[2])
+                    
+                    j += 1
+                    num_pts = 1.0
+                    pt = xyz_hashed[::,i]
+                    pt_sum = xyz[::,i]
+                ids_old_to_new_xyz.append(j)
+
+            # add the last point
+            new_pt = pt_sum / num_pts
+            new_xyz_grid.append(float(xyz_hashed[0,-1]) / float(xyz_hash_scale))
+            new_xyz_grid.append(float(xyz_hashed[1,-1]) / float(xyz_hash_scale))
+            new_xyz_grid.append(float(xyz_hashed[2,-1]) / float(xyz_hash_scale))
+            new_xyz_mean.append(new_pt[0])
+            new_xyz_mean.append(new_pt[1])
+            new_xyz_mean.append(new_pt[2])
+
+            return (np.reshape(new_xyz_grid, (3,-1), order='F'), np.reshape(new_xyz_mean, (3,-1), order='F'), ids_old_to_new_xyz) 
+        else:
+            ids_old_to_new_xyz = renderDepth.get_ids(np.shape(xyz)[1])
+            return (xyz, xyz, ids_old_to_new_xyz)
+
+
+    def distance_to_radius_mapping(self, focal_length, xyz_hash_scale, min_distance_to_camera = 0.01):
+        if isinstance(focal_length, list):
+            if len(focal_length) > 1:
+                focal_length = (focal_length[0] + focal_length[1]) / 2
+            else:
+                focal_length = focal_length[0]
+        radius_world = 1/xyz_hash_scale
+
+        max_radius = np.round(focal_length * radius_world / (5*radius_world))
+        if int(max_radius % 2) != 1:
+            max_radius += 1
+        max_radius = int(max_radius)
+
+        radius_thresholds = []
+        for i in range(1, max_radius+2, 2):
+            d_i = focal_length * radius_world / i
+            d_i2 = focal_length * radius_world / (i+2)
+            radius_thresholds.append(0.5 * (d_i + d_i2))
+            radius_thresholds.append(i)
+        
+        return np.array(radius_thresholds).reshape((2,-1),order='F')
+
+
+    def estimate_visibility(self, cameras, images, xyz, xyz_hash_scale = -1, distance_threshold = 0.1, all_points = False):
+        # hash points
+        new_xyz_grid, new_xyz_mean, ids_old_to_new_xyz = self.hash_points(xyz, xyz_hash_scale)
+
+        # holoio = HoloIO()
+        # holoio.write_pointcloud_to_file(new_xyz_grid, "d:/tmp/hololens_mapper/pipelines/MeshroomCache/HoloLensIO/b18939407270cdb88931e57772a1383582c6a1c5/model_grid.obj" )
+        # holoio.write_pointcloud_to_file(new_xyz_mean, "d:/tmp/hololens_mapper/pipelines/MeshroomCache/HoloLensIO/b18939407270cdb88931e57772a1383582c6a1c5/model_mean.obj" )
+
+        # calculate projection scales
         t = np.array([[8.0, 5.6, 3.2, 0.8, 0],[1, 3, 5, 7, 9]])  # TODO: d1 / d * f ... px size for d, d1 is size of radius in space
 
-        # get visibility estimate
-        w = camera["width"]
-        h = camera["height"]
-        K = np.matrix([[camera["f"], 0, camera["pp"][0]],[0, camera["f"], camera["pp"][1]],[0, 0, 1]])
+        # hash cameras
+        cameras_hash = {}
+        for cam in cameras:
+            cameras_hash[cam["camera_id"]] = cam
+
         visibility_xyz = [] 
-        
         all_data = []
         for image in images:
-            all_data.append({"image_id": image["image_id"], "K": K, "R": image["R"], \
-                "C": image["C"], "h": h, "w": w, "xyz": xyz, "t": t, "dt": distance_threshold})
-        #test = self.estimate_visibility_for_image(all_data[0])
+            camera = cameras_hash[image["camera_id"]]
+            t = self.distance_to_radius_mapping(camera['f'], xyz_hash_scale)
+            all_data.append({"image_id": image["image_id"], \
+                "K": self.get_calibration_matrix(camera), "R": image["R"], \
+                "C": image["C"], "h": camera["height"], \
+                "w": camera["width"], "xyz": new_xyz_grid, "t": t, "dt": distance_threshold})
+        test = self.estimate_visibility_for_image(all_data[0])
 
+        chunksize = mp.cpu_count()
         with mp.Pool(chunksize) as pool:
             for ind, res in enumerate(pool.imap(self.estimate_visibility_for_image, all_data), chunksize):
                 for i in range(0,len(res)):

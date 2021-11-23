@@ -31,7 +31,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 logger.info('Loading HoloLens model.')
-holo_cameras, holo_images, holo_points3D = holo_io.load_model(recordingDir + "/pv.csv")
+holo_cameras, holo_images, holo_points3D = holo_io.load_pv_model(recordingDir + "/pv.csv")
 
 # logger.info('Loading dense pointcloud.')
 xyz, rgb = meshroom_io.load_vertices(inputPointcloud)  

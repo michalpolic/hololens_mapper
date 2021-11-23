@@ -294,7 +294,7 @@ class HoloIO:
             objfile.close()
             
 
-    def read_cameras(self, csv_file_path):
+    def read_hololens_csv(self, csv_file_path):
         """Read cameras parameters from CSV file
         Input: 
             csv_file_path - path where to save the pointcloud (ext. .obj)
@@ -305,7 +305,7 @@ class HoloIO:
         return self.parse_poseinfo_to_cameras(csv)
 
 
-    def load_model(self, csv_file_paths):
+    def load_pv_model(self, csv_file_paths):
         """Transform cameras parameters from CSV file into standard model structures
         Input: 
             csv_file_path - path where to save the pointcloud (ext. .obj)
@@ -314,9 +314,39 @@ class HoloIO:
             images - the Colmap structure with images info
             points3D - the Colmap structure with points in 3D
         """
-        cameras_dict = self.read_cameras(csv_file_paths)
+        cameras_dict = self.read_hololens_csv(csv_file_paths)
         cameras = self.get_hololens_camera()
         images = self.get_hololens_images(cameras_dict)
+        points3D = self.get_hololens_points3D()
+        
+        return (cameras, images, points3D)
+
+
+    def load_model(self, recording_dir, intrinsics):
+        """Transform cameras parameters from CSV file into standard model structures
+        Input: 
+            recording_dir - path hololens recording folder
+            intrinsics - information about cameras assumed in the model
+        Output: 
+            cameras - the Colmap structure with camera info
+            images - the Colmap structure with images info
+            points3D - the Colmap structure with points in 3D
+        """
+        if not recording_dir[-1] == '/':
+            recording_dir = recording_dir + '/'
+
+        cameras = []
+        images = []
+        image_id_from = 0
+        for camera_params in intrinsics:
+            cameras.append(self.get_hololens_camera_from_intrinsics(camera_params))
+
+            for csv_prefix in camera_params["csvPrefixes"]:
+                views_dict = self.read_hololens_csv(recording_dir + csv_prefix + ".csv")
+                images.extend(self.get_hololens_images(views_dict, \
+                    camera_id = camera_params["intrinsicId"], image_id = image_id_from))
+                image_id_from = images[-1]["image_id"] + 1
+
         points3D = self.get_hololens_points3D()
         
         return (cameras, images, points3D)
@@ -336,17 +366,45 @@ class HoloIO:
         camera['rd'] = [0., 0.]
         return camera
 
-    def get_hololens_images(self, cameras_dict):
-        """Create hololens images dict. with parameters from parsed pv.csv
+    def get_hololens_camera_from_intrinsics(self, intrinsics):
+        """Transform cameras parameters user input into COLMAP model structures
+        Input: 
+            intrinsics - information about one camera assumed in the model
+        Output: 
+            camera - the Colmap structure with camera info
+        """
+        camera = {}
+        camera['camera_id'] = int(intrinsics["intrinsicId"])
+        camera['width'] = int(intrinsics["width"])
+        camera['height'] = int(intrinsics["height"])
+        camera['f'] = [intrinsics["pxFocalLength"]["x"], intrinsics["pxFocalLength"]["y"]]
+        camera['pp'] = [intrinsics["principalPoint"]["x"], intrinsics["principalPoint"]["y"]]
+
+        if len(intrinsics["distortionParams"]) > 1:
+            camera['model'] = 'RADIAL'
+            camera['f'] = np.mean(camera['f'])
+            camera['rd'] = intrinsics["distortionParams"][0::2]
+        else:
+            camera['model'] = 'PINHOLE'
+            camera['rd'] = []
+
+        return camera
+
+
+    def get_hololens_images(self, cameras_dict, camera_id = 0, image_id = 0):
+        """Create hololens images dict. with parameters from parsed csv
+        Input: 
+            cameras_dict - list of parameters from csv file
+            camera_id - related camera id for all the views 
+            image_id - starting id of the view, used if more cameras loaded
         Output: 
             images - the Colmap structure with images parameters
         """
         images = []
-        image_id = 0
         for image_csv in cameras_dict.items():
             images.append({
                 'image_id': int(image_id),
-                'camera_id': int(0),
+                'camera_id': int(camera_id),
                 'R': image_csv[1]['R'],
                 'C': image_csv[1]['C'],
                 'name': image_csv[1]['file_path'],

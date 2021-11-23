@@ -4,9 +4,9 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
+            "HololensPointcloudComposer": "0.1",
             "KeyframeSelector": "0.1",
-            "HoloLensMatcher": "0.1",
-            "HololensPointcloudComposer": "0.1"
+            "HoloLensMatcher": "0.1"
         }
     },
     "graph": {
@@ -31,6 +31,32 @@
                 "verboseLevel": "info"
             },
             "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}//model.obj"
+            }
+        },
+        "HoloLensMatcher_1": {
+            "nodeType": "HoloLensMatcher",
+            "position": [
+                710,
+                -63
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "263e98c5d67690d73761febe69540fc5b1772f36"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "input": "{KeyframeSelector_1.output}",
+                "algorithm": "SIFT",
+                "clusteringRadius": 1,
+                "matchingTreshold": 10,
+                "verboseLevel": "info"
+            },
+            "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/"
             }
         },
@@ -46,40 +72,14 @@
                 "split": 1
             },
             "uids": {
-                "0": "14880f067a17587b2d7857e0bc2a218dee93563e"
+                "0": "2d3b4ef6ca10e78c6b74af6bfbeeb5863e7f1b37"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "recordingDir": "{HololensPointcloudComposer_1.recordingDir}",
-                "blurThreshold": 25.0,
-                "minFrameOffset": 13,
-                "copyCSVs": true,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
-        "HoloLensMatcher_1": {
-            "nodeType": "HoloLensMatcher",
-            "position": [
-                710,
-                -63
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "703b07820d07b728c89ba50772cee067ca5dc2e7"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "input": "{KeyframeSelector_1.output}",
-                "algorithm": "SIFT",
-                "clusteringRadius": 1,
-                "matchingTreshold": 10,
+                "pvBlurThreshold": 25.0,
+                "pvMinFrameOffset": 13,
+                "vlcMinFrameOffset": 30,
                 "verboseLevel": "info"
             },
             "outputs": {
