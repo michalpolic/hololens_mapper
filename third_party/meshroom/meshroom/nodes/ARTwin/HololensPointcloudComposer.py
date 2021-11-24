@@ -82,8 +82,6 @@ This node transform the depthmaps from hololens recording into one coordinate sy
                 chunk.node.UVfile.value, chunk.node.recordingDir.value + "/long_throw_depth.csv",
                 logger=chunk.logger) 
 
-            if not os.path.exists(chunk.node.output.value):
-                os.mkdir(chunk.node.output.value)
             chunk.logger.info('Saving model.obj')
             holo_io.write_pointcloud_to_file(holo_xyz, chunk.node.output.value)
             chunk.logger.info('Hololens pointcloud composer is done.')
