@@ -15,6 +15,7 @@ conda env create -f environment.yml
 
 # compile the C++ codes
 # renderDepth.cpp
-mkdir ./src/utils/renderDepth/build
-cd ./src/utils/renderDepth/build
+mkdir ./src/utils/srcRenderDepth/build
+cd ./src/utils/srcRenderDepth/build
+cmake ..
 cmake --build . --config Release --target install
