@@ -16,6 +16,7 @@ for i in range(6):
 sys.path.append(dir_path)
 from src.holo.HoloIO import HoloIO
 from src.meshroom.MeshroomIO import MeshroomIO
+from src.colmap.Colmap import Colmap
 from src.colmap.ColmapIO import ColmapIO
 from src.utils.UtilsMath import UtilsMath
 
@@ -160,11 +161,18 @@ different format.
 
             # estimate visibility
             utils_math = UtilsMath()
-            visibility_map = utils_math.estimate_visibility(cameras, images, xyz, \
+            visibility_map, new_xyz = utils_math.estimate_visibility(cameras, images, xyz, \
                 xyz_hash_scale = chunk.node.hashScale.value, all_points = chunk.node.allPoints.value)
 
+            # np.save(chunk.node.output.value + "/visibility_map.npy", visibility_map)
+            # np.save(chunk.node.output.value + "/new_xyz.npy", new_xyz)
+            # visibility_map = np.load(chunk.node.output.value + "/visibility_map.npy")
+            # new_xyz = np.load(chunk.node.output.value + "/new_xyz.npy")
+
             # save structures
+            colmap = Colmap()
             colmap_io = ColmapIO()
+            images, points3D = colmap.compose_images_and_points3D_from_visibilty(images, visibility_map, new_xyz)
             colmap_io.write_model(chunk.node.output.value, cameras, images, points3D)
 
             chunk.logger.info("Data are transformed.") 

@@ -24,12 +24,12 @@ class HoloIO:
         try:
             uvfile = open(uvdata_path, 'r')
             uvlines = uvfile.read().split("\n")
-            uvdata = [-np.ones((448,450)), -np.ones((448,450))]
+            uvdata = -np.ones((2*448,450))
             for line in uvlines:
                 if not "inf, inf" in line:
-                    parsed = re.findall('[0-9.]+', line)
-                    uvdata[0][int(parsed[0]), int(parsed[1])] = float(parsed[2])
-                    uvdata[1][int(parsed[0]), int(parsed[1])] = float(parsed[3])
+                    parsed = re.findall('[-0-9.]+', line)
+                    uvdata[int(parsed[0]), int(parsed[1])] = float(parsed[2])
+                    uvdata[int(parsed[0]) + 448, int(parsed[1])] = float(parsed[3])
         except:
             assert(False, "failed parsing the UV data file")
         finally:
@@ -96,7 +96,11 @@ class HoloIO:
                 'CameraProjectionTransform.m33,CameraProjectionTransform.m34,' + \
                 'CameraProjectionTransform.m41,CameraProjectionTransform.m42,' + \
                 'CameraProjectionTransform.m43,CameraProjectionTransform.m44\n')
-            list_of_rows = [f"{item}\n" for key, item in csv_dict.items()]
+
+            imgs_order = np.sort(np.array(list(map(int, csv_dict.keys()))))
+            list_of_rows = []
+            for img_id in imgs_order:
+                list_of_rows.append(f"{csv_dict[str(img_id).zfill(20)]}\n")
             csvfile.write(''.join(list_of_rows))
 
         except:
@@ -105,9 +109,7 @@ class HoloIO:
             csvfile.close()
 
 
-
-
-    def parse_poseinfo_to_cameras(self, poseinfo):
+    def parse_poseinfo_to_cameras(self, poseinfo, camera_type = 'pv'):
         """Rewrite each HoloLens camera parametes to standard format used in Hartley - MVG.
         Input: 
             poseinfo - dictionary camerainfo['name'] -> {array of camera parameters in HoloLens format}
@@ -124,8 +126,20 @@ class HoloIO:
                 D2C = np.matrix([float(num_str) for num_str in vals[25:41]]).reshape((4, 4)).T
                 D2O = np.matrix([float(num_str) for num_str in vals[9:25]]).reshape((4, 4)).T
                 O2D = np.linalg.inv(D2O)
-                Rt = np.diag([-1, 1, 1, 1]) * D2C * O2D
-                R = Rt[0:3, 0:3]
+
+                known_camera_type = False
+                if camera_type == 'pv':
+                    known_camera_type = True
+                    Rt = np.diag([1, -1, -1, 1]) * D2C * O2D
+
+                if camera_type == 'vlc':
+                    known_camera_type = True
+                    perm = np.matrix([[0, 1, 0, 0],[1, 0, 0, 0],[0, 0, -1, 0],[0, 0, 0, 1]])
+                    Rt = perm * D2C * O2D
+
+                assert known_camera_type, f"Unknown camera '{camera_type}' type in parse_poseinfo_to_cameras function."
+
+                R = np.linalg.det(Rt[0:3, 0:3]) * Rt[0:3, 0:3]
                 C = - R.T * Rt[0:3, 3]
                 cameras[k] = {
                     "id": view_id,
@@ -146,6 +160,7 @@ class HoloIO:
 
         return cameras
 
+
     def read_depthmap(self, params):   
         """Read and decode the depthmaps using the UV data.
         Input: 
@@ -160,7 +175,7 @@ class HoloIO:
         uvdata = params['uvdata']
         assert os.path.isfile(depthmap_path), f"the depthmaps file {depthmap_path} does not exist"
         assert ".pgm" in depthmap_path, f"the depthmaps file {depthmap_path} is in wrong format"
-        assert uvdata, "UV data are empty"
+        assert uvdata.any(), "UV data are empty"
 
         print(f'Reading depthmap {depthmap_path}')
 
@@ -180,13 +195,13 @@ class HoloIO:
             for i in range(0, 450):
                 for j in range(0, 448):
                     r = values[i, j]
-                    u = uvdata[0][j,i]
-                    v = uvdata[1][j,i]
+                    u = uvdata[j,i]
+                    v = uvdata[j+448,i]
                     if not r == 0 and not (u == -1 or v == -1):
-                        d = r / (math.sqrt(u * u + v * v + 1) * -1000)
-                        xyz1.append(d * u)
-                        xyz1.append(d * v)
-                        xyz1.append(d) 
+                        d = r / math.sqrt(u * u + v * v + 1)
+                        xyz1.append((d * u) / -1000)
+                        xyz1.append((d * v) / -1000)
+                        xyz1.append(d  / -1000) 
                         xyz1.append(1)
         except:
             assert False, "failed decoding depthmap file"
@@ -243,7 +258,7 @@ class HoloIO:
                 if ".pgm" in filename:
                     data.append({"timestamp": filename.split(".")[0], "depthmap_path": depthmaps_dir + filename, \
                         "uvdata": uvdata})
-            # test = self.read_depthmap(data[0])
+            #test = self.read_depthmap(data[0])
 
             with mp.Pool(chunksize) as pool:
                 for _, res in enumerate(pool.imap(self.read_depthmap, data), chunksize):
@@ -302,7 +317,13 @@ class HoloIO:
             cameras_dict - dictionary with camera parameters cameras_dict[name] = {params}
         """
         csv = self.read_csv(csv_file_path)
-        return self.parse_poseinfo_to_cameras(csv)
+        
+        camera_type = 'unknown'
+        if 'pv' in csv_file_path[-10::]:
+            camera_type = 'pv'
+        if 'vlc' in csv_file_path[-10::]:
+            camera_type = 'vlc'
+        return self.parse_poseinfo_to_cameras(csv, camera_type)
 
 
     def load_pv_model(self, csv_file_paths):
@@ -337,15 +358,13 @@ class HoloIO:
 
         cameras = []
         images = []
-        image_id_from = 0
         for camera_params in intrinsics:
             cameras.append(self.get_hololens_camera_from_intrinsics(camera_params))
 
             for csv_prefix in camera_params["csvPrefixes"]:
                 views_dict = self.read_hololens_csv(recording_dir + csv_prefix + ".csv")
                 images.extend(self.get_hololens_images(views_dict, \
-                    camera_id = camera_params["intrinsicId"], image_id = image_id_from))
-                image_id_from = images[-1]["image_id"] + 1
+                    camera_id = camera_params["intrinsicId"], image_id = len(images)))
 
         points3D = self.get_hololens_points3D()
         
@@ -383,7 +402,7 @@ class HoloIO:
         if len(intrinsics["distortionParams"]) > 1:
             camera['model'] = 'RADIAL'
             camera['f'] = np.mean(camera['f'])
-            camera['rd'] = intrinsics["distortionParams"][0::2]
+            camera['rd'] = intrinsics["distortionParams"][0:2]
         else:
             camera['model'] = 'PINHOLE'
             camera['rd'] = []

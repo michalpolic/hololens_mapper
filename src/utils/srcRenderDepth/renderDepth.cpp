@@ -114,8 +114,9 @@ py::array_t<double> get_ids(int n){
     return ids;
 }
 
-py::array_t<double> compose_visibility(int img_id, int width, int uv_length, py::array_t<double> uv, 
-    py::array_t<double> gtd, py::array_t<double> md, py::array_t<double> ptsids, double threshold){
+py::array_t<double> compose_visibility(int img_id, int width, 
+    int uv_length, py::array_t<double> uv, py::array_t<double> gtd,
+     py::array_t<double> md, py::array_t<double> ptsids, double threshold){
 
     // input
     auto uvbuf = uv.request();

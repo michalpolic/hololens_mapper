@@ -1,4 +1,5 @@
 import os
+import sys
 from ctypes import *
 import numpy as np
 import sqlite3
@@ -10,7 +11,7 @@ class Colmap():
     _colmap_container = None
     _utils_math = None
 
-    def __init__(self, colmap_container):
+    def __init__(self, colmap_container = None):
         """Init colmap object to run predefined commands"""
         self._colmap_container = colmap_container
         self._utils_math = UtilsMath()
@@ -170,3 +171,39 @@ class Colmap():
         con.close()
 
         return np.concatenate((keypoints1[corresp_ids[:,0],0:2], keypoints2[corresp_ids[:,1],0:2]), axis=1)
+
+    def compose_images_and_points3D_from_visibilty(self, images, visibility_map, new_xyz):
+        # find which points are seen from more than 2 viewpoints
+        used_points3D = np.zeros(np.shape(new_xyz)[1])
+        for i in range(0,len(visibility_map),4):
+            used_points3D[int(visibility_map[i])] += 1
+        valid_points3D = used_points3D > 1
+
+        points3D = []
+        ids_xyz_to_points3D = -np.ones(np.shape(new_xyz)[1], dtype=int)
+        for i in range(0,len(visibility_map),4):
+            if valid_points3D[int(visibility_map[i])]:
+                
+                # add point if not exist
+                if ids_xyz_to_points3D[int(visibility_map[i])] == -1:
+                    xyz = new_xyz[::,int(visibility_map[i])]
+                    ids_xyz_to_points3D[int(visibility_map[i])] = len(points3D)
+                    pt = {
+                        'point3D_id': len(points3D),
+                        'X': [xyz[0], xyz[1], xyz[2]],
+                        'rgb': [0, 0, 0],
+                        'err': 1,
+                        'img_pt': []
+                    }
+                    points3D.append(pt)
+                
+                # update observations of the point and image 
+                pt = points3D[ids_xyz_to_points3D[int(visibility_map[i])]]
+                image = images[int(visibility_map[i+1])] 
+                pt['img_pt'].append(image['image_id'])
+                pt['img_pt'].append(len(image['point3D_ids'])) 
+                image['uvs'].append(visibility_map[i+2])
+                image['uvs'].append(visibility_map[i+3])
+                image['point3D_ids'].append(pt['point3D_id'])
+        return (images, points3D)
+

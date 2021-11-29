@@ -128,9 +128,11 @@ class ColmapIO:
 
     def write_model(self, project_path, cameras, images, points3D):
         print('Write COLMAP model.')
+        if not project_path[-1] == '/':
+            project_path = project_path + '/' 
         self.write_cameras(project_path + "cameras.txt", cameras)
         self.write_images(project_path + "images.txt", images)
-        self.write_points(project_path + "points3D.txt", points3D)
+        self.write_points3D(project_path + "points3D.txt", points3D)
 
 
     def write_cameras(self, cameras_file_path, cameras):
@@ -142,7 +144,10 @@ class ColmapIO:
 
         for cam in cameras:
             params = [cam['camera_id'], cam['model'], cam['width'], cam['height']]
-            params.extend(cam['f'])
+            if isinstance(cam['f'], list):
+                params.extend(cam['f'])
+            else:
+                params.append(cam['f'])
             params.extend(cam['pp'])    
 
             known_camera_model = False
@@ -151,8 +156,7 @@ class ColmapIO:
             if cam['model'] == "RADIAL":
                 known_camera_model = True
                 params.extend(cam['rd'])
-            if not known_camera_model:
-                assert False, "Unsuported camera model"
+            assert known_camera_model, "Unsuported camera model"
             line = " ".join(map(str, params))
             cameras_file.write(line + "\n")
 
@@ -160,7 +164,7 @@ class ColmapIO:
     def write_images(self, images_file_path, images):
         mean_observations = 0
         if len(images) >= 0:
-            mean_observations = sum((len(img.point3D_ids) for img in images))/len(images)
+            mean_observations = sum((len(img['point3D_ids']) for img in images))/len(images)
 
         images_file = open(images_file_path, "w")
         images_file.write( \
@@ -171,13 +175,17 @@ class ColmapIO:
         
         utils_math = UtilsMath()
         for img in images:
-            params = [img["image_id"], utils_math.r2q(img["R"]), -img["R"]*img["C"], \
-                img["camera_id"], img["name"]]
+            params = [img["image_id"]]
+            R = img["R"]
+            params.extend(np.reshape(utils_math.r2q(R),-1).tolist()[0])
+            params.extend(np.reshape(-R*img["C"],-1).tolist()[0])
+            params.append(img["camera_id"])    
+            params.append(img["name"])
             line = " ".join(map(str, params))
             images_file.write(line + "\n")
 
             observations = []
-            for i in len(img["point3D_ids"]):
+            for i in range(len(img["point3D_ids"])):
                 observations.extend([img['uvs'][2*i], img['uvs'][2*i + 1], img['point3D_ids'][i]])
             line = " ".join(map(str, observations))
             images_file.write(line + "\n")
@@ -194,6 +202,6 @@ class ColmapIO:
             f"# Number of points: {len(points3D)}, mean track length: {mean_track_length}\n")
 
         for pt in points3D:
-            params = [pt["point3D_id"], pt["X"], pt["rgb"], pt["err"], pt['img_pt']]
+            params = [pt["point3D_id"], *pt["X"], *pt["rgb"], pt["err"], *pt['img_pt']]
             line = " ".join(map(str, params))
             points3D_file.write(line + "\n")

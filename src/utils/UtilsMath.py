@@ -115,19 +115,7 @@ class UtilsMath:
         return (xyz, rgb)
 
 
-    def estimate_visibility_for_image(self, data):
-        img_id = data["image_id"]
-        print(f'Estimate visibility for image: {img_id}')
-        K  = data["K"] 
-        R  = data["R"] 
-        C  = data["C"] 
-        h  = data["h"]
-        w  = data["w"]
-        xyz  = data["xyz"] 
-        t  = data["t"]
-        distance_threshold = data["dt"] 
-        visibility_xyz = [] 
-
+    def get_sorted_and_filtered_observations_and_depth(self, xyz, K, R, C, w, h):
         # project points
         uvl = K * R * (xyz - C)
         u = uvl[0,::] / uvl[2,::]
@@ -137,7 +125,7 @@ class UtilsMath:
 
         # get data in image
         filter = np.array(renderDepth.is_visible(h, w, np.shape(uv)[1], uv), dtype=np.bool8)
-        filter = filter & (np.array(uvl[2,:])[0] < 0)
+        filter = filter & (np.array(uvl[2,:])[0] > 0)
         depth_filtered = depth[filter]
         uv_filtered = uv[::,filter]
         xyz_filtered = xyz[::,filter]
@@ -151,25 +139,60 @@ class UtilsMath:
         uv_sorted = uv_filtered[::,depth_order]
         xyz_sorted = xyz_filtered[::,depth_order]
         xyz_ids_sorted = xyz_ids_filtered[depth_order]
+        
+        return (uv_sorted, depth_sorted, xyz_ids_sorted)
+
+
+    def estimate_visibility_for_image(self, data):
+        img_id = data["image_id"]
+        print(f'Estimate visibility for image: {img_id}')
+        K  = data["K"] 
+        R  = data["R"] 
+        C  = data["C"] 
+        h  = data["h"]
+        w  = data["w"]
+        xyz  = data["xyz"] 
+        new_xyz_grid =  data["new_xyz_grid"] 
+        new_xyz_mean =  data["new_xyz_mean"] 
+        ids_old_to_new_xyz =  data["ids_old_to_new_xyz"] 
+        t  = data["t"]
+        distance_threshold = data["dt"] 
+
+        # if all_points = True return visibility to all xyz, othervise new_xyz_mean
+        all_points = data["all_points"]  
+        visibility_xyz = [] 
 
         # run cpp to render visibility information
+        uv_sorted, depth_sorted, _ = self.get_sorted_and_filtered_observations_and_depth(new_xyz_grid, K, R, C, w, h)
         holo_depth_img = renderDepth.render(h, w, np.shape(uv_sorted)[1], np.shape(t)[1], \
                  uv_sorted.reshape(1,-1), depth_sorted, t.reshape(1,-1)) 
         
-        #  test
+        # #  debug output
         # holo_depth_img2 = holo_depth_img.reshape(h,w)
         # mdic = {"holo_depth_img": holo_depth_img2, "uv": uv_sorted, "depth": depth_sorted, "t": t}
-        # savemat("/local/artwin/mapping/codes/mapper/src/utils/renderDepth/matlab_matrix.mat", mdic)
-        
+        # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/debug/render_depth_{img_id}.mat", mdic)
+        # #  /debug output
+
+        if all_points:
+            uv_sorted, depth_sorted, xyz_ids_sorted = self.get_sorted_and_filtered_observations_and_depth(xyz, K, R, C, w, h)
+        else:
+            uv_sorted, depth_sorted, xyz_ids_sorted = self.get_sorted_and_filtered_observations_and_depth(new_xyz_mean, K, R, C, w, h)
+
         visibility_xyz = renderDepth.compose_visibility(int(img_id), w, np.shape(uv_sorted)[1], \
-            np.floor(uv_sorted).reshape(1,-1), depth_sorted, holo_depth_img, \
-            xyz_ids_sorted, distance_threshold)
+                np.floor(uv_sorted).reshape(1,-1), depth_sorted, holo_depth_img, \
+                xyz_ids_sorted, distance_threshold)
 
         return visibility_xyz
 
 
     def get_calibration_matrix(self, camera):
-        return np.matrix([[camera["f"], 0, camera["pp"][0]],[0, camera["f"], camera["pp"][1]],[0, 0, 1]])
+        focal_length = camera["f"]
+        if isinstance(focal_length, list):
+            if len(focal_length) > 1:
+                focal_length = (focal_length[0] + focal_length[1]) / 2
+            else:
+                focal_length = focal_length[0]
+        return np.matrix([[focal_length, 0, camera["pp"][0]],[0, focal_length, camera["pp"][1]],[0, 0, 1]])
 
     def hash_points(self,  xyz, xyz_hash_scale = -1.):
         new_xyz_mean = []
@@ -244,16 +267,13 @@ class UtilsMath:
         return np.array(radius_thresholds).reshape((2,-1),order='F')
 
 
-    def estimate_visibility(self, cameras, images, xyz, xyz_hash_scale = -1, distance_threshold = 0.1, all_points = False):
+    def estimate_visibility(self, cameras, images, xyz, xyz_hash_scale = -1, all_points = False):
         # hash points
         new_xyz_grid, new_xyz_mean, ids_old_to_new_xyz = self.hash_points(xyz, xyz_hash_scale)
 
         # holoio = HoloIO()
-        # holoio.write_pointcloud_to_file(new_xyz_grid, "d:/tmp/hololens_mapper/pipelines/MeshroomCache/HoloLensIO/b18939407270cdb88931e57772a1383582c6a1c5/model_grid.obj" )
-        # holoio.write_pointcloud_to_file(new_xyz_mean, "d:/tmp/hololens_mapper/pipelines/MeshroomCache/HoloLensIO/b18939407270cdb88931e57772a1383582c6a1c5/model_mean.obj" )
-
-        # calculate projection scales
-        t = np.array([[8.0, 5.6, 3.2, 0.8, 0],[1, 3, 5, 7, 9]])  # TODO: d1 / d * f ... px size for d, d1 is size of radius in space
+        # holoio.write_pointcloud_to_file(new_xyz_grid, "/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/model_grid.obj" )
+        # holoio.write_pointcloud_to_file(new_xyz_mean, "/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/model_mean.obj" )
 
         # hash cameras
         cameras_hash = {}
@@ -268,18 +288,19 @@ class UtilsMath:
             all_data.append({"image_id": image["image_id"], \
                 "K": self.get_calibration_matrix(camera), "R": image["R"], \
                 "C": image["C"], "h": camera["height"], \
-                "w": camera["width"], "xyz": new_xyz_grid, "t": t, "dt": distance_threshold})
-        test = self.estimate_visibility_for_image(all_data[0])
+                "w": camera["width"], "xyz": xyz, "new_xyz_grid": new_xyz_grid, \
+                "new_xyz_mean": new_xyz_mean, "ids_old_to_new_xyz": ids_old_to_new_xyz, \
+                "t": t, "dt": 1.1/xyz_hash_scale, "all_points": all_points})
+        # test = self.estimate_visibility_for_image(all_data[0])
+        # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/debug/data.mat", all_data[0])
 
         chunksize = mp.cpu_count()
         with mp.Pool(chunksize) as pool:
             for ind, res in enumerate(pool.imap(self.estimate_visibility_for_image, all_data), chunksize):
                 for i in range(0,len(res)):
                     visibility_xyz.append(res[i])       # pt3d_id = res[4*i + 0]    img_id = res[4*i + 1]    u = res[4*i + 2]    v = res[4*i + 3]
-                    
-        return visibility_xyz
 
-
-
-
-        
+        if all_points: 
+            return (visibility_xyz, xyz)
+        else:
+            return (visibility_xyz, new_xyz_mean)
