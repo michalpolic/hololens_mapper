@@ -4,9 +4,11 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "KeyframeSelector": "0.1",
+            "DensePointcloudFilter": "0.1",
+            "HoloLensIO": "0.1",
             "HololensPointcloudComposer": "0.1",
-            "HoloLensIO": "0.1"
+            "KeyframeSelector": "0.1",
+            "MatchingPairsSelector": "0.1"
         }
     },
     "graph": {
@@ -22,7 +24,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "9ec581b7dfdc6c6da24677dbc2057b6d71e687bd"
+                "0": "9d95bda95ee9c497fbd68bf647b7d059f82819db"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -46,7 +48,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "2d3b4ef6ca10e78c6b74af6bfbeeb5863e7f1b37"
+                "0": "9a17312c0296ba05ad265690ee0525336fdd2748"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -72,12 +74,12 @@
                 "split": 1
             },
             "uids": {
-                "0": "2ebf61aaed8b3576c89817f30a2f415198899b64"
+                "0": "82269a52f21f2ccf23c99da6956f277432da5099"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "recordingDir": "{KeyframeSelector_1.output}",
-                "pointcloudFile": "{HololensPointcloudComposer_1.output}",
+                "pointcloudFile": "{DensePointcloudFilter_1.output}",
                 "hashScale": 10,
                 "allPoints": false,
                 "intrinsics": [
@@ -118,7 +120,7 @@
                         },
                         "distortionParams": [
                             -0.03371,
-                            0.02360
+                            0.0236
                         ]
                     },
                     {
@@ -137,7 +139,7 @@
                             "y": 324.1116
                         },
                         "distortionParams": [
-                            -0.00717, 
+                            -0.00717,
                             0.00725
                         ]
                     },
@@ -157,7 +159,7 @@
                             "y": 320.1994
                         },
                         "distortionParams": [
-                            -0.0102, 
+                            -0.0102,
                             0.0194
                         ]
                     },
@@ -187,6 +189,57 @@
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "DensePointcloudFilter_1": {
+            "nodeType": "DensePointcloudFilter",
+            "position": [
+                65,
+                79
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "933b7ad41cecd8ec0753e9ba91c17d917a1cc711"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "densePointcloud": "{HololensPointcloudComposer_1.output}",
+                "neighbourDistance": 0.05,
+                "minNeighbours": 50,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}//model.obj"
+            }
+        },
+        "MatchingPairsSelector_1": {
+            "nodeType": "MatchingPairsSelector",
+            "position": [
+                425,
+                -12
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "f10a0e1a6f7ecbfe82010becbc05e838a84049ed"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "sfmFile": "{HoloLensIO_1.output}",
+                "inputSfMFormat": "COLMAP",
+                "outputSfMFormat": "COLMAP",
+                "minCommonPts": 200,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}//image_pairs.txt"
             }
         }
     }

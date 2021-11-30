@@ -110,6 +110,7 @@ This node compute matches between all pairs of HoloLens rgb images.
             colmap = Colmap(colmap_container)
             matcher = UtilsMatcher(chunk.node.algorithm.value, colmap)      # patch2pix / SuperGlue / SIFT
             
+            # colmap matches_importer --help
             if matcher._matcher_name == "SIFT":
                 chunk.logger.info('COLMAP --> compute SIFT features')
                 colmap.extract_features("/data/colmap/database.db", "/data/pv")     # COLMAP feature extractor

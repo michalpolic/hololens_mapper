@@ -15,6 +15,8 @@ class ColmapIO:
 
     def load_model(self, project_path):
         print('Reading colmap model.')
+
+        # TODO: use container and run this command only if needed
         os.system(f"colmap model_converter --input_path {project_path} --output_path {project_path} --output_type TXT") # TODO: use docker instead
         if not project_path[-1] == '/':
             project_path = project_path + '/'
@@ -31,7 +33,7 @@ class ColmapIO:
         file_reader = open(colmap_cams_file, 'r')
         data_lines = file_reader.read().split("\n")
         for line in data_lines:
-            if line[0] == "#":
+            if len(line) == 0 or line[0] == "#":
                 continue
             else:
                 p = line.split(" ")
@@ -205,3 +207,13 @@ class ColmapIO:
             params = [pt["point3D_id"], *pt["X"], *pt["rgb"], pt["err"], *pt['img_pt']]
             line = " ".join(map(str, params))
             points3D_file.write(line + "\n")
+
+    def save_image_pairs(self, out_file_path, images, view_graph, min_common_pts):
+        list_image_pairs = []
+        img_pair_ids = np.where(view_graph>min_common_pts)
+        for i in range(np.shape(img_pair_ids)[1]):
+           list_image_pairs.append(f"{images[img_pair_ids[0][i]]['name']} {images[img_pair_ids[1][i]]['name']}\n") 
+
+        out_file = open(out_file_path, "w")
+        out_file.write("".join(list_image_pairs))
+        out_file.close()

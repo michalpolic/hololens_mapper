@@ -37,11 +37,11 @@ class UtilsMath:
             col_id = np.argmax(nS)
             q = np.append([0], S[::,col_id] / nS[col_id])
         else:
-            r = np.sqrt(c)/2
-            q = np.matrix([[r],
-                [(R[2,1]-R[1,2])/r],
-                [(R[0,2]-R[2,0])/r],
-                [(R[1,0]-R[0,1])/r]])
+            r = np.sqrt(np.abs(c))/2
+            q = np.matrix([[r*r],
+                [(R[2,1]-R[1,2])],
+                [(R[0,2]-R[2,0])],
+                [(R[1,0]-R[0,1])]])
             q = q / np.linalg.norm(q, 2)
         return q
 
@@ -103,14 +103,14 @@ class UtilsMath:
         return colmap_cameras 
 
 
-    def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts, rgb = None):
+    def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts, rgb = []):
         print('Filter noise in dense pointcloud using KDtree.')
         xyzT = xyz.T
         point_tree = spatial.cKDTree(xyzT)
         num_neighbours = point_tree.query_ball_point(xyzT, radius, workers = -1, return_length = True)
         filter = [num_neighbours[i] > npts for i in range(np.shape(xyz)[1])]
         xyz = xyz[::,filter]
-        if rgb != None and rgb.any():
+        if rgb.any():
             rgb = rgb[::,filter]
         return (xyz, rgb)
 
@@ -304,3 +304,25 @@ class UtilsMath:
             return (visibility_xyz, xyz)
         else:
             return (visibility_xyz, new_xyz_mean)
+
+
+    def get_view_graph(self, images, points3D):
+        
+        # images may have any ids
+        images_to_ids = {}  
+        i = 0
+        for image in images: 
+            images_to_ids[image['image_id']] = i
+            i += 1
+
+        view_graph = np.zeros((i,i),dtype=int)
+        for pt in points3D:
+            pt_visible_in_images = list(map(int, pt['img_pt'][0::2]))
+
+            for i in range(len(pt_visible_in_images)):
+                image_id1 = images_to_ids[pt_visible_in_images[i]]
+                for j in range(i+1,len(pt_visible_in_images)):
+                    image_id2 = images_to_ids[pt_visible_in_images[j]]
+                    view_graph[image_id1, image_id2] += 1
+        
+        return (images_to_ids, view_graph)
