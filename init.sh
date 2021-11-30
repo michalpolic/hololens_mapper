@@ -12,10 +12,16 @@ fi
 
 # create common conda enviroment
 conda env create -f environment.yml
+conda activate meshroom
 
 # compile the C++ codes
-# renderDepth.cpp
 mkdir ./src/utils/srcRenderDepth/build
 cd ./src/utils/srcRenderDepth/build
+cmake ..
+cmake --build . --config Release --target install
+
+cd ../../../..
+mkdir ./src/meshroom/MeshroomCpp/build
+cd ./src/meshroom/MeshroomCpp/build
 cmake ..
 cmake --build . --config Release --target install

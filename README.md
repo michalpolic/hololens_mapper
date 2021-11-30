@@ -1,7 +1,13 @@
+Requirements (install in advance)
+* git
+* cmake 
+* conda
+* go
+* singularity (Linux) / docker (Windows)
 
-Init the enviroments required:
-* Install Singularity from https://sylabs.io/guides/3.0/user-guide/installation.html 
-* Run the initialization: "bash ./singularity/init.sh"
+Init the containers and conda enviroment:
+* Run the initialization: "sh ./init.sh"
 
 How to run: 
-* TOOD ..
+* conda activate meshroom
+
