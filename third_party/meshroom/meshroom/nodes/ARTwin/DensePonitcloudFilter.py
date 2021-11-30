@@ -64,7 +64,7 @@ This filter noise out of the dense pointcloud.
             name="output",
             label="Output folder",
             description="",
-            value=desc.Node.internalFolder,
+            value=desc.Node.internalFolder + "/model.obj",
             uid=[],
             ),
     ]
@@ -84,13 +84,8 @@ This filter noise out of the dense pointcloud.
             utils_math = UtilsMath()
 
             chunk.logger.info('Loading dense pointcloud.')
-            is_pointcloud_loaded = False 
-            if chunk.node.densePointcloud.value[-4::] == ".obj":
-                xyz, rgb = meshroom_io.load_obj_vertices(chunk.node.densePointcloud.value) 
-                is_pointcloud_loaded = True
-            if chunk.node.densePointcloud.value[-4::] == ".ply":
-                xyz, rgb = meshroom_io.load_ply_vertices(chunk.node.densePointcloud.value) 
-                is_pointcloud_loaded = True
+            xyz, rgb = meshroom_io.load_vertices(chunk.node.densePointcloud.value) 
+            is_pointcloud_loaded = True
 
             assert is_pointcloud_loaded, 'Failed to load dense pointcloud.'
 
@@ -100,7 +95,7 @@ This filter noise out of the dense pointcloud.
             
             chunk.logger.info('Saving filtered pointcloud.')
             holo_io.write_pointcloud_to_file(xyz_fitered, \
-                chunk.node.output.value + f"/filterd_pointcloud.obj", rgb = rgb_filterd)
+                chunk.node.output.value, rgb = rgb_filterd)
 
             chunk.logger.info('Dense poincloud filtering is done.') 
 
