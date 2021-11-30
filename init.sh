@@ -12,9 +12,18 @@ fi
 
 # create common conda enviroment
 conda env create -f environment.yml
+conda activate meshroom
 
 # compile the C++ codes
 # renderDepth.cpp
 mkdir ./src/utils/renderDepth/build
 cd ./src/utils/renderDepth/build
+cmake -D Python_EXECUTABLE=$(which python) -D pybind11_DIR="$(conda info --json | jq -r '.active_prefix')/share/cmake/pybind11" ..
 cmake --build . --config Release --target install
+
+cd ../../../..
+mkdir ./src/meshroom/MeshroomCpp/build
+cd ./src/meshroom/MeshroomCpp/build
+cmake -D Python_EXECUTABLE=$(which python) -D pybind11_DIR="$(conda info --json | jq -r '.active_prefix')/share/cmake/pybind11" ..
+cmake --build . --config Release --target install
+

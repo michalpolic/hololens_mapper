@@ -12,9 +12,8 @@ set(CMAKE_INSTALL_PREFIX CMAKE_SOURCE_DIR)
 #add_library(renderDepth STATIC renderDepth.cpp)
 #set_target_properties(renderDepth PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-set(pybind11_DIR "~/anaconda3/envs/patch2pix/share/cmake/pybind11")
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
+find_package(pybind11 CONFIG REQUIRED PATHS ${pybind11_DIR} NO_DEFAULT_PATH)
 pybind11_add_module(renderDepth renderDepth.cpp)
 #target_link_libraries(pymodule PRIVATE renderDepth)
 

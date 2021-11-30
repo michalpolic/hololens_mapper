@@ -28,3 +28,5 @@ dependencies:
       - enum34
       - markdown==2.6.11
       - requests==2.22.0
+      - pybind11==2.8.1
+
