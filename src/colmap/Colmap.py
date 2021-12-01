@@ -205,5 +205,8 @@ class Colmap():
                 image['uvs'].append(visibility_map[i+2])
                 image['uvs'].append(visibility_map[i+3])
                 image['point3D_ids'].append(pt['point3D_id'])
+                points3D[ids_xyz_to_points3D[int(visibility_map[i])]] = pt
+                images[int(visibility_map[i+1])] = image
+
         return (images, points3D)
 

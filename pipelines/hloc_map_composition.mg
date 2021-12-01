@@ -4,11 +4,12 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "DensePointcloudFilter": "0.1",
-            "HoloLensIO": "0.1",
+            "HoloLensMatcher": "0.1",
             "HololensPointcloudComposer": "0.1",
-            "KeyframeSelector": "0.1",
-            "MatchingPairsSelector": "0.1"
+            "DensePointcloudFilter": "0.1",
+            "MatchingPairsSelector": "0.1",
+            "HoloLensIO": "0.1",
+            "KeyframeSelector": "0.1"
         }
     },
     "graph": {
@@ -24,11 +25,11 @@
                 "split": 1
             },
             "uids": {
-                "0": "9d95bda95ee9c497fbd68bf647b7d059f82819db"
+                "0": "2515b305bff1798c84d39d372e77474ce5f147c8"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "recordingDir": "/local1/projects/artwin/datasets/Munich/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1",
+                "recordingDir": "D:/tmp/HoloLensRecordingKitchen/HoloLensRecording__2021_11_25__15_04_34",
                 "UVfile": "/local1/projects/artwin/datasets/uvdata.txt",
                 "verboseLevel": "info"
             },
@@ -48,12 +49,12 @@
                 "split": 1
             },
             "uids": {
-                "0": "9a17312c0296ba05ad265690ee0525336fdd2748"
+                "0": "760f02eefac2ca31a1e20f53432e607600026f48"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "recordingDir": "{HololensPointcloudComposer_1.recordingDir}",
-                "pvBlurThreshold": 25.0,
+                "pvBlurThreshold": 15.0,
                 "pvMinFrameOffset": 5,
                 "vlcMinFrameOffset": 5,
                 "verboseLevel": "info"
@@ -66,7 +67,7 @@
             "nodeType": "HoloLensIO",
             "position": [
                 242,
-                4
+                32
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -74,7 +75,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "82269a52f21f2ccf23c99da6956f277432da5099"
+                "0": "3e5fc98a6951be77f35933c3b7f439b16ae01f34"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -203,7 +204,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "933b7ad41cecd8ec0753e9ba91c17d917a1cc711"
+                "0": "6257f5992987038600847364de0e2a123a6d6e05"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -219,8 +220,8 @@
         "MatchingPairsSelector_1": {
             "nodeType": "MatchingPairsSelector",
             "position": [
-                425,
-                -12
+                422,
+                36
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -228,7 +229,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "f10a0e1a6f7ecbfe82010becbc05e838a84049ed"
+                "0": "50954840f0ca6869e5a2e8ded5c45d11bdfe95d4"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -240,6 +241,32 @@
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}//image_pairs.txt"
+            }
+        },
+        "HoloLensMatcher_1": {
+            "nodeType": "HoloLensMatcher",
+            "position": [
+                613,
+                -30
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "1e6610b426bd32aad0984ff9f2af4a07e700a844"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "input": "{KeyframeSelector_1.output}",
+                "algorithm": "SIFT",
+                "clusteringRadius": 1,
+                "matchingTreshold": 10,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
             }
         }
     }

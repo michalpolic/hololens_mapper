@@ -2,6 +2,7 @@ __pycache__*/
 build*/
 tmp*/
 *.so
+*.pyd
 *.sif
 launch.json
 settings.json

@@ -139,7 +139,7 @@ class HoloIO:
 
                 assert known_camera_type, f"Unknown camera '{camera_type}' type in parse_poseinfo_to_cameras function."
 
-                R = np.linalg.det(Rt[0:3, 0:3]) * Rt[0:3, 0:3]
+                R = Rt[0:3, 0:3]
                 C = - R.T * Rt[0:3, 3]
                 cameras[k] = {
                     "id": view_id,
@@ -285,7 +285,7 @@ class HoloIO:
         return wold_xyz
 
 
-    def write_pointcloud_to_file(self, xyz, file_path, rgb = []):
+    def write_pointcloud_to_file(self, xyz, file_path, rgb = np.array(0)):
         """Write dense pointcloud into file.
         Input: 
             xyz - dense pointcloud

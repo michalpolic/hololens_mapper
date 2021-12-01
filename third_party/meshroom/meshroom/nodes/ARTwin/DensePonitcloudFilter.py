@@ -85,9 +85,6 @@ This filter noise out of the dense pointcloud.
 
             chunk.logger.info('Loading dense pointcloud.')
             xyz, rgb = meshroom_io.load_vertices(chunk.node.densePointcloud.value) 
-            is_pointcloud_loaded = True
-
-            assert is_pointcloud_loaded, 'Failed to load dense pointcloud.'
 
             chunk.logger.info('Filtering dnese pointcloud.')
             xyz_fitered, rgb_filterd = utils_math.filter_dense_pointcloud_noise_KDtree(xyz, \
