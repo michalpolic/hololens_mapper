@@ -115,8 +115,11 @@ std::string encode_structure(int num_xyz, int num_visibility_map_records,
     py::print(std::string("Composing obs. for points in 3D ... 100 proc").c_str());
 
     py::print(std::string("Num. of images: " + std::to_string(max_img_id)).c_str());
-    std::map<std::string, int> images_obs[max_img_id+1];
-    int images_obs_max[max_img_id+1] = { 0 };
+    std::vector<std::map<std::string, int>> images_obs;
+    images_obs.reserve(max_img_id+1);
+    int *images_obs_max = (int*) malloc(sizeof(int) * (max_img_id+1));
+    std::memset(images_obs_max, 0, sizeof(int) * (max_img_id+1));
+
     proc = 0;
     for (int i = 0; i < num_visibility_map_records; ++i){
         if (proc < int((double(i) / double(num_visibility_map_records))*100)){
@@ -127,6 +130,7 @@ std::string encode_structure(int num_xyz, int num_visibility_map_records,
         images_obs[img_id][get_obs_hash(int(vmap_ptr[4*i+2]),int(vmap_ptr[4*i+3]))] = images_obs_max[img_id];
         images_obs_max[img_id] = images_obs_max[img_id] + 1;
     }
+    free(images_obs_max);
     py::print(std::string("Composing unique obs. ids ... 100 proc").c_str());
     
 
