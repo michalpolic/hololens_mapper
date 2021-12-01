@@ -37,12 +37,12 @@ class UtilsMath:
             col_id = np.argmax(nS)
             q = np.append([0], S[::,col_id] / nS[col_id])
         else:
-            r = np.sqrt(np.abs(c))/2
-            q = np.matrix([[r*r],
-                [(R[2,1]-R[1,2])],
-                [(R[0,2]-R[2,0])],
-                [(R[1,0]-R[0,1])]])
-            q = q / np.linalg.norm(q, 2)
+            r = np.sqrt(np.abs(c))
+            q = np.matrix([[r/2],
+                [(R[2,1]-R[1,2])/r/2],
+                [(R[0,2]-R[2,0])/r/2],
+                [(R[1,0]-R[0,1])/r/2]])
+        q = q / np.linalg.norm(q, 2)
         return q
 
     def extract_camera_name(self, cameara_path):
@@ -103,7 +103,7 @@ class UtilsMath:
         return colmap_cameras 
 
 
-    def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts, rgb = []):
+    def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts, rgb = np.array(0)):
         print('Filter noise in dense pointcloud using KDtree.')
         xyzT = xyz.T
         point_tree = spatial.cKDTree(xyzT)
