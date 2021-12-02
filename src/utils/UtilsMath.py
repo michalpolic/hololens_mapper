@@ -141,7 +141,7 @@ class UtilsMath:
         depth_filtered = depth[filter]
         uv_filtered = uv[::,filter]
         xyz_filtered = xyz[::,filter]
-        xyz_ids = renderDepth.get_ids(np.shape(uv)[1])
+        xyz_ids = np.arange(np.shape(uv)[1], dtype=np.float64)
 
         xyz_ids_filtered = xyz_ids[filter]
         
@@ -217,7 +217,7 @@ class UtilsMath:
 
             return (np.reshape(new_xyz_grid, (3,-1), order='F'), np.reshape(new_xyz_mean, (3,-1), order='F'), ids_old_to_new_xyz) 
         else:
-            ids_old_to_new_xyz = renderDepth.get_ids(np.shape(xyz)[1])
+            ids_old_to_new_xyz = np.arange(np.shape(xyz)[1], dtype=np.float64)
             return (xyz, xyz, ids_old_to_new_xyz)
 
 
