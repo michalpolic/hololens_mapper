@@ -6,9 +6,8 @@ channels:
 dependencies:
   - python=3.7
   - cudatoolkit=10.2
-  - pytorch  
-  - torchvision 
-  - pybind11
+  - pytorch
+  - torchvision
   - pip  
   - pip:
       - PyQt5==5.15.0
@@ -16,7 +15,6 @@ dependencies:
       - opencv-python==4.3.0.36
       - PySide2==5.14.1
       - matplotlib>=3.1.3
-      - jupyter
       - scipy
       - pillow>=6.0.0
       - numpy>=1.18.1
@@ -29,4 +27,8 @@ dependencies:
       - markdown==2.6.11
       - requests==2.22.0
       - pybind11==2.8.1
+  # Debugging & development
+  - jedi-language-server=0.34.11
+  - jupyterlab-lsp=3.9.1
+  - jupyterlab=3.2.4
 

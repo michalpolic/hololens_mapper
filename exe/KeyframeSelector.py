@@ -2,11 +2,11 @@ import os
 import sys
 import logging
 import shutil
+from pathlib import Path
 
 # import mapper packages
-dir_path = __file__
-dir_path = os.path.dirname(dir_path)
-sys.path.append(dir_path)
+root = Path(__file__).resolve().parent.parent
+sys.path.append(str(root))
 from src.holo.HoloIO import HoloIO
 from src.utils.UtilsKeyframes import UtilsKeyframes
 
