@@ -118,15 +118,15 @@ class UtilsMath:
     def estimate_visibility_for_image(self, data):
         img_id = data["image_id"]
         print(f'Estimate visibility for image: {img_id}')
-        K  = data["K"] 
-        R  = data["R"] 
-        C  = data["C"] 
+        K  = data["K"]
+        R  = data["R"]
+        C  = data["C"]
         h  = data["h"]
         w  = data["w"]
-        xyz  = data["xyz"] 
+        xyz  = data["xyz"]
         t  = data["t"]
-        distance_threshold = data["dt"] 
-        visibility_xyz = [] 
+        distance_threshold = data["dt"]
+        visibility_xyz = []
 
         # project points
         uvl = K * R * (xyz - C)
@@ -260,7 +260,7 @@ class UtilsMath:
         for cam in cameras:
             cameras_hash[cam["camera_id"]] = cam
 
-        visibility_xyz = [] 
+        visibility_xyz = []
         all_data = []
         for image in images:
             camera = cameras_hash[image["camera_id"]]

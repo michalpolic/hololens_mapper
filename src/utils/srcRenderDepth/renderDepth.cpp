@@ -70,7 +70,7 @@ py::array_t<double> render(int img_height, int img_width, int uv_length, int t_l
     }
 
     // save the output
-    return img;
+    return img.reshape({img_height, img_width});
 }
 
 

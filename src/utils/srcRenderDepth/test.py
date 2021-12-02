@@ -16,4 +16,4 @@ t_length = np.shape(t)[1]
 
 
 res = renderDepth.render(img_height, img_width, uv_length, t_length, uv.reshape(1,-1), d, t.reshape(1,-1))
-print(res.reshape(img_height, img_width))
+print(res)
