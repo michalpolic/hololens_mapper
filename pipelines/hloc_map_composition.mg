@@ -4,11 +4,11 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "HoloLensMatcher": "0.1",
             "HololensPointcloudComposer": "0.1",
-            "DensePointcloudFilter": "0.1",
-            "MatchingPairsSelector": "0.1",
             "HoloLensIO": "0.1",
+            "DensePointcloudFilter": "0.1",
+            "HoloLensMatcher": "0.1",
+            "MatchingPairsSelector": "0.1",
             "KeyframeSelector": "0.1"
         }
     },
@@ -220,8 +220,8 @@
         "MatchingPairsSelector_1": {
             "nodeType": "MatchingPairsSelector",
             "position": [
-                422,
-                36
+                418,
+                70
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -246,8 +246,8 @@
         "HoloLensMatcher_1": {
             "nodeType": "HoloLensMatcher",
             "position": [
-                613,
-                -30
+                584,
+                -40
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -255,11 +255,13 @@
                 "split": 1
             },
             "uids": {
-                "0": "1e6610b426bd32aad0984ff9f2af4a07e700a844"
+                "0": "ae988a0648a03c4d3331aa17b7bab9ed629b6be0"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "input": "{KeyframeSelector_1.output}",
+                "colmapSfM": "{HoloLensIO_1.output}",
+                "imagesFolder": "{KeyframeSelector_1.output}",
+                "imagePairs": "{MatchingPairsSelector_1.output}",
                 "algorithm": "SIFT",
                 "clusteringRadius": 1,
                 "matchingTreshold": 10,

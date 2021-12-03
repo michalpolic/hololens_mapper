@@ -21,12 +21,17 @@ class Colmap():
             {"database_path": database_path, 
             "image_path": image_path,
             "ImageReader.camera_model": "RADIAL",
-            "ImageReader.single_camera": 1
+            "ImageReader.single_camera_per_folder": 1
             })
 
     def exhaustive_matcher(self, database_path):
         self._colmap_container.command_dict("colmap exhaustive_matcher", 
             {"database_path": database_path})
+
+    def custom_matching(self, database_path, match_list_path):
+        self._colmap_container.command_dict("colmap matches_importer", 
+            {"database_path": database_path,
+            "match_list_path": match_list_path})
 
     def mapper(self, database_path, image_path, output_path):
         self._colmap_container.command_dict("colmap mapper", 
@@ -36,10 +41,10 @@ class Colmap():
             "Mapper.min_model_size": 5
             })
 
-    def prepare_database(self, data_dir, database_path):
-        if os.path.exists(data_dir + database_path):
-            os.remove(data_dir + database_path)
-        self._colmap_container.command_dict("colmap database_creator", {"database_path": "/data" + database_path})
+    def prepare_database(self, physical_database_path, container_database_path):
+        if os.path.exists(physical_database_path):
+            os.remove(physical_database_path)
+        self._colmap_container.command_dict("colmap database_creator", {"database_path": container_database_path})
 
     def insert_pv_camera_into_database(self, database_path):   # use predefined parameters
         con = sqlite3.connect(database_path)

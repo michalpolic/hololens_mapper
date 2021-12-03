@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import re
 import multiprocessing as mp
+from distutils.dir_util import copy_tree
 
 import numpy as np
 
@@ -440,6 +441,21 @@ class HoloIO:
         """
         points3D = []
         return points3D
+
+    def copy_sfm_images(self, source_dir, destination_dir, \
+        imgs_dir_list = ["pv", "vlc_ll", "vlc_lf", "vlc_rf", "vlc_rr"]):
+        
+        if not source_dir[-1] == '/':
+            source_dir = source_dir + '/'
+        if not destination_dir[-1] == '/':
+            destination_dir = destination_dir + '/'
+        
+        for imgs_dir in imgs_dir_list:
+            if os.path.isdir(source_dir + imgs_dir):
+                copy_tree(source_dir + imgs_dir, destination_dir + imgs_dir)   
+        
+
+
 
 
 

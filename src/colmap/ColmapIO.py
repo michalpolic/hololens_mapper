@@ -17,7 +17,7 @@ class ColmapIO:
         print('Reading colmap model.')
 
         # TODO: use container and run this command only if needed
-        os.system(f"colmap model_converter --input_path {project_path} --output_path {project_path} --output_type TXT") # TODO: use docker instead
+        # os.system(f"colmap model_converter --input_path {project_path} --output_path {project_path} --output_type TXT") # TODO: use docker instead
         if not project_path[-1] == '/':
             project_path = project_path + '/'
         self._project_path = project_path
@@ -37,26 +37,27 @@ class ColmapIO:
                 continue
             else:
                 p = line.split(" ")
-                camera_dict['camera_id'] = int(p[0])
-                camera_dict['model'] = p[1]
-                camera_dict['width'] = int(p[2])
-                camera_dict['height'] = int(p[3])
+                camera = {}
+                camera['camera_id'] = int(p[0])
+                camera['model'] = p[1]
+                camera['width'] = int(p[2])
+                camera['height'] = int(p[3])
                 
                 known_camera_model = False
-                if camera_dict['model'] == "PINHOLE":
+                if camera['model'] == "PINHOLE":
                     known_camera_model = True
-                    camera_dict['f'] = [float(p[4]), float(p[5])]
-                    camera_dict['pp'] = [float(p[6]), float(p[7])]
-                    camera_dict['rd'] = []
+                    camera['f'] = [float(p[4]), float(p[5])]
+                    camera['pp'] = [float(p[6]), float(p[7])]
+                    camera['rd'] = []
 
-                if camera_dict['model'] == "RADIAL":
+                if camera['model'] == "RADIAL":
                     known_camera_model = True
-                    camera_dict['f'] = float(p[4])
-                    camera_dict['pp'] = [float(p[5]), float(p[6])]
-                    camera_dict['rd'] = [float(p[7]), float(p[8])]
+                    camera['f'] = float(p[4])
+                    camera['pp'] = [float(p[5]), float(p[6])]
+                    camera['rd'] = [float(p[7]), float(p[8])]
 
-                if not known_camera_model:
-                    assert False, "Unsuported camera model"
+                assert known_camera_model, "Unsuported camera model"                
+                camera_dict[camera['camera_id']] = camera
                 
         return camera_dict
 

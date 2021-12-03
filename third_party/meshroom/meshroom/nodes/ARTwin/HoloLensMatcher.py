@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from src.holo.HoloIO import HoloIO
+
 __version__ = "0.1"
 
 from meshroom.core import desc
@@ -8,14 +10,13 @@ import glob
 import os
 import sys
 from pathlib import Path
-from distutils.dir_util import copy_tree
 
 # import mapper packages
 dir_path = __file__
 for i in range(6):
     dir_path = os.path.dirname(dir_path)
 sys.path.append(dir_path)
-from src.holo.HoloIO import HoloIO
+from src.colmap.ColmapIO import ColmapIO
 from src.colmap.Colmap import Colmap
 from src.utils.UtilsContainers import UtilsContainers
 from src.utils.UtilsMatcher import UtilsMatcher
@@ -29,9 +30,25 @@ This node compute matches between all pairs of HoloLens rgb images.
 
     inputs = [
         desc.File(
-            name="input",
-            label="Recording directory",
-            description="The directory containing input images in /pv folder",
+            name="colmapSfM",
+            label="Colmap SfM",
+            description="The directory containing input camera poses " \
+                "saved in COLMAP SfM format.",
+            value="",
+            uid=[0],
+        ),
+        desc.File(
+            name="imagesFolder",
+            label="Directory with images",
+            description="The directory containing input images in /pv and /vlc_* folders",
+            value="",
+            uid=[0],
+        ),
+        desc.File(
+            name="imagePairs",
+            label="Image pairs to match",
+            description="File with image names to match. " \
+                "Each image pair is on one line, e.g. img1 img2.",
             value="",
             uid=[0],
         ),
@@ -85,47 +102,59 @@ This node compute matches between all pairs of HoloLens rgb images.
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             
-            if not chunk.node.input:
-                chunk.logger.warning('Nothing to process')
+            if not chunk.node.colmapSfM:
+                chunk.logger.warning('COLMAP SfM directory is missing.')
                 return
+            if not chunk.node.imagesFolder:
+                chunk.logger.warning('Folder with images is missing.')
+                return
+            if not chunk.node.imagePairs.value:
+                chunk.logger.info('Image pairs missing, all pairs will be assumed.')
             if not chunk.node.output.value:
                 return
 
-            # 1) read the cameras 
-            chunk.logger.info('Read camera info.')
-            holo_io = HoloIO()
-            holo_cameras = holo_io.read_hololens_csv(chunk.node.input.value + "/pv.csv")
+            # 1) read the cameras / copy images to working directory
+            colmap_io = ColmapIO()
+            chunk.logger.info("Loading HoloLens model.")
+            cameras, images, points3D = colmap_io.load_model(chunk.node.colmapSfM.value)
 
-            # 2) run matching
             chunk.logger.info('Start matching.')
             out_dir = chunk.node.output.value
-            Path(out_dir + "/colmap/sparse").mkdir(parents=True, exist_ok=True)
-            copy_tree(chunk.node.input.value, out_dir)
+            holo_io = HoloIO()
+            holo_io.copy_sfm_images(chunk.node.imagesFolder.value, out_dir)
 
+
+            # 2) run matching
             chunk.logger.info('Init COLMAP container')
             if sys.platform == 'win32':
-                colmap_container = UtilsContainers("docker", "uodcvip/colmap", "/data/" + out_dir.replace(":",""))
+                out_dir = out_dir[0].lower() + out_dir[1::]
+                colmap_container = UtilsContainers("docker", "uodcvip/colmap", "/host_mnt/" + out_dir.replace(":",""))
             else:
                 colmap_container = UtilsContainers("singularity", dir_path + "/colmap.sif", out_dir)
             colmap = Colmap(colmap_container)
-            matcher = UtilsMatcher(chunk.node.algorithm.value, colmap)      # patch2pix / SuperGlue / SIFT
+            matcher = UtilsMatcher(chunk.node.algorithm.value, colmap)          # patch2pix / SuperGlue / SIFT
             
             # colmap matches_importer --help
             if matcher._matcher_name == "SIFT":
                 chunk.logger.info('COLMAP --> compute SIFT features')
-                colmap.extract_features("/data/colmap/database.db", "/data/pv")     # COLMAP feature extractor
-                chunk.logger.info('COLMAP --> exhaustive matching')
-                colmap.exhaustive_matcher("/data/colmap/database.db")               # COLMAP matcher
+                colmap.prepare_database(out_dir + "database.db", "/data/database.db")
+                colmap.extract_features("/data/database.db", "/data")           # COLMAP feature extractor
+                if not chunk.node.imagePairs.value:
+                    chunk.logger.info('COLMAP --> exhaustive matching')
+                    colmap.exhaustive_matcher("/data/database.db")               # COLMAP matcher
+                else:
+                    chunk.logger.info('COLMAP --> exhaustive matching of imported image pairs')
+                    colmap.custom_matching("/data/database.db", chunk.node.imagePairs.value)
 
             chunk.logger.info('Matcher --> run hololens matching')
-            obs_for_images, matches = matcher.holo_matcher(out_dir + "/pv", holo_cameras, 
+            obs_for_images, matches = matcher.holo_matcher(out_dir + "/pv", images, 
                 database_path = out_dir + "/colmap/database.db", radius = chunk.node.clusteringRadius.value, 
                 err_threshold = chunk.node.matchingTreshold.value)    
             
             chunk.logger.info('Save matches into database')
             colmap.save_matches_into_database(out_dir, "/colmap/database.db", 
-                holo_cameras, matches, obs_for_images)
-            chunk.logger.info('Matches saved into database.')    
+                images, matches, obs_for_images)
+            chunk.logger.info('Matches saved into database.')
           
         except AssertionError as err:
             chunk.logger.error("Error in keyframe selector: " + err)
