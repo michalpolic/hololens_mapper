@@ -136,14 +136,13 @@ class UtilsMath:
         depth = np.linalg.norm(xyz - C, axis=0)
 
         # get data in image
-        filter = np.array(renderDepth.is_visible(h, w, np.shape(uv)[1], uv), dtype=np.bool8)
-        filter = filter & (np.array(uvl[2,:])[0] < 0)
-        depth_filtered = depth[filter]
-        uv_filtered = uv[::,filter]
-        xyz_filtered = xyz[::,filter]
+        f = renderDepth.is_visible(h, w, uv) & (np.array(uvl[2,:])[0] < 0)
+        depth_filtered = depth[f]
+        uv_filtered = uv[:, f]
+        xyz_filtered = xyz[:, f]
         xyz_ids = np.arange(np.shape(uv)[1], dtype=np.float64)
 
-        xyz_ids_filtered = xyz_ids[filter]
+        xyz_ids_filtered = xyz_ids[f]
         
         # sort points wrt. depth
         depth_order = np.flip(np.argsort(depth_filtered))

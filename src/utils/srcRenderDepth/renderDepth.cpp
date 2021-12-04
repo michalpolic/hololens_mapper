@@ -74,22 +74,23 @@ py::array_t<double> render(int img_height, int img_width, int uv_length, int t_l
 }
 
 
-py::array_t<double> is_visible(int img_height, int img_width, int uv_length, py::array_t<double> uv){
+py::array_t<bool> is_visible(int img_height, int img_width, py::array_t<double, py::array::c_style> uv){
 
     // input
     auto uvbuf = uv.request();
-    double *uvptr = (double *) uvbuf.ptr;
+    auto uvptr = (double *) uvbuf.ptr;
+    auto uv_length = uvbuf.shape[1];
 
     // output
-    py::array_t<double> visible(uv_length);
+    py::array_t<bool> visible(uv_length);
     auto visiblebuf = visible.request();
-    double *visibleptr = (double *) visiblebuf.ptr;
+    auto visibleptr = (bool *) visiblebuf.ptr;
 
     // set zeros to img
     for (int i = 0; i < uv_length; ++i){
         if (uvptr[i] > 0 & uvptr[i + uv_length] > 0 & uvptr[i] < img_width & uvptr[i + uv_length] < img_height){
             visibleptr[i] = 1;
-        }else{
+        } else{
             visibleptr[i] = 0;
         }
     }
@@ -98,7 +99,7 @@ py::array_t<double> is_visible(int img_height, int img_width, int uv_length, py:
     return visible;
 }
 
-py::array_t<double> compose_visibility(int img_id, int width, int uv_length, py::array_t<double> uv, 
+py::array_t<double> compose_visibility(int img_id, int width, int uv_length, py::array_t<double> uv,
     py::array_t<double> gtd, py::array_t<double> md, py::array_t<double> ptsids, double threshold){
 
     // input
