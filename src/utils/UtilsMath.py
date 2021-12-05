@@ -166,6 +166,45 @@ class UtilsMath:
 
         return visibility_xyz
 
+    def render_image(self, data, max_radius=5):
+        img_id = data["image_id"]
+        print(f'Estimate visibility for image: {img_id}')
+        K   = data["K"]
+        R   = data["R"]
+        C   = data["C"]
+        h   = data["h"]
+        w   = data["w"]
+        f   = data["f"]
+        xyz = data["xyz"]
+        rgb = data["rgb"]
+
+        # project points
+        uvl = K * R * (xyz - C)
+        u = uvl[0, :] / uvl[2, :]
+        v = uvl[1, :] / uvl[2, :]
+        uv = np.concatenate((u, v), axis=0)
+        depth = np.linalg.norm(xyz - C, axis=0)
+
+        # get data in image
+        filtering = np.array((u >= 0) & (v >= 0) & (u < w) & (v < h) & (uvl[2, :] < 0)).squeeze()
+        depth_filtered = depth[filtering.squeeze()]
+        # sort according to depth
+        ordering = np.flip(np.argsort(depth_filtered))
+
+        depth = depth_filtered[ordering.squeeze()]
+        uv = uv[:, filtering][:, ordering]
+        rgb = rgb[:, filtering][:, ordering]
+
+        # trivial linear interpolation
+        k = (max_radius - 1) / (max(depth) - min(depth))
+        q = 1 - k * min(depth)
+        radii = np.round((k * depth + q + 1) / 2).astype(np.uint16)
+
+        # run cpp to render visibility information
+        img = renderDepth.render_image(h, w, uv, radii, rgb)
+
+        return img
+
 
     def get_calibration_matrix(self, camera):
         return np.matrix([[camera["f"], 0, camera["pp"][0]],[0, camera["f"], camera["pp"][1]],[0, 0, 1]])
