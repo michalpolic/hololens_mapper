@@ -4,12 +4,14 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "HololensPointcloudComposer": "0.1",
             "HoloLensIO": "0.1",
-            "DensePointcloudFilter": "0.1",
+            "KeyframeSelector": "0.1",
+            "HololensPointcloudComposer": "0.1",
+            "ColmapMapper": "0.1",
             "HoloLensMatcher": "0.1",
-            "MatchingPairsSelector": "0.1",
-            "KeyframeSelector": "0.1"
+            "ModelsAligner": "0.1",
+            "DensePointcloudFilter": "0.1",
+            "MatchingPairsSelector": "0.1"
         }
     },
     "graph": {
@@ -25,7 +27,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "2515b305bff1798c84d39d372e77474ce5f147c8"
+                "0": "310b96a95d4761b9dff24b8ffe77756259eb1e0b"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -49,7 +51,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "760f02eefac2ca31a1e20f53432e607600026f48"
+                "0": "be61e554269bbdd24d1d86248f6736f20a8316f2"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -75,7 +77,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "3e5fc98a6951be77f35933c3b7f439b16ae01f34"
+                "0": "cfb355420717a79925a2092b4e310355adbeb2d6"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -204,7 +206,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "6257f5992987038600847364de0e2a123a6d6e05"
+                "0": "3f28555bfd54ab5d83a007f5f3b4f74f58b4cbfc"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -220,8 +222,8 @@
         "MatchingPairsSelector_1": {
             "nodeType": "MatchingPairsSelector",
             "position": [
-                418,
-                70
+                416,
+                92
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -229,7 +231,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "50954840f0ca6869e5a2e8ded5c45d11bdfe95d4"
+                "0": "5a866a05e796470bfd829fb072c2060e2f8347f1"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -246,8 +248,8 @@
         "HoloLensMatcher_1": {
             "nodeType": "HoloLensMatcher",
             "position": [
-                584,
-                -40
+                583,
+                -39
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -255,7 +257,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "ae988a0648a03c4d3331aa17b7bab9ed629b6be0"
+                "0": "78ea86cf15761e083e27a99ee1c42cdd826b7a66"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -265,6 +267,53 @@
                 "algorithm": "SIFT",
                 "clusteringRadius": 1,
                 "matchingTreshold": 10,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "ColmapMapper_1": {
+            "nodeType": "ColmapMapper",
+            "position": [
+                766,
+                -13
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "e4cbed31434fb8b1bb654d2745b907ecc66d8fa1"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "colmapFolder": "{HoloLensMatcher_1.output}",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "ModelsAligner_1": {
+            "nodeType": "ModelsAligner",
+            "position": [
+                947,
+                0
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "353b16dc7868a0b00a69d69d8eda69ec67aa142d"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "sfmTransform": "{ColmapMapper_1.output}",
+                "sfmReference": "{HoloLensIO_1.output}",
                 "verboseLevel": "info"
             },
             "outputs": {

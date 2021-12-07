@@ -61,15 +61,26 @@ class UtilsMath:
         return (colmap_C, holo_C)
 
 
+    def estimate_colmap_to_colmap_transformation(self, reference_images, transformed_images):
+        reference_C = np.array([]).reshape(3,0)
+        transformed_C = np.array([]).reshape(3,0)
+
+        
+
+        return self.estimate_euclidean_transformation(reference_C, transformed_C)
+
     def estimate_colmap_to_holo_transformation(self, colmap_cameras, holo_cameras):
         print('Estimate COLMAP to HoloLens transformation.')
         colmap_C, holo_C = self.compose_coresponding_camera_centers(colmap_cameras, holo_cameras)
+        return self.estimate_euclidean_transformation(holo_C, colmap_C)
 
+
+    def estimate_euclidean_transformation(self, X_ref, X_transformed):
         # scale input points
-        mc = np.mean(colmap_C, axis=1)
-        mh = np.mean(holo_C, axis=1)
-        c0 = colmap_C - mc
-        h0 = holo_C - mh
+        mc = np.mean(X_transformed, axis=1)
+        mh = np.mean(X_ref, axis=1)
+        c0 = X_transformed - mc
+        h0 = X_ref - mh
         normc = np.sqrt(np.sum(np.multiply(c0,c0)))
         normh = np.sqrt(np.sum(np.multiply(h0,h0)))
         c0 = c0 * (1/normc)
