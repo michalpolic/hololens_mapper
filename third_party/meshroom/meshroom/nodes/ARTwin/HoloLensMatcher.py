@@ -10,6 +10,7 @@ import glob
 import os
 import sys
 from pathlib import Path
+from shutil import copy2
 
 # import mapper packages
 dir_path = __file__
@@ -57,7 +58,7 @@ This node compute matches between all pairs of HoloLens rgb images.
             label="Matching algorithm",
             description="The algorithm used to extract matches between images",
             value='SIFT',
-            values=['SIFT', 'SuperGlue', 'patch2pix'],
+            values=['SIFT'], #, 'SuperGlue', 'patch2pix'],
             uid=[0],
             exclusive=True,
             ),
@@ -113,18 +114,16 @@ This node compute matches between all pairs of HoloLens rgb images.
             if not chunk.node.output.value:
                 return
 
-            # 1) read the cameras / copy images to working directory
-            colmap_io = ColmapIO()
-            chunk.logger.info("Loading HoloLens model.")
-            cameras, images, points3D = colmap_io.load_model(chunk.node.colmapSfM.value)
-
             chunk.logger.info('Start matching.')
             out_dir = chunk.node.output.value
             holo_io = HoloIO()
             holo_io.copy_sfm_images(chunk.node.imagesFolder.value, out_dir)
 
+            if chunk.node.imagePairs:
+                copy2(chunk.node.imagePairs.value, out_dir)
+                rel_path_to_img_pairs = '/data/' + os.path.basename(chunk.node.imagePairs.value)
 
-            # 2) run matching
+            # run standard matching
             chunk.logger.info('Init COLMAP container')
             if sys.platform == 'win32':
                 out_dir = out_dir[0].lower() + out_dir[1::]
@@ -133,28 +132,39 @@ This node compute matches between all pairs of HoloLens rgb images.
                 colmap_container = UtilsContainers("singularity", dir_path + "/colmap.sif", out_dir)
             colmap = Colmap(colmap_container)
             matcher = UtilsMatcher(chunk.node.algorithm.value, colmap)          # patch2pix / SuperGlue / SIFT
-            
+
             # colmap matches_importer --help
             if matcher._matcher_name == "SIFT":
                 chunk.logger.info('COLMAP --> compute SIFT features')
-                colmap.prepare_database(out_dir + "database.db", "/data/database.db")
+                colmap.prepare_database(out_dir + "/database.db", "/data/database.db")
                 colmap.extract_features("/data/database.db", "/data")           # COLMAP feature extractor
                 if not chunk.node.imagePairs.value:
                     chunk.logger.info('COLMAP --> exhaustive matching')
                     colmap.exhaustive_matcher("/data/database.db")               # COLMAP matcher
                 else:
                     chunk.logger.info('COLMAP --> exhaustive matching of imported image pairs')
-                    colmap.custom_matching("/data/database.db", chunk.node.imagePairs.value)
+                    matcher.update_image_pairs_paths(out_dir + '/' + \
+                        os.path.basename(chunk.node.imagePairs.value), replace = ['\\', '/'])
+                    colmap.custom_matching("/data/database.db", rel_path_to_img_pairs)
 
-            chunk.logger.info('Matcher --> run hololens matching')
-            obs_for_images, matches = matcher.holo_matcher(out_dir + "/pv", images, 
-                database_path = out_dir + "/colmap/database.db", radius = chunk.node.clusteringRadius.value, 
-                err_threshold = chunk.node.matchingTreshold.value)    
+            # read the cameras / images
+            colmap_io = ColmapIO()
+            chunk.logger.info("Loading HoloLens model.")
+            cameras, images, points3D = colmap_io.load_model(chunk.node.colmapSfM.value)
+            images_db = colmap_io.load_images_from_database(out_dir + "/database.db")
+            images = matcher.synchronize_images_ids_with_database(images, images_db)
             
-            chunk.logger.info('Save matches into database')
-            colmap.save_matches_into_database(out_dir, "/colmap/database.db", 
-                images, matches, obs_for_images)
-            chunk.logger.info('Matches saved into database.')
+            # run hololens matcher
+            chunk.logger.info('Matcher --> run hololens matching')
+            obs_for_images, matches = matcher.holo_matcher2(out_dir, cameras, images, 
+                database_path = out_dir + "/database.db", err_threshold = chunk.node.matchingTreshold.value)    
+            
+            chunk.logger.info('Save model into database')
+            colmap.prepare_database(out_dir + "/database.db", '/data/database.db')
+            images = matcher.update_images_observations(images, obs_for_images)
+            colmap_io.write_model_into_database(out_dir, "/database.db", cameras, images, matches)
+            
+            chunk.logger.info('Matcher done.')
           
         except AssertionError as err:
             chunk.logger.error("Error in keyframe selector: " + err)

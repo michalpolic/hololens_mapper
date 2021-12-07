@@ -2,6 +2,7 @@ import sys
 import os
 import numpy as np
 from numpy import True_, linalg
+import sqlite3
 from src.utils.UtilsMath import UtilsMath
 
 class ColmapIO:
@@ -218,3 +219,121 @@ class ColmapIO:
         out_file = open(out_file_path, "w")
         out_file.write("".join(list_image_pairs))
         out_file.close()
+
+    def camera_model_to_db(self, cam):
+        known_camera_model = False
+        if cam['model'] == 'PINHOLE':
+            known_camera_model = True
+            model_id = 1
+            params = bytearray(np.array([cam['f'][0], cam['f'][1], cam['pp'][0], cam['pp'][1]], dtype=np.float64))
+            prior_focal = (cam['f'][0] + cam['f'][1]) / 2
+
+        if cam['model'] == 'RADIAL':
+            known_camera_model = True
+            model_id = 3
+            params = bytearray(np.array([cam['f'], cam['pp'][0], cam['pp'][1], cam['rd'][0], cam['rd'][1]], dtype=np.float64))
+            prior_focal = cam['f']
+
+        assert known_camera_model, 'Unknown camera model.'
+        return (model_id, params, prior_focal)
+
+    def write_model_into_database(self, data_dir, database_path, cameras, images, matches):
+        self.insert_cameras_into_database(data_dir + database_path, cameras)
+        self.insert_images_into_database(data_dir + database_path, images)
+        self.insert_keypoints_into_database(data_dir + database_path, images)
+        self.insert_matches_into_database(data_dir + database_path, matches)
+        self.insert_inliers_into_database(data_dir + database_path, matches)
+
+    def insert_cameras_into_database(self, physical_database_path, cameras):
+        con = sqlite3.connect(physical_database_path)
+        cursor = con.cursor()
+        sqlite_insert = """INSERT INTO cameras (camera_id, model, width, height, params, prior_focal_length) VALUES (?, ?, ?, ?, ?, ?)"""
+        for cam_id in cameras:
+            cam = cameras[cam_id]
+            cam_model_id, params, prior_focal = self.camera_model_to_db(cam)
+            data_tuple = (cam_id, cam_model_id, cam['width'], cam['height'], params, prior_focal)
+            cursor.execute(sqlite_insert, data_tuple)
+        con.commit()
+        con.close()
+
+    def insert_images_into_database(self, physical_database_path, images):
+        con = sqlite3.connect(physical_database_path)
+        cursor = con.cursor()
+        sqlite_insert = """INSERT INTO images (image_id, name, camera_id, prior_qw, prior_qx, prior_qy, prior_qz, prior_tx, prior_ty, prior_tz) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""         
+        utils_math = UtilsMath()
+        for img in images:
+            q = np.ndarray.tolist(utils_math.r2q(img['R']).reshape(-1))[0]
+            t = np.ndarray.tolist((- img['R'] * img['C']).reshape(-1))[0]
+            data_tuple = (img['image_id'], img['name'].replace('\\','/'), int(img['camera_id']), \
+                q[0], q[1], q[2], q[3], t[0], t[1], t[2])
+            cursor.execute(sqlite_insert, data_tuple)
+        con.commit()
+        con.close()
+
+    def insert_keypoints_into_database(self, physical_database_path, images):
+        con = sqlite3.connect(physical_database_path)
+        cursor = con.cursor()
+        sqlite_insert = """INSERT INTO keypoints (image_id, rows, cols, data) VALUES (?, ?, ?, ?)"""
+        for img in images:
+            n = int(len(img['uvs'])/2)
+            uvs = np.array(img['uvs']).reshape(-1,2)
+            data = np.concatenate((uvs, np.zeros((n,2))), axis=1).astype(np.float32).tobytes(order='C')
+            data_tuple = (img['image_id'], n, 4, data)
+            cursor.execute(sqlite_insert, data_tuple)
+        con.commit()
+        con.close()
+
+    def pair_id_to_image_ids(self, pair_id):
+        image_id2 = pair_id % 2147483647
+        image_id1 = int((pair_id - image_id2) / 2147483647)
+        return image_id1, image_id2
+
+    def insert_matches_into_database(self, physical_database_path, matches):
+        con = sqlite3.connect(physical_database_path)
+        cursor = con.cursor()
+        sqlite_insert = """INSERT INTO matches (pair_id, rows, cols, data) VALUES (?, ?, ?, ?)"""
+        for pair_id in matches:
+            img1_id, img2_id = self.pair_id_to_image_ids(pair_id)
+            corresp_ids = np.array([matches[pair_id]["obs_ids1"], matches[pair_id]["obs_ids2"]]).T.astype(dtype='uint32')
+            if img1_id > img2_id:
+                corresp_ids = corresp_ids[:, [1, 0]]
+            data = corresp_ids.tobytes(order='C')
+            n = np.shape(matches[pair_id]["obs_ids1"])[0]
+            data_tuple = (pair_id, n, 2, data)
+            cursor.execute(sqlite_insert, data_tuple)
+        con.commit()
+        con.close()
+
+    def insert_inliers_into_database(self, physical_database_path, matches):
+        con = sqlite3.connect(physical_database_path)
+        cursor = con.cursor()
+        sqlite_insert = """INSERT INTO two_view_geometries (pair_id, rows, cols, data, config, F, E) VALUES (?, ?, ?, ?, ?, ?, ?)"""
+        for pair_id in matches:
+            img1_id, img2_id = self.pair_id_to_image_ids(pair_id)
+            inliers_filter = matches[pair_id]["inliers"]
+            obs_ids1 = matches[pair_id]["obs_ids1"][inliers_filter]
+            obs_ids2 = matches[pair_id]["obs_ids2"][inliers_filter]
+            corresp_ids = np.array([obs_ids1, obs_ids2], dtype='uint32').T
+            if img1_id > img2_id:
+                corresp_ids = corresp_ids[:, [1, 0]]
+            data = corresp_ids.tobytes(order='C')
+            F_data = matches[pair_id]["F"].astype(dtype='float64').tobytes(order='C')
+            E_data = matches[pair_id]["E"].astype(dtype='float64').tobytes(order='C')
+            n = int(np.sum(inliers_filter))
+            data_tuple = (pair_id, n, 2, data, 2, F_data, E_data)
+            cursor.execute(sqlite_insert, data_tuple)
+        con.commit()
+        con.close()
+
+    def load_images_from_database(self, physical_database_path):
+        con = sqlite3.connect(physical_database_path)
+        cursor = con.cursor()
+        cursor.execute("SELECT image_id, name FROM images")
+        row = cursor.fetchall()
+        con.close()
+
+        images_db = []
+        for item in row:
+            images_db.append({'image_id': item[0], 'name': item[1]})
+
+        return images_db

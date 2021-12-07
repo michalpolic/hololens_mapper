@@ -29,7 +29,7 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "recordingDir": "D:/tmp/HoloLensRecordingKitchen/HoloLensRecording__2021_11_25__15_04_34",
+                "recordingDir": "/local1/projects/artwin/datasets/Kitchen__2021_11_25",
                 "UVfile": "/local1/projects/artwin/datasets/uvdata.txt",
                 "verboseLevel": "info"
             },

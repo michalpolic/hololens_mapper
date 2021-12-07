@@ -132,15 +132,6 @@ class Colmap():
             cursor.execute(sqlite_insert, data_tuple)
         con.commit()
         con.close()
-
-
-    def save_matches_into_database(self, data_dir, database_path, holo_cameras, patch2pix_matches, obs_for_images):
-        self.prepare_database(data_dir, database_path)
-        self.insert_pv_camera_into_database(data_dir + database_path)
-        self.insert_pv_images_into_database(data_dir + database_path, holo_cameras, obs_for_images)
-        self.insert_pv_keypoints_into_database(data_dir + database_path, holo_cameras, obs_for_images)
-        self.insert_pv_matches_into_database(data_dir + database_path, patch2pix_matches, holo_cameras, obs_for_images)
-        self.insert_pv_inliers_into_database(data_dir + database_path, patch2pix_matches, holo_cameras)
     
     def get_image_id_for_name(self, database_path, img_name):
         con = sqlite3.connect(database_path)
@@ -149,13 +140,8 @@ class Colmap():
         row = cursor.fetchall()
         con.close()
         return row[0][0]
-        
-
-    def load_matches_from_db(self, database_path, img1_name, img2_name):
-        assert database_path != "", "The database_path in load_matches_from_db is not specified."
-        img1_id = self.get_image_id_for_name(database_path, img1_name)
-        img2_id = self.get_image_id_for_name(database_path, img2_name)
-        
+    
+    def load_matches_for_pair_of_images(self, database_path, img1_id, img2_id):
         con = sqlite3.connect(database_path)
         cursor = con.cursor()
         cursor.execute("SELECT pair_id, rows, cols, data FROM matches WHERE pair_id=?", (self.img_ids_to_pair_id(img1_id, img2_id),))
@@ -176,6 +162,13 @@ class Colmap():
         con.close()
 
         return np.concatenate((keypoints1[corresp_ids[:,0],0:2], keypoints2[corresp_ids[:,1],0:2]), axis=1)
+
+    def load_matches_from_db(self, database_path, img1_name, img2_name):
+        assert database_path != "", "The database_path in load_matches_from_db is not specified."
+        img1_id = self.get_image_id_for_name(database_path, img1_name)
+        img2_id = self.get_image_id_for_name(database_path, img2_name)
+        return self.load_matches_for_pair_of_images(database_path, img1_id, img2_id)
+        
 
     def compose_images_and_points3D_from_visibilty(self, images, visibility_map, new_xyz):
         # find which points are seen from more than 2 viewpoints
