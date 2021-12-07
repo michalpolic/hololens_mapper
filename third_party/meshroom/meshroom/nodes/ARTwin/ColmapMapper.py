@@ -6,6 +6,7 @@ from meshroom.core import desc
 import shutil
 import glob
 import os
+import os.path 
 import sys
 from pathlib import Path
 from shutil import copy2
@@ -81,6 +82,10 @@ This node COLMAP mapper on database which contains matches.
             colmap = Colmap(colmap_container)
             
             colmap.mapper("/data/database.db", "/data", "/data")
+
+            # create txt files out of the largest reconstruction
+            if os.path.isdir(out_dir + '/0'):
+                colmap.model_converter('/data/0','/data','TXT')
 
             chunk.logger.info('Mapper done.')
           

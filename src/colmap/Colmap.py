@@ -41,6 +41,13 @@ class Colmap():
             "Mapper.min_model_size": 5
             })
 
+    def model_converter(self, in_path, out_path, out_type):
+        self._colmap_container.command_dict("colmap model_converter", 
+            {"input_path": in_path, 
+            "output_path": out_path,
+            "output_type": out_type
+            })
+
     def prepare_database(self, physical_database_path, container_database_path):
         if os.path.exists(physical_database_path):
             os.remove(physical_database_path)

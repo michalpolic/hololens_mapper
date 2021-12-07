@@ -76,7 +76,7 @@ This node COLMAP mapper on database which contains matches.
 
             # copy required resources
             holo_io = HoloIO()
-            holo_io.copy_sfm_images(chunk.node.colmapSfM.value, chunk.node.output.value)
+            holo_io.copy_sfm_images(chunk.node.sfmTransform.value, chunk.node.output.value)
             
             # load models
             colmap_io = ColmapIO()
@@ -92,7 +92,7 @@ This node COLMAP mapper on database which contains matches.
             # save transformed model
             colmap_io.write_model(chunk.node.output.value, cameras, transformed_images, transformed_points3D)
 
-            chunk.logger.info('Mapper done.')
+            chunk.logger.info('Aligner done.')
           
         except AssertionError as err:
             chunk.logger.error("Error in keyframe selector: " + err)

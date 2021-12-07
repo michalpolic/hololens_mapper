@@ -65,7 +65,16 @@ class UtilsMath:
         reference_C = np.array([]).reshape(3,0)
         transformed_C = np.array([]).reshape(3,0)
 
-        
+        reference_images_by_name = {}
+        for img in reference_images:
+            reference_images_by_name[img['name'].replace('\\','/')] = img
+
+        for img in transformed_images:
+            transformed_img_name = img['name'].replace('\\','/')
+            if transformed_img_name in reference_images_by_name:
+                ref_img = reference_images_by_name[transformed_img_name]
+                reference_C = np.concatenate((reference_C, ref_img["C"]), axis=1)
+                transformed_C = np.concatenate((transformed_C, img["C"]), axis=1)
 
         return self.estimate_euclidean_transformation(reference_C, transformed_C)
 
