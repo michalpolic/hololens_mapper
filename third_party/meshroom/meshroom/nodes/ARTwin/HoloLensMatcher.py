@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-from src.holo.HoloIO import HoloIO
-
 __version__ = "0.1"
 
 from meshroom.core import desc
@@ -17,6 +15,7 @@ dir_path = __file__
 for i in range(6):
     dir_path = os.path.dirname(dir_path)
 sys.path.append(dir_path)
+from src.holo.HoloIO import HoloIO
 from src.colmap.ColmapIO import ColmapIO
 from src.colmap.Colmap import Colmap
 from src.utils.UtilsContainers import UtilsContainers

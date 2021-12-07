@@ -8,6 +8,7 @@ import glob
 import os
 import sys
 from pathlib import Path
+from shutil import copy2
 
 # import mapper packages
 dir_path = __file__
@@ -16,6 +17,7 @@ for i in range(6):
 sys.path.append(dir_path)
 from src.colmap.Colmap import Colmap
 from src.utils.UtilsContainers import UtilsContainers
+from src.holo.HoloIO import HoloIO
 
 class ColmapMapper(desc.Node):
 
@@ -63,6 +65,12 @@ This node COLMAP mapper on database which contains matches.
             if not chunk.node.output.value:
                 return
 
+            # copy required resources
+            out_dir = chunk.node.output.value
+            holo_io = HoloIO()
+            holo_io.copy_sfm_images(chunk.node.colmapFolder.value, out_dir)
+            copy2(chunk.node.colmapFolder.value + '/database.db', out_dir)
+
             # run standard matching
             chunk.logger.info('Init COLMAP container')
             if sys.platform == 'win32':
@@ -72,8 +80,8 @@ This node COLMAP mapper on database which contains matches.
                 colmap_container = UtilsContainers("singularity", dir_path + "/colmap.sif", out_dir)
             colmap = Colmap(colmap_container)
             
-            Path(chunk.node.output.value + "/sparse").mkdir(parents=True, exist_ok=True)
-            colmap.mapper(chunk.node.output.value + "/database.db", chunk.node.output.value, chunk.node.output.value + "/sparse")
+            Path(out_dir + "/sparse").mkdir(parents=True, exist_ok=True)
+            colmap.mapper("/data/database.db", "/data", "/data/sparse")
 
             chunk.logger.info('Mapper done.')
           
