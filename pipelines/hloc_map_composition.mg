@@ -4,14 +4,15 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
+            "MatchingPairsSelector": "0.1",
             "HoloLensIO": "0.1",
-            "KeyframeSelector": "0.1",
-            "HololensPointcloudComposer": "0.1",
-            "ColmapMapper": "0.1",
             "HoloLensMatcher": "0.1",
-            "ModelsAligner": "0.1",
+            "KeyframeSelector": "0.1",
+            "HlocMapCreator": "0.1",
             "DensePointcloudFilter": "0.1",
-            "MatchingPairsSelector": "0.1"
+            "ModelsAligner": "0.1",
+            "ColmapMapper": "0.1",
+            "HololensPointcloudComposer": "0.1"
         }
     },
     "graph": {
@@ -314,6 +315,29 @@
             "inputs": {
                 "sfmTransform": "{ColmapMapper_1.output}",
                 "sfmReference": "{HoloLensIO_1.output}",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "HlocMapCreator_1": {
+            "nodeType": "HlocMapCreator",
+            "position": [
+                416,
+                191
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "69dc0725b0351dc2326639f615ea4a31326a9635"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputSfM": "{HoloLensIO_1.output}",
                 "verboseLevel": "info"
             },
             "outputs": {
