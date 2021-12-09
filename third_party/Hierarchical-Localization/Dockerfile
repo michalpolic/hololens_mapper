@@ -15,3 +15,4 @@ RUN make -j install
 
 RUN pip3 install git+https://github.com/mihaidusmanu/pycolmap
 WORKDIR /app/
+ENV PYTHONPATH /app/

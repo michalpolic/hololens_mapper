@@ -1,0 +1,19 @@
+import os
+import sys
+from ctypes import *
+from src.utils.UtilsContainers import UtilsContainers
+
+
+class Hloc():
+
+    _hloc_container = None
+
+    def __init__(self, hloc_container = None):
+        """Init colmap object to run predefined commands"""
+        self._hloc_container = hloc_container
+
+    def build_map(self, dataset_path, outputs_path):
+        self._hloc_container.command_dict("python build_dataset.py", 
+            {"dataset": dataset_path, 
+            "outputs": outputs_path
+            })

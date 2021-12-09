@@ -20,6 +20,9 @@ make -j install
 
 pip3 install git+https://github.com/mihaidusmanu/pycolmap
 cd /app/
+PYTHONPATH=/app/
+%environment
+export PYTHONPATH=/app/
 %runscript
 cd /app/
 exec /bin/bash "$@"
