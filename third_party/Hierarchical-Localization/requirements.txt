@@ -1,0 +1,9 @@
+torch>=1.1
+torchvision>=0.3
+numpy
+opencv-python
+tqdm
+matplotlib
+scipy
+h5py
+git+https://github.com/mihaidusmanu/pycolmap
