@@ -16,8 +16,10 @@ for i in range(6):
     dir_path = os.path.dirname(dir_path)
 sys.path.append(dir_path)
 from src.hloc.Hloc import Hloc
+from src.colmap.Colmap import Colmap
 from src.utils.UtilsContainers import UtilsContainers
 from src.holo.HoloIO import HoloIO
+from src.colmap.ColmapIO import ColmapIO
 
 
 class HlocMapCreator(desc.Node):
@@ -88,10 +90,22 @@ This node creates HLOC map out of the images and COLMAP SfM.
             chunk.logger.info('Init COLMAP container')
             if sys.platform == 'win32':
                 out_dir = out_dir[0].lower() + out_dir[1::]
-                hloc_container = UtilsContainers("docker", "uodcvip/colmap", "/host_mnt/" + out_dir.replace(":",""))
+                hloc_container = UtilsContainers("docker", "hloc:latest", "/host_mnt/" + out_dir.replace(":",""))
+                colmap_container = UtilsContainers("docker", "uodcvip/colmap", "/host_mnt/" + out_dir.replace(":",""))
             else:
                 hloc_container = UtilsContainers("singularity", dir_path + "/hloc.sif", out_dir)
+                colmap_container = UtilsContainers("singularity", dir_path + "/colmap.sif", out_dir)
             hloc = Hloc(hloc_container)
+            colmap = Colmap(colmap_container)
+
+            # update image names 
+            colmap_io = ColmapIO()
+            cameras, images, points3D = colmap_io.load_model(out_dir)
+            images = hloc.update_image_names(images)
+            colmap_io.write_model(out_dir, cameras, images, points3D)
+
+            # convert COLMAP SfM in TXT to bin 
+            colmap.model_converter('/data','/data', 'BIN')
 
             # build the map
             hloc.build_map('/data','/data')

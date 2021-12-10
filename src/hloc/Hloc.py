@@ -16,3 +16,11 @@ class Hloc():
         self._hloc_container.command_dict("python3 /app/build_dataset.py", 
             {"dataset": dataset_path, 
             "outputs": outputs_path})
+
+    def update_image_names(self, images):
+        new_images = []
+        for img in images:
+            img['name'] = img['name'].replace('\\','/')
+            new_images.append(img)
+        return new_images
+        
