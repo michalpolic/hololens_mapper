@@ -338,6 +338,7 @@
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "inputSfM": "{HoloLensIO_1.output}",
+                "imagesFolder": "{KeyframeSelector_1.output}",
                 "verboseLevel": "info"
             },
             "outputs": {

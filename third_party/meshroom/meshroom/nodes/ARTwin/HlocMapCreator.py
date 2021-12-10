@@ -35,6 +35,13 @@ This node creates HLOC map out of the images and COLMAP SfM.
             value="",
             uid=[0],
         ),
+        desc.File(
+            name="imagesFolder",
+            label="Images folder",
+            description="The directory containing input images used in SfM.",
+            value="",
+            uid=[0],
+        ),
         desc.ChoiceParam(
             name='verboseLevel',
             label='Verbose Level',
@@ -63,6 +70,9 @@ This node creates HLOC map out of the images and COLMAP SfM.
             if not chunk.node.inputSfM:
                 chunk.logger.warning('Transformed SfM directory is missing.')
                 return
+            if not chunk.node.imagesFolder:
+                chunk.logger.warning('Transformed images directory is missing.')
+                return
             if not chunk.node.output.value:
                 return
 
@@ -80,12 +90,12 @@ This node creates HLOC map out of the images and COLMAP SfM.
                 out_dir = out_dir[0].lower() + out_dir[1::]
                 hloc_container = UtilsContainers("docker", "uodcvip/colmap", "/host_mnt/" + out_dir.replace(":",""))
             else:
-                hloc_container = UtilsContainers("singularity", dir_path + "/colmap.sif", out_dir)
+                hloc_container = UtilsContainers("singularity", dir_path + "/hloc.sif", out_dir)
             hloc = Hloc(hloc_container)
 
             # build the map
             hloc.build_map('/data','/data')
-            
+
             chunk.logger.info('HLOC map composer done.')
           
         except AssertionError as err:
