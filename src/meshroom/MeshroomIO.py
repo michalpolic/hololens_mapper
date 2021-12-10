@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+
 try:
     import ujson as json
 except ImportError:
@@ -20,53 +21,79 @@ class MeshroomIO:
         return Mstr
 
 
-    def init_sfm_structure(self, camera):
+    def init_sfm_structure(self):
         sfm_dict = {
                 "version": ["1", "0", "0"],
                 "featuresFolders": "",
                 "matchesFolders": "",
                 "views": [],
-                "intrinsics": [{
-                    "intrinsicId": str(camera['camera_id']),
-                    "width": str(camera['width']),
-                    "height": str(camera['height']),
-                    "sensorWidth": "1.77777777777777",
-                    "sensorHeight": "1.00000000000000",
-                    "serialNumber": "",
-                    "type": "radial3",
-                    "initializationMode": "estimated",
-                    "pxInitialFocalLength": str(camera['f']),
-                    "pxFocalLength": str(camera['f']),
-                    "principalPoint": [
-                        str(camera['pp'][0]),
-                        str(camera['pp'][1])
-                    ],
-                    "distortionParams": [
-                        str(camera['rd'][0]),
-                        str(camera['rd'][1]),
-                        "0"
-                    ],
-                    "locked": "0"
-                }],
+                "intrinsics": [],
                 "poses": [],
                 "structure": []
             }
         return sfm_dict
 
+    def get_focal(self, camera):
+        if camera['model'] == 'RADIAL':
+            return camera['f']
+        if camera['model'] == 'PINHOLE':
+            return (camera['f'][0] + camera['f'][1]) / 2 
+        assert False, "Unknown camera model."
 
-    def add_views_to_sfm_structure(self, sfm_dict, pv_path, images, camera):
+    def get_radial_distortion(self, camera, out_model = 'radial3'):
+        if out_model == 'radial3':
+            if camera['model'] == 'RADIAL':
+                return [camera['rd'][0], camera['rd'][1], 0]
+            if camera['model'] == 'PINHOLE':
+                return [0, 0, 0]
+        assert False, "Unknown camera model."
+
+    def add_cameras_to_sfm_structure(self, sfm_dict, cameras):
+        intrinsics_list = []
+        for camera_id in cameras:
+            cam = cameras[camera_id]
+            rd = self.get_radial_distortion(cam)
+            intrinsics_list.append({
+                "intrinsicId": str(cam['camera_id']),
+                "width": str(cam['width']),
+                "height": str(cam['height']),
+                "sensorWidth": "1.77777777777777",
+                "sensorHeight": "1.00000000000000",
+                "serialNumber": "",
+                "type": "radial3",
+                "initializationMode": "estimated",
+                "pxInitialFocalLength": str(self.get_focal(cam)),
+                "pxFocalLength": str(self.get_focal(cam)),
+                "principalPoint": [
+                    str(cam['pp'][0]),
+                    str(cam['pp'][1])
+                ],
+                "distortionParams": [
+                    str(rd[0]),
+                    str(rd[1]),
+                    str(rd[2])
+                ],
+                "locked": "0"
+            })
+        sfm_dict['intrinsics'] = intrinsics_list
+        return sfm_dict
+
+
+    def add_views_to_sfm_structure(self, sfm_dict, images_path, images, cameras):
+
         for img in images:
+            cam = cameras[int(img['camera_id'])]
+
             sfm_dict["views"].append({
                 "viewId": str(img['image_id']),
                 "poseId": str(img['image_id']),
                 "intrinsicId": str(img['camera_id']),
-                "path": pv_path + img['name'].replace('\\','/'),
-                "width": str(camera['width']),
-                "height": str(camera['height'])
+                "path": images_path + img['name'].replace('\\','/'),
+                "width": str(cam['width']),
+                "height": str(cam['height'])
             })
 
             R = img['R']
-            R = R * np.linalg.det(R)
             C = img['C']
             sfm_dict["poses"].append({
                 "poseId": str(img['image_id']),
@@ -81,17 +108,12 @@ class MeshroomIO:
         
         return sfm_dict
 
-
-    def transform_images_to_dictionary(self, images):
+    def add_points_to_sfm_structure(self, sfm_dict, points3D, images):
         images_dict = {}
         for img in images:
-            images_dict[str(img['image_id'])] = img
-        return images_dict
+            images_dict[int(img['image_id'])] = img
 
-
-    def add_points_to_sfm_structure(self, sfm_dict, points, images):
-        images_dict = self.transform_images_to_dictionary(images)
-        for pt in points:
+        for pt in points3D:
             if (len(pt['img_pt']) / 2) > 3 and pt['err'] < 2:
                 landmark = {
                     "landmarkId": str(pt['point3D_id']),
@@ -104,7 +126,7 @@ class MeshroomIO:
                 for j in range(int((len(pt['img_pt'])) / 2)):
                     image_id = int(pt['img_pt'][2*j])
                     observation_id = int(pt['img_pt'][2*j + 1])
-                    img = images_dict[str(image_id)]
+                    img = images_dict[image_id]
                     uv = img['uvs'][2*observation_id:2*observation_id+2]
 
                     landmark["observations"].append({
@@ -171,19 +193,29 @@ class MeshroomIO:
         return sfm_dict
 
 
-    def save_colmap_to_json(self, out_path, pv_path, camera, images, points):
-        print("Saving COLMAP to Meshroom JSON.")
-        sfm_dict = self.init_sfm_structure(camera)
-        sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, camera)
+    def save_colmap_to_json(self, out_path, pv_path, cameras, images, points):
+        print("Composition of Meshroom JSON.")
+        sfm_dict = self.init_sfm_structure()
+        sfm_dict = self.add_cameras_to_sfm_structure(sfm_dict, cameras)
+        sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, cameras)
         sfm_dict = self.add_points_to_sfm_structure(sfm_dict, points, images)
         with open(out_path, 'w') as outfile:
             json.dump(sfm_dict, outfile)
 
+    def write_model(self, out_path, images_dir, cameras, images, points3D):
+        print("Composition of Meshroom JSON.")
+        sfm_dict = self.init_sfm_structure()
+        sfm_dict = self.add_cameras_to_sfm_structure(sfm_dict, cameras)
+        sfm_dict = self.add_views_to_sfm_structure(sfm_dict, images_dir, images, cameras)
+        sfm_dict = self.add_points_to_sfm_structure(sfm_dict, points3D, images)
+        with open(out_path, 'w') as outfile:
+            json.dump(sfm_dict, outfile)
 
-    def save_merged_mvs_to_json(self, out_path, pv_path, camera, images, xyz, visibility_map, rgb):
+    def save_merged_mvs_to_json(self, out_path, pv_path, cameras, images, xyz, visibility_map, rgb):
         print("Saving Holo + MVS to Meshroom JSON.")
-        sfm_dict = self.init_sfm_structure(camera)
-        sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, camera)
+        sfm_dict = self.init_sfm_structure()
+        sfm_dict = self.add_cameras_to_sfm_structure(sfm_dict, cameras)
+        sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, cameras)
         
         rgb2 = np.ndarray.tolist(np.ndarray.flatten(rgb.astype(dtype=np.float64).T))
         xyz2 = np.ndarray.tolist(np.ndarray.flatten(np.array(xyz).T))
