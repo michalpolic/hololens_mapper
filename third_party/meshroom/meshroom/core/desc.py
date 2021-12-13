@@ -493,23 +493,29 @@ class CommandLineNode(Node):
             except psutil.NoSuchProcess:
                 pass
 
-    def updateComandLineForContianers(self, cmd):
-        if 'MESHROOM_WORKING_DIR' in os.environ:
-            
+    def updateComandLineForContianers(self, chunk, cmd):
+        container_name = chunk.node.containerName.value
+        lib_prefix = chunk.node.containerPrefix.value.replace('\\','/')
+        if lib_prefix[-1] != '/':
+            lib_prefix = lib_prefix + '/'
+        cache = os.path.dirname(os.path.dirname(os.path.dirname(self.internalFolder)))
+        cmd = cmd.replace(cache, '/data/')
 
-            working_dir = os.environ.get('MESHROOM_WORKING_DIR')
-            cmd.replace(working_dir,"/data")
-            if sys.platform == 'win32':
-                cmd = f"docker run --gpus all -v {working_dir}:/data alicevision/meshroom:2021.1.0-av2.4.0-centos7-cuda10.2 {cmd}"
-            else:
-                cmd = f"singularity exec --nv -B {working_dir}:/data ./alicevision.sif /opt/AliceVision_install/bin/{cmd}"
+        if sys.platform == 'win32':
+            cache = cache[0].lower() + cache[1::]
+            cache = "/host_mnt/" + cache.replace(":","")
+            cmd = f"docker run --rm --gpus all -v {cache}:/data {container_name} {lib_prefix}{cmd}"
+        else:
+            cmd = f"singularity exec --nv -B {cache}:/data {container_name} {lib_prefix}{cmd}"
+
         return cmd
 
     def processChunk(self, chunk):
         try:
             with open(chunk.logFile, 'w') as logF:
                 cmd = self.buildCommandLine(chunk)
-                cmd = self.updateComandLineForContianers(cmd)
+                if chunk.node.containerName and chunk.node.containerName.value is not "":
+                    cmd = self.updateComandLineForContianers(chunk, cmd)
                 chunk.status.commandLine = cmd
                 chunk.saveStatusFile()
                 print(' - commandLine: {}'.format(cmd))
