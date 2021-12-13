@@ -22,6 +22,23 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
 '''
 
     inputs = [
+        desc.StringParam(
+            name="containerName", 
+            label="AliceVision container",
+            description="If you would like to run the comnands inside a container, "
+                "set the path (Singularity) or name (Docker) of the container to run.", 
+            value="", 
+            uid=[]
+        ),
+        desc.StringParam(
+            name="containerPrefix", 
+            label="Container prefix",
+            description="If you would like to run the comnands inside a container, "
+                "set the internal path to executables inside the container. "
+                "If the container is build with executables in path, let this variable empty.", 
+            value="", 
+            uid=[]
+        ),
         desc.File(
             name='input',
             label='SfMData',

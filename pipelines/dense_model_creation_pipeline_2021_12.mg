@@ -4,15 +4,19 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "HoloLensIO": "0.1",
-            "ModelsAligner": "0.1",
+            "PrepareDenseScene": "3.0",
             "MatchingPairsSelector": "0.1",
-            "DensePointcloudFilter": "0.1",
-            "HololensPointcloudComposer": "0.1",
+            "DepthMap": "2.0",
+            "KeyframeSelector": "0.1",
+            "ColmapMapper": "0.1",
+            "ModelsAligner": "0.1",
+            "Meshing": "7.0",
             "HoloLensMatcher": "0.1",
             "ConvertSfMFormat": "2.0",
-            "ColmapMapper": "0.1",
-            "KeyframeSelector": "0.1"
+            "HololensPointcloudComposer": "0.1",
+            "DepthMapFilter": "3.0",
+            "DensePointcloudFilter": "0.1",
+            "HoloLensIO": "0.1"
         }
     },
     "graph": {
@@ -192,6 +196,42 @@
                 "output": "{cache}/{nodeType}/{uid0}/"
             }
         },
+        "ConvertSfMFormat_1": {
+            "nodeType": "ConvertSfMFormat",
+            "position": [
+                1322,
+                86
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 0,
+                "split": 1
+            },
+            "uids": {
+                "0": "0e560cad28e59f7c75786b590ca0c6483f765932"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "/local/artwin/mapping/codes/hololens_mapper/alicevision.sif",
+                "containerPrefix": "/opt/AliceVision_install/bin/",
+                "input": "{HoloLensIO_2.outputMeshroomSfM}",
+                "fileExt": "abc",
+                "describerTypes": [
+                    "sift",
+                    "unknown"
+                ],
+                "imageWhiteList": [],
+                "views": true,
+                "intrinsics": true,
+                "extrinsics": true,
+                "structure": true,
+                "observations": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
+            }
+        },
         "HoloLensIO_1": {
             "nodeType": "HoloLensIO",
             "position": [
@@ -319,14 +359,213 @@
                 "verboseLevel": "info"
             },
             "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
+            }
+        },
+        "PrepareDenseScene_1": {
+            "nodeType": "PrepareDenseScene",
+            "position": [
+                1510,
+                -8
+            ],
+            "parallelization": {
+                "blockSize": 40,
+                "size": 0,
+                "split": 0
+            },
+            "uids": {
+                "0": "abea0c43b944c0182835d411e23efd7478510fd3"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{ConvertSfMFormat_1.containerName}",
+                "containerPrefix": "{ConvertSfMFormat_1.containerPrefix}",
+                "input": "{ConvertSfMFormat_1.output}",
+                "imagesFolders": [
+                    "{ModelsAligner_1.sfmReference}"
+                ],
+                "masksFolders": [],
+                "outputFileType": "exr",
+                "saveMetadata": true,
+                "saveMatricesTxtFiles": false,
+                "evCorrection": false,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputUndistorted": "{cache}/{nodeType}/{uid0}/*.{outputFileTypeValue}"
+            }
+        },
+        "DepthMap_1": {
+            "nodeType": "DepthMap",
+            "position": [
+                1706,
+                -6
+            ],
+            "parallelization": {
+                "blockSize": 3,
+                "size": 0,
+                "split": 0
+            },
+            "uids": {
+                "0": "38aafc5994a60c9f9368676b44f3c70785ecf324"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{PrepareDenseScene_1.containerName}",
+                "containerPrefix": "{PrepareDenseScene_1.containerPrefix}",
+                "input": "{PrepareDenseScene_1.input}",
+                "imagesFolder": "{PrepareDenseScene_1.outputUndistorted}",
+                "downscale": 2,
+                "minViewAngle": 2.0,
+                "maxViewAngle": 70.0,
+                "sgmMaxTCams": 10,
+                "sgmWSH": 4,
+                "sgmGammaC": 5.5,
+                "sgmGammaP": 8.0,
+                "refineMaxTCams": 6,
+                "refineNSamplesHalf": 150,
+                "refineNDepthsToRefine": 31,
+                "refineNiters": 100,
+                "refineWSH": 3,
+                "refineSigma": 15,
+                "refineGammaC": 15.5,
+                "refineGammaP": 8.0,
+                "refineUseTcOrRcPixSize": false,
+                "exportIntermediateResults": false,
+                "nbGPUs": 0,
+                "verboseLevel": "info"
+            },
+            "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "DepthMapFilter_1": {
+            "nodeType": "DepthMapFilter",
+            "position": [
+                1904,
+                -6
+            ],
+            "parallelization": {
+                "blockSize": 10,
+                "size": 0,
+                "split": 0
+            },
+            "uids": {
+                "0": "3a2c98733c6156a8c16053a4d7c0579f2d29f2f2"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{DepthMap_1.containerName}",
+                "containerPrefix": "{DepthMap_1.containerPrefix}",
+                "input": "{DepthMap_1.input}",
+                "depthMapsFolder": "{DepthMap_1.output}",
+                "minViewAngle": 2.0,
+                "maxViewAngle": 70.0,
+                "nNearestCams": 10,
+                "minNumOfConsistentCams": 3,
+                "minNumOfConsistentCamsWithLowSimilarity": 4,
+                "pixSizeBall": 0,
+                "pixSizeBallWithLowSimilarity": 0,
+                "computeNormalMaps": false,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "Meshing_1": {
+            "nodeType": "Meshing",
+            "position": [
+                2091,
+                -17
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "00e05608f920d199e4a81b2b20aa3df0dad563ef"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{DepthMapFilter_1.containerName}",
+                "containerPrefix": "{DepthMapFilter_1.containerPrefix}",
+                "input": "{DepthMapFilter_1.input}",
+                "depthMapsFolder": "{DepthMapFilter_1.output}",
+                "outputMeshFileType": "obj",
+                "useBoundingBox": false,
+                "boundingBox": {
+                    "bboxTranslation": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "bboxRotation": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "bboxScale": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    }
+                },
+                "estimateSpaceFromSfM": true,
+                "estimateSpaceMinObservations": 3,
+                "estimateSpaceMinObservationAngle": 10,
+                "maxInputPoints": 50000000,
+                "maxPoints": 5000000,
+                "maxPointsPerVoxel": 1000000,
+                "minStep": 2,
+                "partitioning": "singleBlock",
+                "repartition": "multiResolution",
+                "angleFactor": 15.0,
+                "simFactor": 15.0,
+                "pixSizeMarginInitCoef": 2.0,
+                "pixSizeMarginFinalCoef": 4.0,
+                "voteMarginFactor": 4.0,
+                "contributeMarginFactor": 2.0,
+                "simGaussianSizeInit": 10.0,
+                "simGaussianSize": 10.0,
+                "minAngleThreshold": 1.0,
+                "refineFuse": true,
+                "helperPointsGridSize": 10,
+                "densify": false,
+                "densifyNbFront": 1,
+                "densifyNbBack": 1,
+                "densifyScale": 20.0,
+                "nPixelSizeBehind": 4.0,
+                "fullWeight": 1.0,
+                "voteFilteringForWeaklySupportedSurfaces": true,
+                "addLandmarksToTheDensePointCloud": false,
+                "invertTetrahedronBasedOnNeighborsNbIterations": 10,
+                "minSolidAngleRatio": 0.2,
+                "nbSolidAngleFilteringIterations": 2,
+                "colorizeOutput": true,
+                "addMaskHelperPoints": false,
+                "maskHelperPointsWeight": 1.0,
+                "maskBorderSize": 4,
+                "maxNbConnectedHelperPoints": 50,
+                "saveRawDensePointCloud": true,
+                "exportDebugTetrahedralization": false,
+                "seed": 0,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "outputMesh": "{cache}/{nodeType}/{uid0}/mesh.{outputMeshFileTypeValue}",
+                "output": "{cache}/{nodeType}/{uid0}/densePointCloud.abc",
+                "outputRAW": "{cache}/{nodeType}/{uid0}/densePointCloud_raw.abc"
             }
         },
         "HoloLensIO_2": {
             "nodeType": "HoloLensIO",
             "position": [
-                1132,
-                41
+                1140,
+                87
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -352,28 +591,30 @@
                 "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
             }
         },
-        "ConvertSfMFormat_1": {
+        "ConvertSfMFormat_2": {
             "nodeType": "ConvertSfMFormat",
             "position": [
-                1325,
-                40
+                2282,
+                -10
             ],
             "parallelization": {
                 "blockSize": 0,
-                "size": 0,
+                "size": 1,
                 "split": 1
             },
             "uids": {
-                "0": "48a7c59f0aba7d083d11e8674fac0ff7648421e6"
+                "0": "563a4cb8170bc2656935f8d4c827f5039e5d215a"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "containerName": "/local/artwin/mapping/codes/hololens_mapper/alicevision.sif",
-                "containerPrefix": "/opt/AliceVision_install/bin/",
-                "input": "{HoloLensIO_2.outputMeshroomSfM}",
-                "fileExt": "abc",
+                "containerName": "{Meshing_1.containerName}",
+                "containerPrefix": "{Meshing_1.containerPrefix}",
+                "input": "{Meshing_1.outputRAW}",
+                "fileExt": "ply",
                 "describerTypes": [
-                    "dspsift"
+                    "dspsift",
+                    "unknown",
+                    "sift"
                 ],
                 "imageWhiteList": [],
                 "views": true,
