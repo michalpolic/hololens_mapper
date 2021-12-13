@@ -4,14 +4,15 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "HololensPointcloudComposer": "0.1",
-            "KeyframeSelector": "0.1",
-            "DensePointcloudFilter": "0.1",
-            "ModelsAligner": "0.1",
-            "HoloLensMatcher": "0.1",
-            "MatchingPairsSelector": "0.1",
             "HoloLensIO": "0.1",
-            "ColmapMapper": "0.1"
+            "ModelsAligner": "0.1",
+            "MatchingPairsSelector": "0.1",
+            "DensePointcloudFilter": "0.1",
+            "HololensPointcloudComposer": "0.1",
+            "HoloLensMatcher": "0.1",
+            "ConvertSfMFormat": "2.0",
+            "ColmapMapper": "0.1",
+            "KeyframeSelector": "0.1"
         }
     },
     "graph": {
@@ -324,8 +325,8 @@
         "HoloLensIO_2": {
             "nodeType": "HoloLensIO",
             "position": [
-                1131,
-                45
+                1132,
+                41
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -348,6 +349,41 @@
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "ConvertSfMFormat_1": {
+            "nodeType": "ConvertSfMFormat",
+            "position": [
+                1325,
+                40
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 0,
+                "split": 1
+            },
+            "uids": {
+                "0": "48a7c59f0aba7d083d11e8674fac0ff7648421e6"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "",
+                "containerPrefix": "",
+                "input": "{HoloLensIO_2.output}",
+                "fileExt": "abc",
+                "describerTypes": [
+                    "dspsift"
+                ],
+                "imageWhiteList": [],
+                "views": true,
+                "intrinsics": true,
+                "extrinsics": true,
+                "structure": true,
+                "observations": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
             }
         }
     }
