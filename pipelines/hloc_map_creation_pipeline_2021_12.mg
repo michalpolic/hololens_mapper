@@ -4,15 +4,10 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "MatchingPairsSelector": "0.1",
-            "HoloLensIO": "0.1",
-            "HoloLensMatcher": "0.1",
+            "HololensPointcloudComposer": "0.1",
             "KeyframeSelector": "0.1",
-            "HlocMapCreator": "0.1",
-            "DensePointcloudFilter": "0.1",
-            "ModelsAligner": "0.1",
-            "ColmapMapper": "0.1",
-            "HololensPointcloudComposer": "0.1"
+            "HoloLensIO": "0.1",
+            "HlocMapCreator": "0.1"
         }
     },
     "graph": {
@@ -66,6 +61,30 @@
                 "output": "{cache}/{nodeType}/{uid0}/"
             }
         },
+        "HlocMapCreator_1": {
+            "nodeType": "HlocMapCreator",
+            "position": [
+                420,
+                -39
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "1566af91261140f64b84c297dc15f627f5ef8c78"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputSfM": "{HoloLensIO_1.output}",
+                "imagesFolder": "{KeyframeSelector_1.output}",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
         "HoloLensIO_1": {
             "nodeType": "HoloLensIO",
             "position": [
@@ -78,12 +97,12 @@
                 "split": 1
             },
             "uids": {
-                "0": "cfb355420717a79925a2092b4e310355adbeb2d6"
+                "0": "0a9c42b43b7e572d88ded619db123c0cb8434900"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "recordingDir": "{KeyframeSelector_1.output}",
-                "pointcloudFile": "{DensePointcloudFilter_1.output}",
+                "inputFolder": "{KeyframeSelector_1.output}",
+                "pointcloudFile": "{HololensPointcloudComposer_1.output}",
                 "hashScale": 10,
                 "allPoints": false,
                 "intrinsics": [
@@ -188,157 +207,8 @@
                         ]
                     }
                 ],
+                "inputSfMFormat": "HoloLens",
                 "outputSfMFormat": "COLMAP",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
-        "DensePointcloudFilter_1": {
-            "nodeType": "DensePointcloudFilter",
-            "position": [
-                65,
-                79
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "3f28555bfd54ab5d83a007f5f3b4f74f58b4cbfc"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "densePointcloud": "{HololensPointcloudComposer_1.output}",
-                "neighbourDistance": 0.05,
-                "minNeighbours": 50,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//model.obj"
-            }
-        },
-        "MatchingPairsSelector_1": {
-            "nodeType": "MatchingPairsSelector",
-            "position": [
-                416,
-                92
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "5a866a05e796470bfd829fb072c2060e2f8347f1"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "sfmFile": "{HoloLensIO_1.output}",
-                "inputSfMFormat": "COLMAP",
-                "outputSfMFormat": "COLMAP",
-                "minCommonPts": 200,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//image_pairs.txt"
-            }
-        },
-        "HoloLensMatcher_1": {
-            "nodeType": "HoloLensMatcher",
-            "position": [
-                583,
-                -39
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "78ea86cf15761e083e27a99ee1c42cdd826b7a66"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "colmapSfM": "{HoloLensIO_1.output}",
-                "imagesFolder": "{KeyframeSelector_1.output}",
-                "imagePairs": "{MatchingPairsSelector_1.output}",
-                "algorithm": "SIFT",
-                "clusteringRadius": 1,
-                "matchingTreshold": 10,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
-        "ColmapMapper_1": {
-            "nodeType": "ColmapMapper",
-            "position": [
-                766,
-                -13
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "e4cbed31434fb8b1bb654d2745b907ecc66d8fa1"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "colmapFolder": "{HoloLensMatcher_1.output}",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
-        "ModelsAligner_1": {
-            "nodeType": "ModelsAligner",
-            "position": [
-                947,
-                0
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "353b16dc7868a0b00a69d69d8eda69ec67aa142d"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "sfmTransform": "{ColmapMapper_1.output}",
-                "sfmReference": "{HoloLensIO_1.output}",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
-        "HlocMapCreator_1": {
-            "nodeType": "HlocMapCreator",
-            "position": [
-                416,
-                191
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "69dc0725b0351dc2326639f615ea4a31326a9635"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "inputSfM": "{HoloLensIO_1.output}",
-                "imagesFolder": "{KeyframeSelector_1.output}",
                 "verboseLevel": "info"
             },
             "outputs": {
