@@ -496,10 +496,12 @@ class CommandLineNode(Node):
     def updateComandLineForContianers(self, chunk, cmd):
         container_name = chunk.node.containerName.value
         lib_prefix = chunk.node.containerPrefix.value.replace('\\','/')
+        cmd = cmd.replace(f'--containerName "{chunk.node.containerName.value}"', '')
+        cmd = cmd.replace(f'--containerPrefix "{chunk.node.containerPrefix.value}"', '')
         if lib_prefix[-1] != '/':
             lib_prefix = lib_prefix + '/'
-        cache = os.path.dirname(os.path.dirname(os.path.dirname(self.internalFolder)))
-        cmd = cmd.replace(cache, '/data/')
+        cache = os.path.dirname(os.path.dirname(os.path.dirname(chunk.logFile)))
+        cmd = cmd.replace(cache, '/data')
 
         if sys.platform == 'win32':
             cache = cache[0].lower() + cache[1::]

@@ -146,8 +146,10 @@ class ColmapIO:
             "# CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]\n" + \
             "# Number of cameras: {}\n".format(len(cameras)))
 
-        for cam_id in cameras:
-            cam = cameras[cam_id]
+        if isinstance(cameras,dict):
+            cameras = list(cameras.values())
+
+        for cam in cameras:
             params = [cam['camera_id'], cam['model'], cam['width'], cam['height']]
             if isinstance(cam['f'], list):
                 params.extend(cam['f'])

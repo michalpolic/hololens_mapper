@@ -348,7 +348,8 @@
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
             }
         },
         "ConvertSfMFormat_1": {
@@ -367,9 +368,9 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "containerName": "",
-                "containerPrefix": "",
-                "input": "{HoloLensIO_2.output}",
+                "containerName": "/local/artwin/mapping/codes/hololens_mapper/alicevision.sif",
+                "containerPrefix": "/opt/AliceVision_install/bin/",
+                "input": "{HoloLensIO_2.outputMeshroomSfM}",
                 "fileExt": "abc",
                 "describerTypes": [
                     "dspsift"

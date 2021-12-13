@@ -134,8 +134,15 @@ different format.
         desc.File(
             name="output",
             label="Output Folder",
-            description="",
+            description="Folder with SfM files.",
             value=desc.Node.internalFolder,
+            uid=[],
+        ),
+        desc.File(
+            name="outputMeshroomSfM",
+            label="Meshroom SfM file",
+            description="Link to Meshroom SfM if conversion is to Meshroom format.",
+            value=desc.Node.internalFolder + "meshroom_sfm.json",
             uid=[],
         ),
     ]
@@ -188,7 +195,7 @@ different format.
 
             if chunk.node.outputSfMFormat.value == "Meshroom":
                 chunk.logger.info("Saving Meshroom SfM.")
-                meshroom_io.write_model(chunk.node.output.value + "meshroom_sfm.json", \
+                meshroom_io.write_model(chunk.node.outputMeshroomSfM.value, \
                     chunk.node.output.value, cameras, images, points3D)
 
             chunk.logger.info("HoloLensIO done.") 

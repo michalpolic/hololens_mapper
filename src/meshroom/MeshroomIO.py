@@ -80,6 +80,8 @@ class MeshroomIO:
 
 
     def add_views_to_sfm_structure(self, sfm_dict, images_path, images, cameras):
+        images_path = images_path.replace('\\','/')
+        images_path = images_path.replace('\/','/')
 
         for img in images:
             cam = cameras[int(img['camera_id'])]
