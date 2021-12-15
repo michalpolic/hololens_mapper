@@ -20,7 +20,8 @@ It can also be used to remove specific parts of from an SfM scene (like filter a
             description="If you would like to run the comnands inside a container, "
                 "set the path (Singularity) or name (Docker) of the container to run.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -29,7 +30,8 @@ It can also be used to remove specific parts of from an SfM scene (like filter a
                 "set the internal path to executables inside the container. "
                 "If the container is build with executables in path, let this variable empty.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
         ),
         desc.File(
             name='input',

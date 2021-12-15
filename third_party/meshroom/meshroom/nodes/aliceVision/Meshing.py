@@ -28,7 +28,8 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
             description="If you would like to run the comnands inside a container, "
                 "set the path (Singularity) or name (Docker) of the container to run.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -37,7 +38,8 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
                 "set the internal path to executables inside the container. "
                 "If the container is build with executables in path, let this variable empty.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
         ),
         desc.File(
             name='input',

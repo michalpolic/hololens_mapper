@@ -28,7 +28,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             description="If you would like to run the comnands inside a container, "
                 "set the path (Singularity) or name (Docker) of the container to run.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -37,7 +38,8 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
                 "set the internal path to executables inside the container. "
                 "If the container is build with executables in path, let this variable empty.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
         ),
         desc.File(
             name='input',

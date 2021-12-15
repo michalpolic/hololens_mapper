@@ -23,7 +23,8 @@ This allows to filter unstable points before starting the fusion of all depth ma
             description="If you would like to run the comnands inside a container, "
                 "set the path (Singularity) or name (Docker) of the container to run.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -32,7 +33,8 @@ This allows to filter unstable points before starting the fusion of all depth ma
                 "set the internal path to executables inside the container. "
                 "If the container is build with executables in path, let this variable empty.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
         ),
         desc.File(
             name='input',
