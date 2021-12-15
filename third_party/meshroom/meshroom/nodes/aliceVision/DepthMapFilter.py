@@ -6,9 +6,8 @@ from meshroom.core import desc
 class DepthMapFilter(desc.CommandLineNode):
     commandLine = 'aliceVision_depthMapFiltering {allParams}'
     gpu = desc.Level.NORMAL
-    size = desc.DynamicNodeSize('input')
-    parallelization = desc.Parallelization(blockSize=10)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
+    # parallelization = desc.Parallelization(blockSize=10)
+    # commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
 
     category = 'Dense Reconstruction'
     documentation = '''

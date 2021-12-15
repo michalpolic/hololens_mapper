@@ -1,11 +1,10 @@
-__version__ = "2.0"
+__version__ = "2.1"
 
 from meshroom.core import desc
 
 
 class ConvertSfMFormat(desc.CommandLineNode):
     commandLine = 'aliceVision_convertSfMFormat {allParams}'
-    size = desc.DynamicNodeSize('input')
 
     category = 'Utils'
     documentation = '''

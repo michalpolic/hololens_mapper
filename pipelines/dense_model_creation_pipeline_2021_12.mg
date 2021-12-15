@@ -251,9 +251,7 @@
                 "containerName": "{ConvertSfMFormat_1.containerName}",
                 "containerPrefix": "{ConvertSfMFormat_1.containerPrefix}",
                 "input": "{ConvertSfMFormat_1.output}",
-                "imagesFolders": [
-                    "{ModelsAligner_1.sfmReference}"
-                ],
+                "imagesFolders": [],
                 "masksFolders": [],
                 "outputFileType": "exr",
                 "saveMetadata": true,
