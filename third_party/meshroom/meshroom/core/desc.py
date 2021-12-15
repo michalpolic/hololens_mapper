@@ -502,6 +502,9 @@ class CommandLineNode(Node):
             lib_prefix = lib_prefix + '/'
         cache = os.path.dirname(os.path.dirname(os.path.dirname(chunk.logFile)))
         cmd = cmd.replace(cache, '/data')
+        cache_upper = cache
+        cache_upper = cache_upper[0].upper() + cache_upper[1::]
+        cmd = cmd.replace(cache_upper, '/data')
 
         if sys.platform == 'win32':
             cache = cache[0].lower() + cache[1::]

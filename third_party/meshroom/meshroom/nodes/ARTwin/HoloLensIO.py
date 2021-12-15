@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-from src import colmap
-
 __version__ = "0.1"
 
 from meshroom.core import desc
@@ -119,6 +117,27 @@ different format.
             exclusive=True,
             uid=[0],
         ),
+        desc.BoolParam(
+            name="cpoyImagesToOutput", 
+            label="Copy images to output",
+            description="If True, the images are copied into the output directory.",
+            value=False, 
+            uid=[0]
+        ),
+        desc.ChoiceParam(
+            name="imagesPath", 
+            label="Images path",
+            description="If container, the path to images is set relatively from Cache folder "
+                "with '/data' prefix, e.g. /home/<some_path>/MeshroomCache/abcdefg/pv/01.jpg will be "
+                "/data/abcdefg/pv/01.jpg. Such a format can be used in containers with mounted "
+                "cached folder. If absolute, the path will be absolute path to images. If original, "
+                "the paths should be in the same format as at the input (usualy, e.g., pv/01.jpg or vlc_ll/99.jpg)",
+            value="original",
+            values=["original", "absolute", "container"], 
+            exclusive=True,
+            advanced=True,
+            uid=[0]
+        ),
         desc.ChoiceParam(
             name="verboseLevel",
             label="Verbose Level",
@@ -144,6 +163,8 @@ different format.
             description="Link to Meshroom SfM if conversion is to Meshroom format.",
             value=desc.Node.internalFolder + "meshroom_sfm.json",
             uid=[],
+            group='',
+            advanced=True
         ),
     ]
 
@@ -188,15 +209,27 @@ different format.
                 cameras, images, points3D = colmap_io.load_model(chunk.node.inputFolder.value)
 
 
+            # update images paths
+            working_dir = os.path.dirname(chunk.logFile)
+            if chunk.node.imagesPath.value == "absolute":
+                images = holo_io.update_images_paths(images, working_dir)
+
+            if chunk.node.imagesPath.value == "container":
+                cache_dir = os.path.dirname(os.path.dirname(os.path.dirname(chunk.logFile)))
+                rel_path_from_cache_dir = working_dir.replace(cache_dir,'/data')
+                images = holo_io.update_images_paths(images, rel_path_from_cache_dir)
+
             # output structures
+            if chunk.node.cpoyImagesToOutput.value:
+                holo_io.copy_sfm_images(chunk.node.inputFolder.value, chunk.node.output.value)
+
             if chunk.node.outputSfMFormat.value == "COLMAP":
                 chunk.logger.info("Saving COLMAP SfM.")
                 colmap_io.write_model(chunk.node.output.value, cameras, images, points3D)
 
             if chunk.node.outputSfMFormat.value == "Meshroom":
                 chunk.logger.info("Saving Meshroom SfM.")
-                meshroom_io.write_model(chunk.node.outputMeshroomSfM.value, \
-                    chunk.node.output.value, cameras, images, points3D)
+                meshroom_io.write_model(chunk.node.outputMeshroomSfM.value, cameras, images, points3D)
 
             chunk.logger.info("HoloLensIO done.") 
 
