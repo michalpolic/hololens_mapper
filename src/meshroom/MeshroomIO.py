@@ -79,10 +79,7 @@ class MeshroomIO:
         return sfm_dict
 
 
-    def add_views_to_sfm_structure(self, sfm_dict, images_path, images, cameras):
-        images_path = images_path.replace('\\','/')
-        images_path = images_path.replace('\/','/')
-
+    def add_views_to_sfm_structure(self, sfm_dict, images, cameras):
         for img in images:
             cam = cameras[int(img['camera_id'])]
 
@@ -90,7 +87,7 @@ class MeshroomIO:
                 "viewId": str(img['image_id']),
                 "poseId": str(img['image_id']),
                 "intrinsicId": str(img['camera_id']),
-                "path": images_path + img['name'].replace('\\','/'),
+                "path": img['name'].replace('\\','/').replace('\/','/'),
                 "width": str(cam['width']),
                 "height": str(cam['height'])
             })
@@ -204,11 +201,11 @@ class MeshroomIO:
         with open(out_path, 'w') as outfile:
             json.dump(sfm_dict, outfile)
 
-    def write_model(self, out_path, images_dir, cameras, images, points3D):
+    def write_model(self, out_path, cameras, images, points3D):
         print("Composition of Meshroom JSON.")
         sfm_dict = self.init_sfm_structure()
         sfm_dict = self.add_cameras_to_sfm_structure(sfm_dict, cameras)
-        sfm_dict = self.add_views_to_sfm_structure(sfm_dict, images_dir, images, cameras)
+        sfm_dict = self.add_views_to_sfm_structure(sfm_dict, images, cameras)
         sfm_dict = self.add_points_to_sfm_structure(sfm_dict, points3D, images)
         with open(out_path, 'w') as outfile:
             json.dump(sfm_dict, outfile)

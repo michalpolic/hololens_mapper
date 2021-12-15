@@ -455,7 +455,16 @@ class HoloIO:
                 copy_tree(source_dir + imgs_dir, destination_dir + imgs_dir)   
         
 
+    def update_images_paths(self, images, prefix_to_add):
+        if not prefix_to_add[-1] == '/':
+            prefix_to_add = prefix_to_add + '/'
 
+        new_images = []
+        for img in images:
+            img_path = prefix_to_add + img['name'].replace('\\','/').replace('\/','/')
+            img['name'] = img_path
+            new_images.append(img)
+        return new_images
 
 
 

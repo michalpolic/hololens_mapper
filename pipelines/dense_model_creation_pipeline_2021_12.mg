@@ -4,19 +4,19 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "PrepareDenseScene": "3.0",
             "MatchingPairsSelector": "0.1",
-            "DepthMap": "2.0",
-            "KeyframeSelector": "0.1",
-            "ColmapMapper": "0.1",
-            "ModelsAligner": "0.1",
             "Meshing": "7.0",
-            "HoloLensMatcher": "0.1",
             "ConvertSfMFormat": "2.0",
-            "HololensPointcloudComposer": "0.1",
-            "DepthMapFilter": "3.0",
             "DensePointcloudFilter": "0.1",
-            "HoloLensIO": "0.1"
+            "PrepareDenseScene": "3.0",
+            "HoloLensMatcher": "0.1",
+            "DepthMapFilter": "3.0",
+            "HoloLensIO": "0.1",
+            "DepthMap": "2.0",
+            "ModelsAligner": "0.1",
+            "ColmapMapper": "0.1",
+            "KeyframeSelector": "0.1",
+            "HololensPointcloudComposer": "0.1"
         }
     },
     "graph": {
@@ -107,7 +107,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "b60ea0a05562abe22aa73c4b90b6249a72b5230c"
+                "0": "f3f1cb295b82ea414f2e25218c978f370d2c0ca0"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -133,7 +133,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "df2147f32364ad4e14de7472e75b5ee185b1c4c8"
+                "0": "5bc0c4f137ca22fa67ec227bb00e1068e8dc8aea"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -161,7 +161,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "17e7ee1984b88d58f23b51cddd5e5af7048feba5"
+                "0": "01ed9e5d2c4c09879db8fc29a26fd3cfc09d8546"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -184,7 +184,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "b2e79a9c58629719346d2dab1c0199084058ecc5"
+                "0": "636c04720aa056fe59cce9877ea117c662146fd1"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -208,7 +208,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "0e560cad28e59f7c75786b590ca0c6483f765932"
+                "0": "2d6983c28973be103911c9a92be778d52699cb52"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -232,6 +232,273 @@
                 "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
             }
         },
+        "PrepareDenseScene_1": {
+            "nodeType": "PrepareDenseScene",
+            "position": [
+                1510,
+                -8
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "a4c7035cb07b70029dfb141668d4cb703732c923"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{ConvertSfMFormat_1.containerName}",
+                "containerPrefix": "{ConvertSfMFormat_1.containerPrefix}",
+                "input": "{ConvertSfMFormat_1.output}",
+                "imagesFolders": [
+                    "{ModelsAligner_1.sfmReference}"
+                ],
+                "masksFolders": [],
+                "outputFileType": "exr",
+                "saveMetadata": true,
+                "saveMatricesTxtFiles": false,
+                "evCorrection": false,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputUndistorted": "{cache}/{nodeType}/{uid0}/*.{outputFileTypeValue}"
+            }
+        },
+        "DepthMap_1": {
+            "nodeType": "DepthMap",
+            "position": [
+                1706,
+                -6
+            ],
+            "parallelization": {
+                "blockSize": 3,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "33ce55fa765b59d972aa9faf39f62f1b75c8c24f"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{PrepareDenseScene_1.containerName}",
+                "containerPrefix": "{PrepareDenseScene_1.containerPrefix}",
+                "input": "{PrepareDenseScene_1.input}",
+                "imagesFolder": "{PrepareDenseScene_1.outputUndistorted}",
+                "downscale": 2,
+                "minViewAngle": 2.0,
+                "maxViewAngle": 70.0,
+                "sgmMaxTCams": 10,
+                "sgmWSH": 4,
+                "sgmGammaC": 5.5,
+                "sgmGammaP": 8.0,
+                "refineMaxTCams": 6,
+                "refineNSamplesHalf": 150,
+                "refineNDepthsToRefine": 31,
+                "refineNiters": 100,
+                "refineWSH": 3,
+                "refineSigma": 15,
+                "refineGammaC": 15.5,
+                "refineGammaP": 8.0,
+                "refineUseTcOrRcPixSize": false,
+                "exportIntermediateResults": false,
+                "nbGPUs": 0,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "DepthMapFilter_1": {
+            "nodeType": "DepthMapFilter",
+            "position": [
+                1904,
+                -6
+            ],
+            "parallelization": {
+                "blockSize": 10,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "9754f41d0184811184324fd3c58eb2d01aa0f77f"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{DepthMap_1.containerName}",
+                "containerPrefix": "{DepthMap_1.containerPrefix}",
+                "input": "{DepthMap_1.input}",
+                "depthMapsFolder": "{DepthMap_1.output}",
+                "minViewAngle": 2.0,
+                "maxViewAngle": 70.0,
+                "nNearestCams": 10,
+                "minNumOfConsistentCams": 3,
+                "minNumOfConsistentCamsWithLowSimilarity": 4,
+                "pixSizeBall": 0,
+                "pixSizeBallWithLowSimilarity": 0,
+                "computeNormalMaps": false,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "Meshing_1": {
+            "nodeType": "Meshing",
+            "position": [
+                2091,
+                -17
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "1008f083e3f6f28c78057ef8eeb3d573871c1348"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{DepthMapFilter_1.containerName}",
+                "containerPrefix": "{DepthMapFilter_1.containerPrefix}",
+                "input": "{DepthMapFilter_1.input}",
+                "depthMapsFolder": "{DepthMapFilter_1.output}",
+                "outputMeshFileType": "obj",
+                "useBoundingBox": false,
+                "boundingBox": {
+                    "bboxTranslation": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "bboxRotation": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "bboxScale": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    }
+                },
+                "estimateSpaceFromSfM": true,
+                "estimateSpaceMinObservations": 3,
+                "estimateSpaceMinObservationAngle": 10,
+                "maxInputPoints": 50000000,
+                "maxPoints": 5000000,
+                "maxPointsPerVoxel": 1000000,
+                "minStep": 2,
+                "partitioning": "singleBlock",
+                "repartition": "multiResolution",
+                "angleFactor": 15.0,
+                "simFactor": 15.0,
+                "pixSizeMarginInitCoef": 2.0,
+                "pixSizeMarginFinalCoef": 4.0,
+                "voteMarginFactor": 4.0,
+                "contributeMarginFactor": 2.0,
+                "simGaussianSizeInit": 10.0,
+                "simGaussianSize": 10.0,
+                "minAngleThreshold": 1.0,
+                "refineFuse": true,
+                "helperPointsGridSize": 10,
+                "densify": false,
+                "densifyNbFront": 1,
+                "densifyNbBack": 1,
+                "densifyScale": 20.0,
+                "nPixelSizeBehind": 4.0,
+                "fullWeight": 1.0,
+                "voteFilteringForWeaklySupportedSurfaces": true,
+                "addLandmarksToTheDensePointCloud": false,
+                "invertTetrahedronBasedOnNeighborsNbIterations": 10,
+                "minSolidAngleRatio": 0.2,
+                "nbSolidAngleFilteringIterations": 2,
+                "colorizeOutput": true,
+                "addMaskHelperPoints": false,
+                "maskHelperPointsWeight": 1.0,
+                "maskBorderSize": 4,
+                "maxNbConnectedHelperPoints": 50,
+                "saveRawDensePointCloud": true,
+                "exportDebugTetrahedralization": false,
+                "seed": 0,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "outputMesh": "{cache}/{nodeType}/{uid0}/mesh.{outputMeshFileTypeValue}",
+                "output": "{cache}/{nodeType}/{uid0}/densePointCloud.abc",
+                "outputRAW": "{cache}/{nodeType}/{uid0}/densePointCloud_raw.abc"
+            }
+        },
+        "ConvertSfMFormat_2": {
+            "nodeType": "ConvertSfMFormat",
+            "position": [
+                2282,
+                -10
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "e9e5492cb2252b2aa46418de4ec5b849fe89d4b0"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{Meshing_1.containerName}",
+                "containerPrefix": "{Meshing_1.containerPrefix}",
+                "input": "{Meshing_1.outputRAW}",
+                "fileExt": "ply",
+                "describerTypes": [
+                    "dspsift",
+                    "unknown",
+                    "sift"
+                ],
+                "imageWhiteList": [],
+                "views": true,
+                "intrinsics": true,
+                "extrinsics": true,
+                "structure": true,
+                "observations": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
+            }
+        },
+        "HoloLensIO_2": {
+            "nodeType": "HoloLensIO",
+            "position": [
+                1140,
+                87
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 0,
+                "split": 1
+            },
+            "uids": {
+                "0": "eb1980b858cc6258ed9dab3fe57b0cec5ad5c3b0"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputFolder": "{ModelsAligner_1.output}",
+                "pointcloudFile": "",
+                "hashScale": 1,
+                "allPoints": false,
+                "intrinsics": [],
+                "inputSfMFormat": "COLMAP",
+                "outputSfMFormat": "Meshroom",
+                "cpoyImagesToOutput": true,
+                "imagesPath": "container",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
+            }
+        },
         "HoloLensIO_1": {
             "nodeType": "HoloLensIO",
             "position": [
@@ -244,7 +511,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "b4b1649ec83bac88da10f4b319a990da2deaeb95"
+                "0": "050d28cc514691ff806f376cbb3df06d599981fb"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -356,276 +623,13 @@
                 ],
                 "inputSfMFormat": "HoloLens",
                 "outputSfMFormat": "COLMAP",
+                "cpoyImagesToOutput": false,
+                "imagesPath": "original",
                 "verboseLevel": "info"
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/",
                 "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
-            }
-        },
-        "PrepareDenseScene_1": {
-            "nodeType": "PrepareDenseScene",
-            "position": [
-                1510,
-                -8
-            ],
-            "parallelization": {
-                "blockSize": 40,
-                "size": 0,
-                "split": 0
-            },
-            "uids": {
-                "0": "abea0c43b944c0182835d411e23efd7478510fd3"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{ConvertSfMFormat_1.containerName}",
-                "containerPrefix": "{ConvertSfMFormat_1.containerPrefix}",
-                "input": "{ConvertSfMFormat_1.output}",
-                "imagesFolders": [
-                    "{ModelsAligner_1.sfmReference}"
-                ],
-                "masksFolders": [],
-                "outputFileType": "exr",
-                "saveMetadata": true,
-                "saveMatricesTxtFiles": false,
-                "evCorrection": false,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/",
-                "outputUndistorted": "{cache}/{nodeType}/{uid0}/*.{outputFileTypeValue}"
-            }
-        },
-        "DepthMap_1": {
-            "nodeType": "DepthMap",
-            "position": [
-                1706,
-                -6
-            ],
-            "parallelization": {
-                "blockSize": 3,
-                "size": 0,
-                "split": 0
-            },
-            "uids": {
-                "0": "38aafc5994a60c9f9368676b44f3c70785ecf324"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{PrepareDenseScene_1.containerName}",
-                "containerPrefix": "{PrepareDenseScene_1.containerPrefix}",
-                "input": "{PrepareDenseScene_1.input}",
-                "imagesFolder": "{PrepareDenseScene_1.outputUndistorted}",
-                "downscale": 2,
-                "minViewAngle": 2.0,
-                "maxViewAngle": 70.0,
-                "sgmMaxTCams": 10,
-                "sgmWSH": 4,
-                "sgmGammaC": 5.5,
-                "sgmGammaP": 8.0,
-                "refineMaxTCams": 6,
-                "refineNSamplesHalf": 150,
-                "refineNDepthsToRefine": 31,
-                "refineNiters": 100,
-                "refineWSH": 3,
-                "refineSigma": 15,
-                "refineGammaC": 15.5,
-                "refineGammaP": 8.0,
-                "refineUseTcOrRcPixSize": false,
-                "exportIntermediateResults": false,
-                "nbGPUs": 0,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
-        "DepthMapFilter_1": {
-            "nodeType": "DepthMapFilter",
-            "position": [
-                1904,
-                -6
-            ],
-            "parallelization": {
-                "blockSize": 10,
-                "size": 0,
-                "split": 0
-            },
-            "uids": {
-                "0": "3a2c98733c6156a8c16053a4d7c0579f2d29f2f2"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{DepthMap_1.containerName}",
-                "containerPrefix": "{DepthMap_1.containerPrefix}",
-                "input": "{DepthMap_1.input}",
-                "depthMapsFolder": "{DepthMap_1.output}",
-                "minViewAngle": 2.0,
-                "maxViewAngle": 70.0,
-                "nNearestCams": 10,
-                "minNumOfConsistentCams": 3,
-                "minNumOfConsistentCamsWithLowSimilarity": 4,
-                "pixSizeBall": 0,
-                "pixSizeBallWithLowSimilarity": 0,
-                "computeNormalMaps": false,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
-        "Meshing_1": {
-            "nodeType": "Meshing",
-            "position": [
-                2091,
-                -17
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "00e05608f920d199e4a81b2b20aa3df0dad563ef"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{DepthMapFilter_1.containerName}",
-                "containerPrefix": "{DepthMapFilter_1.containerPrefix}",
-                "input": "{DepthMapFilter_1.input}",
-                "depthMapsFolder": "{DepthMapFilter_1.output}",
-                "outputMeshFileType": "obj",
-                "useBoundingBox": false,
-                "boundingBox": {
-                    "bboxTranslation": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "bboxRotation": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "bboxScale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                "estimateSpaceFromSfM": true,
-                "estimateSpaceMinObservations": 3,
-                "estimateSpaceMinObservationAngle": 10,
-                "maxInputPoints": 50000000,
-                "maxPoints": 5000000,
-                "maxPointsPerVoxel": 1000000,
-                "minStep": 2,
-                "partitioning": "singleBlock",
-                "repartition": "multiResolution",
-                "angleFactor": 15.0,
-                "simFactor": 15.0,
-                "pixSizeMarginInitCoef": 2.0,
-                "pixSizeMarginFinalCoef": 4.0,
-                "voteMarginFactor": 4.0,
-                "contributeMarginFactor": 2.0,
-                "simGaussianSizeInit": 10.0,
-                "simGaussianSize": 10.0,
-                "minAngleThreshold": 1.0,
-                "refineFuse": true,
-                "helperPointsGridSize": 10,
-                "densify": false,
-                "densifyNbFront": 1,
-                "densifyNbBack": 1,
-                "densifyScale": 20.0,
-                "nPixelSizeBehind": 4.0,
-                "fullWeight": 1.0,
-                "voteFilteringForWeaklySupportedSurfaces": true,
-                "addLandmarksToTheDensePointCloud": false,
-                "invertTetrahedronBasedOnNeighborsNbIterations": 10,
-                "minSolidAngleRatio": 0.2,
-                "nbSolidAngleFilteringIterations": 2,
-                "colorizeOutput": true,
-                "addMaskHelperPoints": false,
-                "maskHelperPointsWeight": 1.0,
-                "maskBorderSize": 4,
-                "maxNbConnectedHelperPoints": 50,
-                "saveRawDensePointCloud": true,
-                "exportDebugTetrahedralization": false,
-                "seed": 0,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "outputMesh": "{cache}/{nodeType}/{uid0}/mesh.{outputMeshFileTypeValue}",
-                "output": "{cache}/{nodeType}/{uid0}/densePointCloud.abc",
-                "outputRAW": "{cache}/{nodeType}/{uid0}/densePointCloud_raw.abc"
-            }
-        },
-        "HoloLensIO_2": {
-            "nodeType": "HoloLensIO",
-            "position": [
-                1140,
-                87
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 0,
-                "split": 1
-            },
-            "uids": {
-                "0": "bd8efe3c789c143fef1a696bcb8d833752024307"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "inputFolder": "{ModelsAligner_1.output}",
-                "pointcloudFile": "",
-                "hashScale": 1,
-                "allPoints": false,
-                "intrinsics": [],
-                "inputSfMFormat": "COLMAP",
-                "outputSfMFormat": "Meshroom",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/",
-                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
-            }
-        },
-        "ConvertSfMFormat_2": {
-            "nodeType": "ConvertSfMFormat",
-            "position": [
-                2282,
-                -10
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "563a4cb8170bc2656935f8d4c827f5039e5d215a"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{Meshing_1.containerName}",
-                "containerPrefix": "{Meshing_1.containerPrefix}",
-                "input": "{Meshing_1.outputRAW}",
-                "fileExt": "ply",
-                "describerTypes": [
-                    "dspsift",
-                    "unknown",
-                    "sift"
-                ],
-                "imageWhiteList": [],
-                "views": true,
-                "intrinsics": true,
-                "extrinsics": true,
-                "structure": true,
-                "observations": true,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
             }
         }
     }
