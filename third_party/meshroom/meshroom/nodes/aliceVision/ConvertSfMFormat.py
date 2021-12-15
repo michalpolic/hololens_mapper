@@ -21,11 +21,7 @@ It can also be used to remove specific parts of from an SfM scene (like filter a
                 "set the path (Singularity) or name (Docker) of the container to run.", 
             value="", 
             uid=[],
-<<<<<<< HEAD
             advanced=True,
-=======
-            advanced=True
->>>>>>> dbf29fe57ab7ecd1734479c51159b27d8fd0a81b
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -35,11 +31,7 @@ It can also be used to remove specific parts of from an SfM scene (like filter a
                 "If the container is build with executables in path, let this variable empty.", 
             value="", 
             uid=[],
-<<<<<<< HEAD
             advanced=True,
-=======
-            advanced=True
->>>>>>> dbf29fe57ab7ecd1734479c51159b27d8fd0a81b
         ),
         desc.File(
             name='input',
