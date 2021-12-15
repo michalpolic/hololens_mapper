@@ -4,21 +4,22 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "ConvertSfMFormat": "2.1",
-            "MatchingPairsSelector": "0.1",
-            "KeyframeSelector": "0.1",
-            "DensePointcloudFilter": "0.1",
-            "Texturing": "6.0",
             "DepthMap": "2.0",
-            "Meshing": "7.0",
-            "ColmapMapper": "0.1",
-            "DepthMapFilter": "3.0",
-            "HoloLensIO": "0.1",
-            "PrepareDenseScene": "3.0",
-            "DensePonitcloudsAligner": "0.1",
-            "HoloLensMatcher": "0.1",
             "ModelsAligner": "0.1",
-            "HololensPointcloudComposer": "0.1"
+            "DensePointcloudFilter": "0.1",
+            "ConvertSfMFormat": "2.1",
+            "PrepareDenseScene": "3.0",
+            "Meshing": "7.0",
+            "DensePonitcloudsAligner": "0.1",
+            "KeyframeSelector": "0.1",
+            "HoloLensIO": "0.1",
+            "HololensPointcloudComposer": "0.1",
+            "HoloLensMatcher": "0.1",
+            "MeshFiltering": "3.0",
+            "Texturing": "6.0",
+            "ColmapMapper": "0.1",
+            "MatchingPairsSelector": "0.1",
+            "DepthMapFilter": "3.0"
         }
     },
     "graph": {
@@ -563,6 +564,134 @@
                 "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
             }
         },
+        "DensePonitcloudsAligner_1": {
+            "nodeType": "DensePonitcloudsAligner",
+            "position": [
+                2453,
+                90
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "9152ecd2e7b60c02dd5af1d8b8be45287220acf0"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputPointcloud1": "{ConvertSfMFormat_2.output}",
+                "inputPointcloud2": "{DensePointcloudFilter_1.output}",
+                "alignmentMehod": "concatenation",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}//model.obj"
+            }
+        },
+        "Texturing_1": {
+            "nodeType": "Texturing",
+            "position": [
+                3601,
+                -48
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "f7fd99df7deaed4de175f9a97b2e2cb6f1327392"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{MeshFiltering_1.containerName}",
+                "containerPrefix": "{MeshFiltering_1.containerPrefix}",
+                "input": "{Meshing_2.output}",
+                "imagesFolder": "",
+                "inputMesh": "{MeshFiltering_1.outputMesh}",
+                "inputRefMesh": "",
+                "textureSide": 8192,
+                "downscale": 2,
+                "outputMeshFileType": "obj",
+                "colorMapping": {
+                    "enable": true,
+                    "colorMappingFileType": "exr"
+                },
+                "bumpMapping": {
+                    "enable": true,
+                    "bumpType": "Normal",
+                    "normalFileType": "exr",
+                    "heightFileType": "exr"
+                },
+                "displacementMapping": {
+                    "enable": true,
+                    "displacementMappingFileType": "exr"
+                },
+                "unwrapMethod": "Basic",
+                "useUDIM": true,
+                "fillHoles": false,
+                "padding": 5,
+                "multiBandDownscale": 4,
+                "multiBandNbContrib": {
+                    "high": 1,
+                    "midHigh": 5,
+                    "midLow": 10,
+                    "low": 0
+                },
+                "useScore": true,
+                "bestScoreThreshold": 0.1,
+                "angleHardThreshold": 90.0,
+                "processColorspace": "sRGB",
+                "correctEV": false,
+                "forceVisibleByAllVertices": true,
+                "flipNormals": true,
+                "visibilityRemappingMethod": "PullPush",
+                "subdivisionTargetRatio": 0.8,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputMesh": "{cache}/{nodeType}/{uid0}/texturedMesh.{outputMeshFileTypeValue}",
+                "outputMaterial": "{cache}/{nodeType}/{uid0}/texturedMesh.mtl",
+                "outputTextures": "{cache}/{nodeType}/{uid0}/texture_*.exr"
+            }
+        },
+        "MeshFiltering_1": {
+            "nodeType": "MeshFiltering",
+            "position": [
+                3406,
+                36
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "6b9223c69adf4e378445fb6237596091c1e80a13"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{Meshing_2.containerName}",
+                "containerPrefix": "{Meshing_2.containerPrefix}",
+                "inputMesh": "{Meshing_2.outputMesh}",
+                "outputMeshFileType": "obj",
+                "keepLargestMeshOnly": false,
+                "smoothingSubset": "all",
+                "smoothingBoundariesNeighbours": 0,
+                "smoothingIterations": 5,
+                "smoothingLambda": 1.0,
+                "filteringSubset": "all",
+                "filteringIterations": 1,
+                "filterLargeTrianglesFactor": 60.0,
+                "filterTrianglesRatio": 0.0,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "outputMesh": "{cache}/{nodeType}/{uid0}/mesh.{outputMeshFileTypeValue}"
+            }
+        },
         "ConvertSfMFormat_2": {
             "nodeType": "ConvertSfMFormat",
             "position": [
@@ -632,31 +761,6 @@
                 "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
             }
         },
-        "DensePonitcloudsAligner_1": {
-            "nodeType": "DensePonitcloudsAligner",
-            "position": [
-                2453,
-                90
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "9152ecd2e7b60c02dd5af1d8b8be45287220acf0"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "inputPointcloud1": "{ConvertSfMFormat_2.output}",
-                "inputPointcloud2": "{DensePointcloudFilter_1.output}",
-                "alignmentMehod": "concatenation",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//model.obj"
-            }
-        },
         "DensePointcloudFilter_2": {
             "nodeType": "DensePointcloudFilter",
             "position": [
@@ -682,43 +786,11 @@
                 "output": "{cache}/{nodeType}/{uid0}//model.obj"
             }
         },
-        "HoloLensIO_3": {
-            "nodeType": "HoloLensIO",
+        "Meshing_2": {
+            "nodeType": "Meshing",
             "position": [
-                2824,
-                18
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 0,
-                "split": 1
-            },
-            "uids": {
-                "0": "b575804aec31f0563ba5f0b09df5525e240b9d59"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "inputFolder": "{ModelsAligner_1.output}",
-                "pointcloudFile": "{DensePointcloudFilter_2.output}",
-                "hashScale": 100,
-                "allPoints": true,
-                "intrinsics": [],
-                "inputSfMFormat": "COLMAP",
-                "outputSfMFormat": "Meshroom",
-                "cpoyImagesToOutput": true,
-                "imagesPath": "container",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/",
-                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
-            }
-        },
-        "ConvertSfMFormat_3": {
-            "nodeType": "ConvertSfMFormat",
-            "position": [
-                3000,
-                -92
+                3198,
+                -120
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -726,82 +798,13 @@
                 "split": 1
             },
             "uids": {
-                "0": "26d14844bc639199891c3c2b092c3546c4169fff"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{ConvertSfMFormat_2.containerName}",
-                "containerPrefix": "{ConvertSfMFormat_2.containerPrefix}",
-                "input": "{HoloLensIO_3.outputMeshroomSfM}",
-                "fileExt": "abc",
-                "describerTypes": [
-                    "dspsift",
-                    "unknown",
-                    "sift"
-                ],
-                "imageWhiteList": [],
-                "views": true,
-                "intrinsics": true,
-                "extrinsics": true,
-                "structure": true,
-                "observations": true,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
-            }
-        },
-        "PrepareDenseScene_2": {
-            "nodeType": "PrepareDenseScene",
-            "position": [
-                3192,
-                -119
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "9be2927015012eb9a307b5f80d00412d513bb774"
+                "0": "a5a64f146dfaf5af87582f3afc663f8a03a8bd26"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "containerName": "{ConvertSfMFormat_3.containerName}",
                 "containerPrefix": "{ConvertSfMFormat_3.containerPrefix}",
                 "input": "{ConvertSfMFormat_3.output}",
-                "imagesFolders": [],
-                "masksFolders": [],
-                "outputFileType": "exr",
-                "saveMetadata": true,
-                "saveMatricesTxtFiles": false,
-                "evCorrection": false,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/",
-                "outputUndistorted": "{cache}/{nodeType}/{uid0}/*.{outputFileTypeValue}"
-            }
-        },
-        "Meshing_2": {
-            "nodeType": "Meshing",
-            "position": [
-                3392,
-                -123
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "8e5828dfd90af05f6603020cb7d06bb78363df60"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{PrepareDenseScene_2.containerName}",
-                "containerPrefix": "{PrepareDenseScene_2.containerPrefix}",
-                "input": "{PrepareDenseScene_2.input}",
                 "depthMapsFolder": "",
                 "outputMeshFileType": "obj",
                 "useBoundingBox": false,
@@ -869,11 +872,43 @@
                 "outputRAW": "{cache}/{nodeType}/{uid0}/densePointCloud_raw.abc"
             }
         },
-        "ConvertSfMFormat_4": {
+        "HoloLensIO_3": {
+            "nodeType": "HoloLensIO",
+            "position": [
+                2824,
+                18
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 0,
+                "split": 1
+            },
+            "uids": {
+                "0": "c7d5e8793a7bed72a5cbb6b356360a3be1e28aaf"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputFolder": "{ModelsAligner_1.output}",
+                "pointcloudFile": "{DensePointcloudFilter_2.output}",
+                "hashScale": 100,
+                "allPoints": false,
+                "intrinsics": [],
+                "inputSfMFormat": "COLMAP",
+                "outputSfMFormat": "Meshroom",
+                "cpoyImagesToOutput": true,
+                "imagesPath": "container",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
+            }
+        },
+        "ConvertSfMFormat_3": {
             "nodeType": "ConvertSfMFormat",
             "position": [
-                3621,
-                -161
+                3000,
+                -92
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -881,13 +916,50 @@
                 "split": 1
             },
             "uids": {
-                "0": "cf5d2f9d054f1e5a322cd024e20e3792c761447a"
+                "0": "49c7d17470b1a5573f699b8d6aa84ec1006139cd"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "{ConvertSfMFormat_2.containerName}",
+                "containerPrefix": "{ConvertSfMFormat_2.containerPrefix}",
+                "input": "{HoloLensIO_3.outputMeshroomSfM}",
+                "fileExt": "abc",
+                "describerTypes": [
+                    "dspsift",
+                    "unknown",
+                    "sift"
+                ],
+                "imageWhiteList": [],
+                "views": true,
+                "intrinsics": true,
+                "extrinsics": true,
+                "structure": true,
+                "observations": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
+            }
+        },
+        "ConvertSfMFormat_4": {
+            "nodeType": "ConvertSfMFormat",
+            "position": [
+                3491,
+                -190
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "93aedbcb13b93b9d6ccb660b8c8cf620f7fe6af3"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "containerName": "{Meshing_2.containerName}",
                 "containerPrefix": "{Meshing_2.containerPrefix}",
-                "input": "{Meshing_2.outputRAW}",
+                "input": "{Meshing_2.output}",
                 "fileExt": "ply",
                 "describerTypes": [
                     "sift",
@@ -903,74 +975,6 @@
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
-            }
-        },
-        "Texturing_1": {
-            "nodeType": "Texturing",
-            "position": [
-                3617,
-                -2
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "a23f9f7bd8b58e3e228e9267b9116f6b333f01f3"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{Meshing_2.containerName}",
-                "containerPrefix": "{Meshing_2.containerPrefix}",
-                "input": "{Meshing_2.outputRAW}",
-                "imagesFolder": "",
-                "inputMesh": "{Meshing_2.outputMesh}",
-                "inputRefMesh": "",
-                "textureSide": 8192,
-                "downscale": 2,
-                "outputMeshFileType": "obj",
-                "colorMapping": {
-                    "enable": true,
-                    "colorMappingFileType": "exr"
-                },
-                "bumpMapping": {
-                    "enable": true,
-                    "bumpType": "Normal",
-                    "normalFileType": "exr",
-                    "heightFileType": "exr"
-                },
-                "displacementMapping": {
-                    "enable": true,
-                    "displacementMappingFileType": "exr"
-                },
-                "unwrapMethod": "Basic",
-                "useUDIM": true,
-                "fillHoles": false,
-                "padding": 5,
-                "multiBandDownscale": 4,
-                "multiBandNbContrib": {
-                    "high": 1,
-                    "midHigh": 5,
-                    "midLow": 10,
-                    "low": 0
-                },
-                "useScore": true,
-                "bestScoreThreshold": 0.1,
-                "angleHardThreshold": 90.0,
-                "processColorspace": "sRGB",
-                "correctEV": false,
-                "forceVisibleByAllVertices": true,
-                "flipNormals": true,
-                "visibilityRemappingMethod": "PullPush",
-                "subdivisionTargetRatio": 0.8,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/",
-                "outputMesh": "{cache}/{nodeType}/{uid0}/texturedMesh.{outputMeshFileTypeValue}",
-                "outputMaterial": "{cache}/{nodeType}/{uid0}/texturedMesh.mtl",
-                "outputTextures": "{cache}/{nodeType}/{uid0}/texture_*.exr"
             }
         }
     }
