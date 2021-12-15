@@ -67,6 +67,7 @@ Many cameras are contributing to the low frequencies and only the best ones cont
             label='Ref Mesh',
             description='Optional input mesh to compute height maps and normal maps. If not provided, no additional maps with geometric information will be generated.',
             value='',
+            group='',
             uid=[0],
         ),
         desc.ChoiceParam(
@@ -94,6 +95,7 @@ Many cameras are contributing to the low frequencies and only the best ones cont
             value='obj',
             values=('obj', 'gltf', 'fbx', 'stl'),
             exclusive=True,
+            group='',
             uid=[0],
         ),
         desc.GroupAttribute(name="colorMapping", label="Color Mapping", description="Color Map Parameters",

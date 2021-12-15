@@ -80,7 +80,14 @@ class MeshroomIO:
 
 
     def add_views_to_sfm_structure(self, sfm_dict, images, cameras):
-        for img in images:
+        images_dict = {}
+        if isinstance(images,list):
+            for img in images:
+                images_dict[img['image_id']] = img
+            images = images_dict
+        
+        for img_id in images:
+            img = images[img_id]
             cam = cameras[int(img['camera_id'])]
 
             sfm_dict["views"].append({
@@ -109,8 +116,10 @@ class MeshroomIO:
 
     def add_points_to_sfm_structure(self, sfm_dict, points3D, images):
         images_dict = {}
-        for img in images:
-            images_dict[int(img['image_id'])] = img
+        if isinstance(images,list):
+            for img in images:
+                images_dict[int(img['image_id'])] = img
+            images = images_dict
 
         for pt in points3D:
             if (len(pt['img_pt']) / 2) > 3 and pt['err'] < 2:
@@ -125,7 +134,7 @@ class MeshroomIO:
                 for j in range(int((len(pt['img_pt'])) / 2)):
                     image_id = int(pt['img_pt'][2*j])
                     observation_id = int(pt['img_pt'][2*j + 1])
-                    img = images_dict[image_id]
+                    img = images[image_id]
                     uv = img['uvs'][2*observation_id:2*observation_id+2]
 
                     landmark["observations"].append({

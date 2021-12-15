@@ -459,12 +459,17 @@ class HoloIO:
         if not prefix_to_add[-1] == '/':
             prefix_to_add = prefix_to_add + '/'
 
-        new_images = []
-        for img in images:
-            img_path = prefix_to_add + img['name'].replace('\\','/').replace('\/','/')
-            img['name'] = img_path
-            new_images.append(img)
-        return new_images
+        images_dict = {}
+        if isinstance(images,list):
+            for img in images:
+                images_dict[img['image_id']] = img
+            images = images_dict
+
+        for img_id in images:
+            img = images[img_id]
+            img['name'] = prefix_to_add + img['name'].replace('\\','/').replace('\/','/')
+
+        return images
 
 
 

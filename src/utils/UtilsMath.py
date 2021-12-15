@@ -296,14 +296,16 @@ class UtilsMath:
         # holoio.write_pointcloud_to_file(new_xyz_mean, "/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/model_mean.obj" )
 
         # hash cameras
-        cameras_hash = {}
-        for cam in cameras:
-            cameras_hash[cam["camera_id"]] = cam
+        cameras_hash = cameras
+        if isinstance(cameras, list):
+            cameras_hash = {}
+            for cam in cameras:
+                cameras_hash[int(cam["camera_id"])] = cam
 
         visibility_xyz = [] 
         all_data = []
         for image in images:
-            camera = cameras_hash[image["camera_id"]]
+            camera = cameras_hash[int(image["camera_id"])]
             t = self.distance_to_radius_mapping(camera['f'], xyz_hash_scale)
             all_data.append({"image_id": image["image_id"], \
                 "K": self.get_calibration_matrix(camera), "R": image["R"], \

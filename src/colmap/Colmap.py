@@ -184,6 +184,17 @@ class Colmap():
             used_points3D[int(visibility_map[i])] += 1
         valid_points3D = used_points3D > 1
 
+        # remove old observations
+        for img in images:
+            img['uvs'] = []
+            img['point3D_ids'] = []
+
+        images_dict = {}
+        if isinstance(images, list):
+            for img in images:
+                images_dict[int(img['image_id'])] = img
+            images = images_dict
+
         points3D = []
         ids_xyz_to_points3D = -np.ones(np.shape(new_xyz)[1], dtype=int)
         for i in range(0,len(visibility_map),4):

@@ -193,20 +193,26 @@ different format.
                 chunk.logger.info("Loading HoloLens tracking.")
                 cameras, images, points3D = holo_io.load_model(chunk.node.inputFolder.value, intrinsics)
 
-                if chunk.node.pointcloudFile.value:
-                    chunk.logger.info("Loading dense pointcloud.")
-                    xyz, rgb = meshroom_io.load_vertices(chunk.node.pointcloudFile.value) 
-                    visibility_map, new_xyz = utils_math.estimate_visibility(cameras, images, xyz, \
-                        xyz_hash_scale = chunk.node.hashScale.value, all_points = chunk.node.allPoints.value)
-                    images, points3D = colmap.compose_images_and_points3D_from_visibilty(images, visibility_map, new_xyz)
-                else: 
-                    chunk.logger.info("Dense pointcloud is not available.")
-
             if chunk.node.inputSfMFormat.value == "Meshroom":
                 assert False, "TODO: Meshroom input format."
 
             if chunk.node.inputSfMFormat.value == "COLMAP":
                 cameras, images, points3D = colmap_io.load_model(chunk.node.inputFolder.value)
+
+
+            # update the pointcloud and the observations 
+            if chunk.node.pointcloudFile.value:
+                chunk.logger.info("Loading dense pointcloud.")
+                xyz, rgb = meshroom_io.load_vertices(chunk.node.pointcloudFile.value) 
+                
+                chunk.logger.info("Estimate visibility.")
+                visibility_map, new_xyz = utils_math.estimate_visibility(cameras, images, xyz, \
+                    xyz_hash_scale = chunk.node.hashScale.value, all_points = chunk.node.allPoints.value)
+
+                chunk.logger.info("Update points in 3D and their observations.")
+                images, points3D = colmap.compose_images_and_points3D_from_visibilty(images, visibility_map, new_xyz)
+            else: 
+                chunk.logger.info("Dense pointcloud is not available.")
 
 
             # update images paths
@@ -218,6 +224,7 @@ different format.
                 cache_dir = os.path.dirname(os.path.dirname(os.path.dirname(chunk.logFile)))
                 rel_path_from_cache_dir = working_dir.replace(cache_dir,'/data')
                 images = holo_io.update_images_paths(images, rel_path_from_cache_dir)
+
 
             # output structures
             if chunk.node.cpoyImagesToOutput.value:
