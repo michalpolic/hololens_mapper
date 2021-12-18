@@ -3,6 +3,8 @@ import sys
 from ctypes import *
 import numpy as np
 import sqlite3
+import re
+import random
 from src.utils.UtilsContainers import UtilsContainers
 from src.utils.UtilsMath import UtilsMath
 
@@ -226,3 +228,142 @@ class Colmap():
 
         return (images, points3D)
 
+    def select_subset_of_points3D(self, num_of_points3D, num_of_observations, images, points3D):
+        num_of_unsucessful_trials = 0
+        remove_point = [False for i in range(len(points3D))]
+        num_of_removed_points = 0
+
+        # save num. of obs for each image
+        min_observations_for_img = {}
+        num_obs_in_img = {}
+        obs_to_remove = {}
+        for img_id in images:
+            k = len(images[img_id]['point3D_ids'])
+            num_obs_in_img[img_id] = k
+            min_observations_for_img[img_id] = min(k,num_of_observations)
+            obs_to_remove[img_id] = [False for j in range(k)]
+
+        # simulation -> select what can be removed
+        while (len(points3D) - num_of_removed_points) > num_of_points3D or num_of_unsucessful_trials > 1000:
+
+            pt_position = random.randint(0, len(points3D)-1)
+            if remove_point[pt_position]:
+                continue
+            pt = points3D[pt_position]
+
+            num_obs_in_img2 = num_obs_in_img.copy()
+            for i in range(0, len(pt['img_pt']), 2):
+                num_obs_in_img2[int(pt['img_pt'][i])] -= 1
+
+            remain_enough_observations = True
+            for img_id in images:
+                if num_obs_in_img2[img_id] < min_observations_for_img[img_id]:
+                    remain_enough_observations = False
+            if remain_enough_observations:
+                num_of_removed_points += 1
+                num_of_unsucessful_trials = 0
+                remove_point[pt_position] = True
+                num_obs_in_img = num_obs_in_img2
+                for i in range(0, len(pt['img_pt']), 2):
+                    obs_to_remove[int(pt['img_pt'][i])][int(pt['img_pt'][i+1])] = True
+            else:
+                num_of_unsucessful_trials += 1
+
+        # remove points and observations 
+        new_points3D = []
+        new_points3D_ids_map = {}
+        for i in range(len(points3D)):
+            if not remove_point[i]:
+                pt = points3D[i]
+                new_points3D_ids_map[i] = len(new_points3D)
+                pt['point3D_id'] = len(new_points3D)
+                new_points3D.append(pt)
+
+        for img_id in images:
+            img = images[img_id]
+            point3D_ids = img['point3D_ids']
+            uvs = img['uvs']
+            new_point3D_ids = []
+            new_uvs = []
+            for j in range(len(point3D_ids)):
+                if not obs_to_remove[img_id][j]:
+                    new_point3D_ids.append(new_points3D_ids_map[int(point3D_ids[j])])
+                    new_uvs.append(uvs[2*j])
+                    new_uvs.append(uvs[2*j+1])
+            img['point3D_ids'] = new_point3D_ids
+            img['uvs'] = new_uvs
+
+        return images, new_points3D
+
+
+    def remove_observations_of_removed_images_in_points3D(self, filtered_images, points3D):
+        for pt in points3D:
+            img_pt = pt['img_pt']
+            new_img_pt = []
+            for i in range(0,len(img_pt),2):
+                if not (img_pt[i] in filtered_images):
+                    new_img_pt.append(img_pt[i])
+                    new_img_pt.append(img_pt[i+1])
+            pt['img_pt'] = new_img_pt
+        return points3D
+
+
+    def remove_points_with_less_than_two_oservations(self, images, points3D):
+        new_points3D = []
+        new_points3D_ids_map = {}
+        for i in range(len(points3D)):
+            pt = points3D[i]
+            if (len(pt['img_pt']) / 2) >= 2:
+                new_points3D_ids_map[i] = len(new_points3D)
+                pt['point3D_id'] = len(new_points3D)
+                new_points3D.append(pt) 
+            else: 
+                new_points3D_ids_map[i] = -1
+        
+        for img_id in images:
+            img = images[img_id]
+            point3D_ids = img['point3D_ids']
+            uvs = img['uvs']
+            new_point3D_ids = []
+            new_uvs = []
+            for j in range(len(point3D_ids)):
+                new_pt_id = new_points3D_ids_map[point3D_ids[j]]
+                if new_pt_id > -1:
+                    new_point3D_ids.append(new_pt_id)
+                    new_uvs.append(uvs[2*j])
+                    new_uvs.append(uvs[2*j+1])
+            img['point3D_ids'] = new_point3D_ids
+            img['uvs'] = new_uvs
+
+        return (images, new_points3D)
+
+    def remove_images_with_less_than_three_points3D(self, images):
+        filtered_images = {}
+        for img_id in images:
+            img = images[img_id]
+            if len(img['point3D_ids']) < 3:
+                filtered_images[img_id] = img
+        for img_id in filtered_images:
+            images.pop(img_id)
+
+        return (filtered_images, images)
+
+
+    def remove_images_from_model(self, regular_pattern, images, points3D):
+        # filter images with given regular_pattern in name
+        new_images = {}
+        filtered_images = {}
+        for img_id in images:
+            img = images[img_id]
+            if re.search(regular_pattern, img['name']):
+                filtered_images[int(img['image_id'])] = img
+            else:
+                new_images[int(img['image_id'])] = img
+        
+        # check the consistency of the remaining model and remove wrong images/points3D
+        while filtered_images:
+            points3D = self.remove_observations_of_removed_images_in_points3D(filtered_images, points3D)
+            images, points3D = self.remove_points_with_less_than_two_oservations(images, points3D)
+            filtered_images, new_images = self.remove_images_with_less_than_three_points3D(new_images)
+
+        return (new_images, points3D)

@@ -84,7 +84,7 @@ class ColmapIO:
                     'camera_id': p[8],
                     'R': R,
                     'C': C,
-                    'name': p[9],
+                    'name': p[9].replace('\\','/').replace('\/','/'),
                     'uvs': [],
                     'point3D_ids': []
                 }
@@ -96,7 +96,12 @@ class ColmapIO:
                     img['point3D_ids'].append(p[3 * ii + 2])
                 images_list.append(img)
                 first_row = True
-        return images_list
+        
+        images_dict = {}
+        for img in images_list:
+            images_dict[int(img['image_id'])] = img
+
+        return images_dict
 
     # load points 3D
     def load_points(self, colmap_points_file):
@@ -171,7 +176,7 @@ class ColmapIO:
     def write_images(self, images_file_path, images):
         mean_observations = 0
         if len(images) >= 0:
-            mean_observations = sum((len(img['point3D_ids']) for img in images))/len(images)
+            mean_observations = sum((len(img['point3D_ids']) for img in images.values()))/len(images)
 
         images_file = open(images_file_path, "w")
         images_file.write( \
@@ -181,7 +186,7 @@ class ColmapIO:
             f"# Number of images: {len(images)}, mean observations per image: {mean_observations}\n")
         
         utils_math = UtilsMath()
-        for img in images:
+        for img in images.values():
             params = [img["image_id"]]
             R = img["R"]
             params.extend(np.reshape(utils_math.r2q(R),-1).tolist()[0])
