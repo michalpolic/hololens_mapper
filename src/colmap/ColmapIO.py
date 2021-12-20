@@ -96,13 +96,13 @@ class ColmapIO:
                     img['point3D_ids'].append(p[3 * ii + 2])
                 images_list.append(img)
                 first_row = True
-        
+                
         images_dict = {}
         for img in images_list:
             images_dict[int(img['image_id'])] = img
 
         return images_dict
-
+        
     # load points 3D
     def load_points(self, colmap_points_file):
         points_list = []

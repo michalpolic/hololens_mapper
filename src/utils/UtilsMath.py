@@ -66,10 +66,10 @@ class UtilsMath:
         transformed_C = np.array([]).reshape(3,0)
 
         reference_images_by_name = {}
-        for img in reference_images:
+        for img in reference_images.values():
             reference_images_by_name[img['name'].replace('\\','/')] = img
 
-        for img in transformed_images:
+        for img in transformed_images.values():
             transformed_img_name = img['name'].replace('\\','/')
             if transformed_img_name in reference_images_by_name:
                 ref_img = reference_images_by_name[transformed_img_name]
@@ -115,12 +115,11 @@ class UtilsMath:
 
         return colmap_points
 
-    def transform_colmap_images(self, colmap_cameras, transform):
-        for i in range(0,len(colmap_cameras)):
-            colmap_cameras[i]["R"] = colmap_cameras[i]["R"] * transform["rotation"].T
-            colmap_cameras[i]["C"] =  transform["scale"] * transform["rotation"] * colmap_cameras[i]["C"] + transform["translation"]
-
-        return colmap_cameras 
+    def transform_colmap_images(self, cameras, transform):
+        for cam_id in cameras:
+            cameras[cam_id]["R"] = cameras[cam_id]["R"] * transform["rotation"].T
+            cameras[cam_id]["C"] =  transform["scale"] * transform["rotation"] * cameras[cam_id]["C"] + transform["translation"]
+        return cameras 
 
 
     def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts, rgb = np.array(0)):
@@ -304,7 +303,7 @@ class UtilsMath:
 
         visibility_xyz = [] 
         all_data = []
-        for image in images:
+        for image in images.values():
             camera = cameras_hash[int(image["camera_id"])]
             t = self.distance_to_radius_mapping(camera['f'], xyz_hash_scale)
             all_data.append({"image_id": image["image_id"], \
@@ -333,7 +332,7 @@ class UtilsMath:
         # images may have any ids
         images_to_ids = {}  
         i = 0
-        for image in images: 
+        for image in images.values(): 
             images_to_ids[image['image_id']] = i
             i += 1
 

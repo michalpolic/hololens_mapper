@@ -366,9 +366,11 @@ class HoloIO:
                 views_dict = self.read_hololens_csv(recording_dir + csv_prefix + ".csv")
                 images.extend(self.get_hololens_images(views_dict, \
                     camera_id = camera_params["intrinsicId"], image_id = len(images)))
-
+        images_dict = {}
+        for img in images:
+            images_dict[img['image_id']] = img
+        images = images_dict
         points3D = self.get_hololens_points3D()
-        
         return (cameras, images, points3D)
 
 

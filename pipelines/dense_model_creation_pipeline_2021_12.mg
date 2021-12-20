@@ -40,7 +40,7 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "recordingDir": "/local1/projects/artwin/datasets/Kitchen__2021_11_25",
+                "recordingDir": "/local1/projects/artwin/datasets/Munich/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1",
                 "UVfile": "/local1/projects/artwin/datasets/uvdata.txt",
                 "verboseLevel": "info"
             },
@@ -995,7 +995,7 @@
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "inputFolder": "{HoloLensIO_3.inputFolder}",
-                "subsamplePoints3D": true,
+                "subsamplePoints3D": false,
                 "numberOfPoints3D": 1000,
                 "minNumberOfObservations": 50,
                 "filterPV": false,

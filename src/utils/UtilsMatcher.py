@@ -297,7 +297,7 @@ class UtilsMatcher:
 
     def synchronize_images_ids_with_database(self, images, images_db):
         images_by_name = {}
-        for img in images:
+        for img in images.values():
             images_by_name[img['name'].replace('\\','/')] = img
 
         for image_db in images_db:

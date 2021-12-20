@@ -1,6 +1,7 @@
 __pycache__*/
 build*/
 tmp*/
+tmp*
 *.so
 *.pyd
 *.sif

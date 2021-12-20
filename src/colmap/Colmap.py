@@ -187,15 +187,10 @@ class Colmap():
         valid_points3D = used_points3D > 1
 
         # remove old observations
-        for img in images:
+        for img_id in images:
+            img = images[img_id]
             img['uvs'] = []
             img['point3D_ids'] = []
-
-        images_dict = {}
-        if isinstance(images, list):
-            for img in images:
-                images_dict[int(img['image_id'])] = img
-            images = images_dict
 
         points3D = []
         ids_xyz_to_points3D = -np.ones(np.shape(new_xyz)[1], dtype=int)
@@ -286,7 +281,7 @@ class Colmap():
             new_point3D_ids = []
             new_uvs = []
             for j in range(len(point3D_ids)):
-                if not obs_to_remove[img_id][j]:
+                if not obs_to_remove[img_id][j] and int(point3D_ids[j]) > -1:
                     new_point3D_ids.append(new_points3D_ids_map[int(point3D_ids[j])])
                     new_uvs.append(uvs[2*j])
                     new_uvs.append(uvs[2*j+1])
@@ -301,7 +296,7 @@ class Colmap():
             img_pt = pt['img_pt']
             new_img_pt = []
             for i in range(0,len(img_pt),2):
-                if not (img_pt[i] in filtered_images):
+                if not (int(img_pt[i]) in filtered_images):
                     new_img_pt.append(img_pt[i])
                     new_img_pt.append(img_pt[i+1])
             pt['img_pt'] = new_img_pt
@@ -314,26 +309,30 @@ class Colmap():
         for i in range(len(points3D)):
             pt = points3D[i]
             if (len(pt['img_pt']) / 2) >= 2:
-                new_points3D_ids_map[i] = len(new_points3D)
+                new_points3D_ids_map[int(pt['point3D_id'])] = len(new_points3D)
                 pt['point3D_id'] = len(new_points3D)
                 new_points3D.append(pt) 
             else: 
-                new_points3D_ids_map[i] = -1
+                new_points3D_ids_map[int(pt['point3D_id'])] = -1
         
         for img_id in images:
             img = images[img_id]
             point3D_ids = img['point3D_ids']
-            uvs = img['uvs']
-            new_point3D_ids = []
-            new_uvs = []
+            # uvs = img['uvs']
+            # new_point3D_ids = []
+            # new_uvs = []
             for j in range(len(point3D_ids)):
-                new_pt_id = new_points3D_ids_map[point3D_ids[j]]
-                if new_pt_id > -1:
-                    new_point3D_ids.append(new_pt_id)
-                    new_uvs.append(uvs[2*j])
-                    new_uvs.append(uvs[2*j+1])
-            img['point3D_ids'] = new_point3D_ids
-            img['uvs'] = new_uvs
+                if int(point3D_ids[j]) > -1:
+                    new_pt_id = new_points3D_ids_map[int(point3D_ids[j])]
+                    if new_pt_id > -1:
+                        point3D_ids[j] = str(new_pt_id)
+                        # new_point3D_ids.append(new_pt_id)
+                        # new_uvs.append(uvs[2*j])
+                        # new_uvs.append(uvs[2*j+1])
+                    else:
+                        point3D_ids[j] = '-1'
+            # img['point3D_ids'] = new_point3D_ids
+            # img['uvs'] = new_uvs
 
         return (images, new_points3D)
 
