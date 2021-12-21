@@ -18,7 +18,9 @@ This node applies a Laplacian filtering to remove local defects from the raw Mes
             description="If you would like to run the comnands inside a container, "
                 "set the path (Singularity) or name (Docker) of the container to run.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
+            group='container_setting',
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -27,7 +29,9 @@ This node applies a Laplacian filtering to remove local defects from the raw Mes
                 "set the internal path to executables inside the container. "
                 "If the container is build with executables in path, let this variable empty.", 
             value="", 
-            uid=[]
+            uid=[],
+            advanced=True,
+            group='container_setting',
         ),
         desc.File(
             name='inputMesh',

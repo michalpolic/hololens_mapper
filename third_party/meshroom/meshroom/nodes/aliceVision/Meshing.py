@@ -30,6 +30,7 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -40,6 +41,7 @@ A Graph Cut Max-Flow is applied to optimally cut the volume. This cut represents
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.File(
             name='input',

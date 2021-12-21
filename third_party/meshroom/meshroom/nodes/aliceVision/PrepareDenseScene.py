@@ -23,6 +23,7 @@ This node export undistorted images so the depth map and texturing can be comput
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -33,6 +34,7 @@ This node export undistorted images so the depth map and texturing can be comput
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.File(
             name='input',

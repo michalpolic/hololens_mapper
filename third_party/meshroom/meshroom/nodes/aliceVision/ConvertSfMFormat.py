@@ -21,6 +21,7 @@ It can also be used to remove specific parts of from an SfM scene (like filter a
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -31,6 +32,7 @@ It can also be used to remove specific parts of from an SfM scene (like filter a
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.File(
             name='input',

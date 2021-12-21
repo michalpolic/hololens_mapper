@@ -30,6 +30,7 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -40,6 +41,7 @@ Use a downscale factor of one (full-resolution) only if the quality of the input
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.File(
             name='input',

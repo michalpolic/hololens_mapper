@@ -24,6 +24,7 @@ This allows to filter unstable points before starting the fusion of all depth ma
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.StringParam(
             name="containerPrefix", 
@@ -34,6 +35,7 @@ This allows to filter unstable points before starting the fusion of all depth ma
             value="", 
             uid=[],
             advanced=True,
+            group='container_setting',
         ),
         desc.File(
             name='input',
