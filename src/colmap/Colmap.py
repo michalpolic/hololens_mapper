@@ -40,7 +40,12 @@ class Colmap():
             {"database_path": database_path, 
             "image_path": image_path,
             "output_path": output_path,
-            "Mapper.min_model_size": 5
+            "Mapper.min_model_size": 5,
+            "Mapper.ba_global_images_ratio": 1.2, 
+            "Mapper.ba_global_points_ratio": 1.2, 
+            "Mapper.ba_global_max_num_iterations": 20,
+            "Mapper.ba_global_max_refinements": 3,
+            "Mapper.ba_global_points_freq": 200000
             })
 
     def model_converter(self, in_path, out_path, out_type):
@@ -318,22 +323,13 @@ class Colmap():
         for img_id in images:
             img = images[img_id]
             point3D_ids = img['point3D_ids']
-            # uvs = img['uvs']
-            # new_point3D_ids = []
-            # new_uvs = []
             for j in range(len(point3D_ids)):
                 if int(point3D_ids[j]) > -1:
                     new_pt_id = new_points3D_ids_map[int(point3D_ids[j])]
                     if new_pt_id > -1:
                         point3D_ids[j] = str(new_pt_id)
-                        # new_point3D_ids.append(new_pt_id)
-                        # new_uvs.append(uvs[2*j])
-                        # new_uvs.append(uvs[2*j+1])
                     else:
                         point3D_ids[j] = '-1'
-            # img['point3D_ids'] = new_point3D_ids
-            # img['uvs'] = new_uvs
-
         return (images, new_points3D)
 
     def remove_images_with_less_than_three_points3D(self, images):
@@ -366,3 +362,22 @@ class Colmap():
             filtered_images, new_images = self.remove_images_with_less_than_three_points3D(new_images)
 
         return (new_images, points3D)
+    
+    def get_largest_reconstruction_dir(self, parent_dir):
+        largest_reconstruction_dir = '0'
+        largest_reconstruction_size = -1
+        for i in range(100):
+            if os.path.isdir(parent_dir + '/' + str(i)):
+                if os.path.isfile(parent_dir + '/' + str(i) + '/cameras.bin') and \
+                    os.path.isfile(parent_dir + '/' + str(i) + '/images.bin') and \
+                    os.path.isfile(parent_dir + '/' + str(i) + '/points3D.bin'):
+                    current_reconstruction_size = \
+                        os.path.getsize(parent_dir + '/' + str(i) + '/cameras.bin') + \
+                        os.path.getsize(parent_dir + '/' + str(i) + '/images.bin') + \
+                        os.path.getsize(parent_dir + '/' + str(i) + '/points3D.bin')
+                    if current_reconstruction_size > largest_reconstruction_size:
+                        largest_reconstruction_size = current_reconstruction_size
+                        largest_reconstruction_dir = str(i)
+            else:
+                return largest_reconstruction_dir
+

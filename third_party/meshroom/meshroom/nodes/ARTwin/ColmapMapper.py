@@ -84,8 +84,9 @@ This node COLMAP mapper on database which contains matches.
             colmap.mapper("/data/database.db", "/data", "/data")
 
             # create txt files out of the largest reconstruction
-            if os.path.isdir(out_dir + '/0'):
-                colmap.model_converter('/data/0','/data','TXT')
+            largest_reconstuction_dir = colmap.get_largest_reconstruction_dir(out_dir)
+            if os.path.isdir(out_dir + '/' + largest_reconstuction_dir):
+                colmap.model_converter('/data/' + largest_reconstuction_dir,'/data','TXT')
 
             chunk.logger.info('Mapper done.')
           
