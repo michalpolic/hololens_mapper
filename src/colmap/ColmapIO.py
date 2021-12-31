@@ -44,7 +44,13 @@ class ColmapIO:
                     known_camera_model = True
                     camera_dict['f'] = [float(p[4]), float(p[5])]
                     camera_dict['pp'] = [float(p[6]), float(p[7])]
-                    camera_dict['rd'] = []
+                    camera_dict['rd'] = [0., 0.]
+
+                if camera_dict['model'] == "SIMPLE_PINHOLE":
+                    known_camera_model = True
+                    camera_dict['f'] = [float(p[4]), float(p[4])]
+                    camera_dict['pp'] = [float(p[5]), float(p[6])]
+                    camera_dict['rd'] = [0., 0.]
 
                 if camera_dict['model'] == "RADIAL":
                     known_camera_model = True

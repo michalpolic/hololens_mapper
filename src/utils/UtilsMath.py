@@ -11,7 +11,7 @@ import multiprocessing as mp
 
 from src.holo.HoloIO import HoloIO
 
-sys.path.append(os.path.dirname(__file__) )
+sys.path.append(os.path.dirname(__file__))
 import renderDepth
 
 
@@ -207,7 +207,14 @@ class UtilsMath:
 
 
     def get_calibration_matrix(self, camera):
-        return np.matrix([[camera["f"], 0, camera["pp"][0]],[0, camera["f"], camera["pp"][1]],[0, 0, 1]])
+        try:
+            fx, fy = camera["f"][0], camera["f"][1]
+        except TypeError:
+            fx, fy = camera["f"], camera["f"]
+        return np.matrix([
+            [fx, 0,  camera["pp"][0]],
+            [0,  fy, camera["pp"][1]],
+            [0,  0,  1]])
 
     def hash_points(self,  xyz, xyz_hash_scale = -1.):
         new_xyz_mean = []
