@@ -8,6 +8,7 @@ dependencies:
   - cudatoolkit=10.2
   - pytorch
   - torchvision
+  - trimesh=3.9.36
   - pip  
   - pip:
       - PyQt5==5.15.0

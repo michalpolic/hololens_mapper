@@ -10,9 +10,6 @@ class ColmapIO:
     _images = {}
     _points = {}
 
-    def __init__(self):
-       pass 
-
     def load_model(self, project_path):
         print('Reading colmap model.')
         os.system(f"colmap model_converter --input_path {project_path} --output_path {project_path} --output_type TXT") # TODO: use docker instead
@@ -28,9 +25,11 @@ class ColmapIO:
     # load camera params
     def load_cameras(self, colmap_cams_file):
         camera_dict = {}
-        file_reader = open(colmap_cams_file, 'r')
-        data_lines = file_reader.read().split("\n")
+        with open(colmap_cams_file, 'r') as file_reader:
+            data_lines = file_reader.read().split("\n")
         for line in data_lines:
+            if not line:
+                break
             if line[0] == "#":
                 continue
             else:
@@ -62,8 +61,8 @@ class ColmapIO:
     def load_images(self, colmap_imgs_file):
         utils_math = UtilsMath()
         images_list = []
-        file_reader = open(colmap_imgs_file, 'r')
-        data_lines = file_reader.read().split("\n")
+        with open(colmap_imgs_file, 'r') as file_reader:
+            data_lines = file_reader.read().split("\n")
         first_row = True
         for line in data_lines:
             if len(line) == 0:
@@ -97,8 +96,8 @@ class ColmapIO:
     # load points 3D
     def load_points(self, colmap_points_file):
         points_list = []
-        file_reader = open(colmap_points_file, 'r')
-        data_lines = file_reader.read().split("\n")
+        with open(colmap_points_file, 'r') as file_reader:
+            data_lines = file_reader.read().split("\n")
         for line in data_lines:
             if len(line) == 0:
                 break
@@ -134,27 +133,27 @@ class ColmapIO:
 
 
     def write_cameras(self, cameras_file_path, cameras):
-        cameras_file = open(cameras_file_path, "w")
-        cameras_file.write( \
-            "# Camera list with one line of data per camera:\n" + \
-            "# CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]\n" + \
-            "# Number of cameras: {}\n".format(len(cameras)))
+        with open(cameras_file_path, "w") as cameras_file:
+            cameras_file.write( \
+                "# Camera list with one line of data per camera:\n" + \
+                "# CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]\n" + \
+                "# Number of cameras: {}\n".format(len(cameras)))
 
-        for cam in cameras:
-            params = [cam['camera_id'], cam['model'], cam['width'], cam['height']]
-            params.extend(cam['f'])
-            params.extend(cam['pp'])    
+            for cam in cameras:
+                params = [cam['camera_id'], cam['model'], cam['width'], cam['height']]
+                params.extend(cam['f'])
+                params.extend(cam['pp'])
 
-            known_camera_model = False
-            if cam['model'] == "PINHOLE":
-                known_camera_model = True
-            if cam['model'] == "RADIAL":
-                known_camera_model = True
-                params.extend(cam['rd'])
-            if not known_camera_model:
-                assert False, "Unsuported camera model"
-            line = " ".join(map(str, params))
-            cameras_file.write(line + "\n")
+                known_camera_model = False
+                if cam['model'] == "PINHOLE":
+                    known_camera_model = True
+                if cam['model'] == "RADIAL":
+                    known_camera_model = True
+                    params.extend(cam['rd'])
+                if not known_camera_model:
+                    assert False, "Unsuported camera model"
+                line = " ".join(map(str, params))
+                cameras_file.write(line + "\n")
 
 
     def write_images(self, images_file_path, images):
@@ -162,38 +161,38 @@ class ColmapIO:
         if len(images) >= 0:
             mean_observations = sum((len(img.point3D_ids) for img in images))/len(images)
 
-        images_file = open(images_file_path, "w")
-        images_file.write( \
-            "# Image list with two lines of data per image:\n" + \
-            "# IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n" + \
-            "# POINTS2D[] as (X, Y, POINT3D_ID)\n" + \
-            f"# Number of images: {len(images)}, mean observations per image: {mean_observations}\n")
-        
-        utils_math = UtilsMath()
-        for img in images:
-            params = [img["image_id"], utils_math.r2q(img["R"]), -img["R"]*img["C"], \
-                img["camera_id"], img["name"]]
-            line = " ".join(map(str, params))
-            images_file.write(line + "\n")
+        with open(images_file_path, "w") as images_file:
+            images_file.write( \
+                "# Image list with two lines of data per image:\n" + \
+                "# IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n" + \
+                "# POINTS2D[] as (X, Y, POINT3D_ID)\n" + \
+                f"# Number of images: {len(images)}, mean observations per image: {mean_observations}\n")
 
-            observations = []
-            for i in len(img["point3D_ids"]):
-                observations.extend([img['uvs'][2*i], img['uvs'][2*i + 1], img['point3D_ids'][i]])
-            line = " ".join(map(str, observations))
-            images_file.write(line + "\n")
+            utils_math = UtilsMath()
+            for img in images:
+                params = [img["image_id"], utils_math.r2q(img["R"]), -img["R"]*img["C"], \
+                    img["camera_id"], img["name"]]
+                line = " ".join(map(str, params))
+                images_file.write(line + "\n")
+
+                observations = []
+                for i in len(img["point3D_ids"]):
+                    observations.extend([img['uvs'][2*i], img['uvs'][2*i + 1], img['point3D_ids'][i]])
+                line = " ".join(map(str, observations))
+                images_file.write(line + "\n")
 
 
     def write_points3D(self, points3D_file_path, points3D):
         mean_track_length = 0
         if len(points3D) >= 0:
             mean_track_length = sum((len(pt['img_pt'])/2 for pt in points3D))/len(points3D)
-        points3D_file = open(points3D_file_path, "w")
-        points3D_file.write( \
-            "# 3D point list with one line of data per point:\n" + \
-            "# POINT3D_ID, X, Y, Z, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)\n" + \
-            f"# Number of points: {len(points3D)}, mean track length: {mean_track_length}\n")
+        with open(points3D_file_path, "w") as points3D_file:
+            points3D_file.write( \
+                "# 3D point list with one line of data per point:\n" + \
+                "# POINT3D_ID, X, Y, Z, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)\n" + \
+                f"# Number of points: {len(points3D)}, mean track length: {mean_track_length}\n")
 
-        for pt in points3D:
-            params = [pt["point3D_id"], pt["X"], pt["rgb"], pt["err"], pt['img_pt']]
-            line = " ".join(map(str, params))
-            points3D_file.write(line + "\n")
+            for pt in points3D:
+                params = [pt["point3D_id"], pt["X"], pt["rgb"], pt["err"], pt['img_pt']]
+                line = " ".join(map(str, params))
+                points3D_file.write(line + "\n")
