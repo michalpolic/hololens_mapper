@@ -27,7 +27,7 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "recordingDir": "/local1/projects/artwin/datasets/Munich/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1",
+                "recordingDir": "/local1/projects/artwin/datasets/Kitchen__2021_11_25",
                 "UVfile": "/local1/projects/artwin/datasets/uvdata.txt",
                 "verboseLevel": "info"
             },
@@ -209,6 +209,8 @@
                 ],
                 "inputSfMFormat": "HoloLens",
                 "outputSfMFormat": "COLMAP",
+                "cpoyImagesToOutput": true,
+                "imagesPath": "original",
                 "verboseLevel": "info"
             },
             "outputs": {
