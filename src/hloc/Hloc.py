@@ -18,9 +18,8 @@ class Hloc():
             "outputs": outputs_path})
 
     def update_image_names(self, images):
-        new_images = []
-        for img in images:
+        for img_id in images:
+            img = images[img_id]
             img['name'] = img['name'].replace('\\','/')
-            new_images.append(img)
-        return new_images
+        return images
         
