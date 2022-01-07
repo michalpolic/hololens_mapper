@@ -4,23 +4,23 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
+            "HololensPointcloudComposer": "0.1",
+            "ModelsAligner": "0.1",
+            "DepthMap": "2.0",
             "MatchingPairsSelector": "0.1",
-            "HoloLensIO": "0.1",
             "ConvertSfMFormat": "2.1",
             "PrepareDenseScene": "3.0",
-            "DepthMapFilter": "3.0",
             "HoloLensMatcher": "0.1",
-            "MeshFiltering": "3.0",
-            "Texturing": "6.0",
-            "KeyframeSelector": "0.1",
             "DensePonitcloudsAligner": "0.1",
-            "ModelsAligner": "0.1",
+            "KeyframeSelector": "0.1",
+            "Texturing": "6.0",
+            "FilterColmapSfM": "0.1",
             "DensePointcloudFilter": "0.1",
+            "DepthMapFilter": "3.0",
+            "MeshFiltering": "3.0",
+            "HoloLensIO": "0.1",
             "ColmapMapper": "0.1",
-            "Meshing": "7.0",
-            "DepthMap": "2.0",
-            "HololensPointcloudComposer": "0.1",
-            "FilterColmapSfM": "0.1"
+            "Meshing": "7.0"
         }
     },
     "graph": {
@@ -602,7 +602,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "9d2ccf2cb4f345c4a94af226f0eff43c407f5e24"
+                "0": "f63b531aed564db95d92daee6b24b6c8a707c6fa"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -631,7 +631,7 @@
                 },
                 "unwrapMethod": "Basic",
                 "useUDIM": true,
-                "fillHoles": false,
+                "fillHoles": true,
                 "padding": 5,
                 "multiBandDownscale": 4,
                 "multiBandNbContrib": {
@@ -645,8 +645,8 @@
                 "angleHardThreshold": 90.0,
                 "processColorspace": "sRGB",
                 "correctEV": false,
-                "forceVisibleByAllVertices": true,
-                "flipNormals": true,
+                "forceVisibleByAllVertices": false,
+                "flipNormals": false,
                 "visibilityRemappingMethod": "PullPush",
                 "subdivisionTargetRatio": 0.8,
                 "verboseLevel": "info"
@@ -696,8 +696,8 @@
         "FilterColmapSfM_1": {
             "nodeType": "FilterColmapSfM",
             "position": [
-                3011,
-                136
+                3002,
+                192
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -726,7 +726,7 @@
             "nodeType": "ConvertSfMFormat",
             "position": [
                 2281,
-                -101
+                -102
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -819,8 +819,8 @@
         "Meshing_2": {
             "nodeType": "Meshing",
             "position": [
-                3198,
-                -120
+                3088,
+                -101
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -937,8 +937,8 @@
         "HoloLensIO_4": {
             "nodeType": "HoloLensIO",
             "position": [
-                3195,
-                52
+                3450,
+                160
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -946,14 +946,14 @@
                 "split": 1
             },
             "uids": {
-                "0": "e8d0af3aa61e18909a783f9e76efaac36c42953f"
+                "0": "512a192d10248ed3e1ac1b8057d13636401bc325"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "inputFolder": "{FilterColmapSfM_1.output}",
-                "pointcloudFile": "{HoloLensIO_3.pointcloudFile}",
+                "pointcloudFile": "{ConvertSfMFormat_3.output}",
                 "hashScale": 100,
-                "allPoints": false,
+                "allPoints": true,
                 "intrinsics": [],
                 "inputSfMFormat": "COLMAP",
                 "outputSfMFormat": "Meshroom",
@@ -964,6 +964,42 @@
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/",
                 "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
+            }
+        },
+        "ConvertSfMFormat_3": {
+            "nodeType": "ConvertSfMFormat",
+            "position": [
+                3266,
+                64
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "d891663bbbcd7c1a43840261fabdfa7297d8bc37"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "containerName": "",
+                "containerPrefix": "",
+                "input": "{Meshing_2.output}",
+                "fileExt": "ply",
+                "describerTypes": [
+                    "sift",
+                    "unknown"
+                ],
+                "imageWhiteList": [],
+                "views": false,
+                "intrinsics": false,
+                "extrinsics": false,
+                "structure": true,
+                "observations": false,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
             }
         }
     }
