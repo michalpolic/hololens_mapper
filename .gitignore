@@ -1,0 +1,77 @@
+# temporary files
+*~
+.nfs*
+.*.swp # vim
+*.flc # xemacs
+.DS_Store # MacOS
+Thumbs.db # Windows
+*.out
+
+*.aux
+*.toc
+*.bbl
+*.blg
+*.xml
+*.dot
+*.log
+
+# python
+*.pyc
+
+# Binary files
+*.o
+*.os
+*.so
+*.a
+*.dll
+*.exe
+*.db
+
+# folder receiving the compilation products
+build*
+install
+lib
+bin
+x64
+dl
+
+# CMake
+CMakeFiles  # intermediate folders
+
+# user files
+*.user*
+
+# netbeans projects
+/nbproject
+nbproject
+.idea
+
+# visual projects
+#*.sln
+#*.vcxproj*
+*.suo
+*.vcproj*
+*.ncb
+*.rc
+*.rules
+*.XML
+*.VC.db
+*.VC.opendb
+*ipch
+*.pdb
+
+*.cbp*
+*.layout*
+
+# visual projects create log files into directories
+Debug
+Release
+Production
+
+# Archives
+*.zip
+*.gz
+*.tgz
+*.tar*
+
+.vscode/settings.json
