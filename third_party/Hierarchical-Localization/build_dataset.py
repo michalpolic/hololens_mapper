@@ -26,7 +26,6 @@ sift_sfm = dataset   # from which we extract the reference poses
 outputs = args.outputs  # where everything will be saved
 reference_sfm = outputs / 'sfm_superpoint+superglue'  # the SfM model we will build
 sfm_pairs = outputs / f'pairs-db-covis{args.num_covis}.txt'  # top-k most covisible in SIFT model
-loc_pairs = outputs / f'pairs-query-netvlad{args.num_loc}.txt'  # top-k retrieved by NetVLAD
 results = outputs / f'Aachen_hloc_superpoint+superglue_netvlad{args.num_loc}.txt'
 
 # list the standard configurations available
