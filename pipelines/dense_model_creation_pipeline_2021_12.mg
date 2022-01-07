@@ -4,23 +4,23 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "HololensPointcloudComposer": "0.1",
-            "FilterColmapSfM": "0.1",
-            "ConvertSfMFormat": "2.1",
             "MatchingPairsSelector": "0.1",
-            "PrepareDenseScene": "3.0",
-            "Meshing": "7.0",
-            "Texturing": "6.0",
-            "DepthMap": "2.0",
-            "ColmapMapper": "0.1",
-            "DensePonitcloudsAligner": "0.1",
-            "HoloLensMatcher": "0.1",
-            "ModelsAligner": "0.1",
-            "KeyframeSelector": "0.1",
             "HoloLensIO": "0.1",
+            "ConvertSfMFormat": "2.1",
+            "PrepareDenseScene": "3.0",
+            "DepthMapFilter": "3.0",
+            "HoloLensMatcher": "0.1",
             "MeshFiltering": "3.0",
+            "Texturing": "6.0",
+            "KeyframeSelector": "0.1",
+            "DensePonitcloudsAligner": "0.1",
+            "ModelsAligner": "0.1",
             "DensePointcloudFilter": "0.1",
-            "DepthMapFilter": "3.0"
+            "ColmapMapper": "0.1",
+            "Meshing": "7.0",
+            "DepthMap": "2.0",
+            "HololensPointcloudComposer": "0.1",
+            "FilterColmapSfM": "0.1"
         }
     },
     "graph": {
@@ -36,7 +36,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "310b96a95d4761b9dff24b8ffe77756259eb1e0b"
+                "0": "9d95bda95ee9c497fbd68bf647b7d059f82819db"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -60,7 +60,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "be61e554269bbdd24d1d86248f6736f20a8316f2"
+                "0": "f84a14d469b4990d95dadb88c385c518bdc2db54"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -86,7 +86,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "3f28555bfd54ab5d83a007f5f3b4f74f58b4cbfc"
+                "0": "933b7ad41cecd8ec0753e9ba91c17d917a1cc711"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -111,7 +111,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "f3f1cb295b82ea414f2e25218c978f370d2c0ca0"
+                "0": "012bf86830d98b88781acdf6cf7915ca77f7c4dc"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -137,7 +137,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "5bc0c4f137ca22fa67ec227bb00e1068e8dc8aea"
+                "0": "811f16ca6ed92da51c81cee73c30879b6bcb0f6b"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -165,7 +165,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "01ed9e5d2c4c09879db8fc29a26fd3cfc09d8546"
+                "0": "021b4a355a739dad4a6d468adfcaefe316814960"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -188,7 +188,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "636c04720aa056fe59cce9877ea117c662146fd1"
+                "0": "6d75c3b281d2eb8027426b1b99377e2d3ae2e6f1"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -212,7 +212,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "2d6983c28973be103911c9a92be778d52699cb52"
+                "0": "0ccf7b246a3cbdda24ee85a16b469c7213750aa4"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -248,7 +248,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "4bd86071c63d3292d51950d585d174a049056980"
+                "0": "453cb1174fd4137b3296e142884cca08e99b8da4"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -280,7 +280,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "91e4bda8dac28a84fda53dd4d2a5edec48ba8650"
+                "0": "9fe6ff7d310892eb2f71928288f22860c6ca42ac"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -324,7 +324,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "ddd4a3676275c4b0e3b5a624311006b38e8f5d67"
+                "0": "835f7649c919981939be0fc6595aaa8489d81c44"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -358,7 +358,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "ec0ad5e231333561e78dd6f7d41f01dafb374c8d"
+                "0": "afa5df98c9555370cc687c982f454326aa457340"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -444,7 +444,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "050d28cc514691ff806f376cbb3df06d599981fb"
+                "0": "156aff2fc2a1397397076e7f84cd0328c4bb8537"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -577,7 +577,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "9152ecd2e7b60c02dd5af1d8b8be45287220acf0"
+                "0": "11d146f184bba618f41fbb0a970a03010c9b420a"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -602,7 +602,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "bd2d73f1b5615b23facc8b6e55351fb91a6ec5d2"
+                "0": "9d2ccf2cb4f345c4a94af226f0eff43c407f5e24"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -670,7 +670,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "6b9223c69adf4e378445fb6237596091c1e80a13"
+                "0": "40ca51bb6dbfeb90b66fc0d7dc08f3dca96edf42"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -693,6 +693,35 @@
                 "outputMesh": "{cache}/{nodeType}/{uid0}/mesh.{outputMeshFileTypeValue}"
             }
         },
+        "FilterColmapSfM_1": {
+            "nodeType": "FilterColmapSfM",
+            "position": [
+                3011,
+                136
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "7c4f7576ff30fa481f5587f7d99d47a6e9eef427"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputFolder": "{HoloLensIO_3.inputFolder}",
+                "subsamplePoints3D": false,
+                "numberOfPoints3D": 1000,
+                "minNumberOfObservations": 50,
+                "filterPV": false,
+                "filterVLC": true,
+                "cpoyImagesToOutput": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
         "ConvertSfMFormat_2": {
             "nodeType": "ConvertSfMFormat",
             "position": [
@@ -705,7 +734,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "d40e79540c4488de880a12b1e98a57ea1930188e"
+                "0": "79e8032337126c7066f25fd34dc50d8fe7ca1f52"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -742,7 +771,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "eb1980b858cc6258ed9dab3fe57b0cec5ad5c3b0"
+                "0": "baaefb11964921b3505d22672f360aec0cb19d67"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -774,7 +803,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "c95476d7c68ab1912581f1069fbba229a1daa1ae"
+                "0": "d4bb678e59b9ff6a34d41205d8709b9d3512cebe"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -799,13 +828,13 @@
                 "split": 1
             },
             "uids": {
-                "0": "a5a64f146dfaf5af87582f3afc663f8a03a8bd26"
+                "0": "8d38eb0a7ee969912a6f96ce12b0d0a0e05a75d2"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "containerName": "{ConvertSfMFormat_3.containerName}",
-                "containerPrefix": "{ConvertSfMFormat_3.containerPrefix}",
-                "input": "{ConvertSfMFormat_3.output}",
+                "containerName": "{ConvertSfMFormat_2.containerName}",
+                "containerPrefix": "{ConvertSfMFormat_2.containerPrefix}",
+                "input": "{HoloLensIO_3.outputMeshroomSfM}",
                 "depthMapsFolder": "",
                 "outputMeshFileType": "obj",
                 "useBoundingBox": false,
@@ -885,7 +914,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "c7d5e8793a7bed72a5cbb6b356360a3be1e28aaf"
+                "0": "271cfcd5de0674f0ffd29291aa347b19abc5f9f0"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -905,113 +934,11 @@
                 "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
             }
         },
-        "ConvertSfMFormat_3": {
-            "nodeType": "ConvertSfMFormat",
-            "position": [
-                3000,
-                -92
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "49c7d17470b1a5573f699b8d6aa84ec1006139cd"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{ConvertSfMFormat_2.containerName}",
-                "containerPrefix": "{ConvertSfMFormat_2.containerPrefix}",
-                "input": "{HoloLensIO_3.outputMeshroomSfM}",
-                "fileExt": "abc",
-                "describerTypes": [
-                    "dspsift",
-                    "unknown",
-                    "sift"
-                ],
-                "imageWhiteList": [],
-                "views": true,
-                "intrinsics": true,
-                "extrinsics": true,
-                "structure": true,
-                "observations": true,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
-            }
-        },
-        "ConvertSfMFormat_4": {
-            "nodeType": "ConvertSfMFormat",
-            "position": [
-                3449,
-                -220
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "93aedbcb13b93b9d6ccb660b8c8cf620f7fe6af3"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "containerName": "{Meshing_2.containerName}",
-                "containerPrefix": "{Meshing_2.containerPrefix}",
-                "input": "{Meshing_2.output}",
-                "fileExt": "ply",
-                "describerTypes": [
-                    "sift",
-                    "unknown"
-                ],
-                "imageWhiteList": [],
-                "views": true,
-                "intrinsics": true,
-                "extrinsics": true,
-                "structure": true,
-                "observations": true,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/sfm.{fileExtValue}"
-            }
-        },
-        "FilterColmapSfM_1": {
-            "nodeType": "FilterColmapSfM",
-            "position": [
-                3009,
-                90
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "22276242b96a6ca5495c729e72b7ebcdcc4a844c"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "inputFolder": "{HoloLensIO_3.inputFolder}",
-                "subsamplePoints3D": false,
-                "numberOfPoints3D": 1000,
-                "minNumberOfObservations": 50,
-                "filterPV": false,
-                "filterVLC": true,
-                "cpoyImagesToOutput": true,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
         "HoloLensIO_4": {
             "nodeType": "HoloLensIO",
             "position": [
-                3191,
-                60
+                3195,
+                52
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -1019,12 +946,12 @@
                 "split": 1
             },
             "uids": {
-                "0": "1b835060ac9eb40884e82d4b194655436b7ee252"
+                "0": "e8d0af3aa61e18909a783f9e76efaac36c42953f"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "inputFolder": "{FilterColmapSfM_1.output}",
-                "pointcloudFile": "",
+                "pointcloudFile": "{HoloLensIO_3.pointcloudFile}",
                 "hashScale": 100,
                 "allPoints": false,
                 "intrinsics": [],
