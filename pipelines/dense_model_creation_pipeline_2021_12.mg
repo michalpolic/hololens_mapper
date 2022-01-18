@@ -982,8 +982,8 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "containerName": "",
-                "containerPrefix": "",
+                "containerName": "/local/artwin/mapping/codes/hololens_mapper/alicevision.sif",
+                "containerPrefix": "/opt/AliceVision_install/bin/",
                 "input": "{Meshing_2.output}",
                 "fileExt": "ply",
                 "describerTypes": [
