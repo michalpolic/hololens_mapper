@@ -3,9 +3,9 @@
 CHECKPOINT_FILE="./checkpoints/params_000007.ckpt"
 
 # test on DTU's evaluation set
-DTU_TESTING="/home/dtu/"
-python eval.py --scan_list ./lists/dtu/test.txt --input_folder=$DTU_TESTING --output_folder=$DTU_TESTING \
---checkpoint_path $CHECKPOINT_FILE --parallel --num_views 5 --image_max_dim 1600 --geo_mask_thres 3 --photo_thres 0.8 "$@"
+# DTU_TESTING="/home/dtu/"
+# python eval.py --scan_list ./lists/dtu/test.txt --input_folder=$DTU_TESTING --output_folder=$DTU_TESTING \
+# --checkpoint_path $CHECKPOINT_FILE --parallel --num_views 5 --image_max_dim 1600 --geo_mask_thres 3 --photo_thres 0.8 "$@"
 
 # -------------------------------------------------------------------------------------
 # test on eth3d benchmark
@@ -21,6 +21,6 @@ python eval.py --scan_list ./lists/dtu/test.txt --input_folder=$DTU_TESTING --ou
 
 # -------------------------------------------------------------------------------------
 # test on your custom dataset
-#CUSTOM_TESTING="/home/custom/"
-#python eval.py --input_folder=$CUSTOM_TESTING --output_folder=$CUSTOM_TESTING --checkpoint_path $CHECKPOINT_FILE \
-#--parallel --num_views 10 --image_max_dim 2048 --geo_mask_thres 5 --photo_thres 0.5 "$@"
+CUSTOM_TESTING="/data/"
+python eval.py --input_folder=$CUSTOM_TESTING --output_folder=$CUSTOM_TESTING --checkpoint_path $CHECKPOINT_FILE \
+--parallel --num_views 10 --image_max_dim 2048 --geo_mask_thres 5 --photo_thres 0.5 "$@"

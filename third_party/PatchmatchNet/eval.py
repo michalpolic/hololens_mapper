@@ -50,7 +50,7 @@ def save_depth(args):
     )
 
     image_loader = DataLoader(
-        dataset=dataset, batch_size=args.batch_size, shuffle=False, num_workers=4, drop_last=False)
+        dataset=dataset, batch_size=args.batch_size, shuffle=False, drop_last=False) #, num_workers=4
 
     with torch.no_grad():
         for batch_idx, sample in enumerate(image_loader):

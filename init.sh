@@ -18,6 +18,7 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(una
     docker pull alicevision/meshroom:2021.1.0-av2.4.0-centos7-cuda10.2
     docker pull uodcvip/colmap:latest
     docker build -t hloc:latest ./third_party/Hierarchical-Localization
+    docker build -t patchmatchnet ./third_party/PatchmatchNet
 fi
 
 # compile the C++ codes
