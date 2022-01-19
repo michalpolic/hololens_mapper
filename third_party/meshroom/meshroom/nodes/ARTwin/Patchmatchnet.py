@@ -54,6 +54,13 @@ This node COLMAP mapper on database which contains matches.
             value=desc.Node.internalFolder,
             uid=[],
             ),
+        desc.File(
+            name="outputPLY",
+            label="Output pointcloud",
+            description="",
+            value=desc.Node.internalFolder + "/fused.ply",
+            uid=[],
+            ),
         ]
 
     def processChunk(self, chunk):
