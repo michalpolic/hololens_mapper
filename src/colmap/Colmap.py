@@ -48,6 +48,15 @@ class Colmap():
             "Mapper.ba_global_points_freq": 200000
             })
 
+    def images_undistortion(self, image_path, input_path, output_path):
+        self._colmap_container.command_dict("colmap image_undistorter", 
+            {"image_path": image_path,
+            "input_path": input_path,
+            "output_path": output_path,
+            "output_type": "COLMAP",
+            "max_image_size": 2048
+            })
+
     def model_converter(self, in_path, out_path, out_type):
         self._colmap_container.command_dict("colmap model_converter", 
             {"input_path": in_path, 

@@ -1,0 +1,16 @@
+name: meshroom
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pip  
+  - pip:
+      - torch
+      - torchvision
+      - opencv-python
+      - numpy
+      - plyfile
+      - pillow
+      - tensorboard
