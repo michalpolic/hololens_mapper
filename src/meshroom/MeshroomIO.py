@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+from plyfile import PlyData, PlyElement
 
 try:
     import ujson as json
@@ -288,7 +289,22 @@ class MeshroomIO:
         f.close()
         return (xyz, rgb)
 
-    def load_ply_vertices(self, ply_file_path):
+    def load_ply_vertices(self, ply_file_path): 
+        plydata = PlyData.read(ply_file_path)
+        xyz = np.zeros((3,plydata['vertex'].count), dtype=float)
+        rgb = np.zeros((3,plydata['vertex'].count), dtype=np.uint8)
+        i = 0
+        for pt in plydata['vertex'].data:
+            xyz[0][i] = float(pt[0])
+            xyz[1][i] = float(pt[1])
+            xyz[2][i] = float(pt[2])
+            rgb[0][i] = float(pt[3])
+            rgb[1][i] = float(pt[4])
+            rgb[2][i] = float(pt[5])
+            i += 1
+        return (xyz, rgb)
+
+    def load_ply_vertices_txt(self, ply_file_path):
         print("Load PLY vertices: " + ply_file_path)
         f = open(ply_file_path, 'r')
         lines = f.readlines()
@@ -306,7 +322,7 @@ class MeshroomIO:
             if count2 <= count:
                 continue
             else:
-                line = line.lstrip()
+                line = str(line).lstrip()
                 line_len = len(line)
                 line = line.replace("  ", " ")
                 while len(line) < line_len:
