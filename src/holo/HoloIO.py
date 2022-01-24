@@ -251,7 +251,7 @@ class HoloIO:
             logger.info(f'Reading camera poses from file: {depthmap_poses_path}')
         csv = self.read_csv(depthmap_poses_path)
 
-        chunksize = mp.cpu_count()
+        chunksize = int(np.ceil(mp.cpu_count() / 2))
         wold_xyz = np.array([]).reshape(3,0)
         for r, d, f in os.walk(depthmaps_dir):
             data = []
