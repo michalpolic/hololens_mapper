@@ -3,8 +3,6 @@ from __future__ import print_function
 __version__ = "0.1"
 
 from meshroom.core import desc
-import shutil
-import glob
 import os
 import os.path 
 import sys
@@ -114,6 +112,7 @@ fused pointcloud file.
                 "photo_thres": 0.8
                 })
             
+
             chunk.logger.info('Patchmatchnet done.')
           
         except AssertionError as err:

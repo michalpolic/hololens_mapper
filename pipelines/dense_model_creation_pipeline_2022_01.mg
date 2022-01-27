@@ -4,21 +4,21 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
+            "DensePonitcloudsAligner": "0.1",
             "FilterColmapSfM": "0.1",
-            "Meshing": "7.0",
-            "ModelsAligner": "0.1",
+            "ColmapMapper": "0.1",
+            "ConvertSfMFormat": "2.1",
             "KeyframeSelector": "0.1",
             "HololensPointcloudComposer": "0.1",
-            "Patchmatchnet": "0.1",
-            "HoloLensMatcher": "0.1",
-            "HoloLensIO": "0.1",
-            "Texturing": "6.0",
-            "ConvertSfMFormat": "2.1",
-            "ColmapMapper": "0.1",
-            "MatchingPairsSelector": "0.1",
-            "DensePonitcloudsAligner": "0.1",
             "MeshFiltering": "3.0",
-            "DensePointcloudFilter": "0.1"
+            "ModelsAligner": "0.1",
+            "Meshing": "7.0",
+            "Texturing": "6.0",
+            "DensePointcloudFilter": "0.1",
+            "HoloLensIO": "0.1",
+            "Patchmatchnet": "0.1",
+            "MatchingPairsSelector": "0.1",
+            "HoloLensMatcher": "0.1"
         }
     },
     "graph": {
@@ -488,6 +488,30 @@
                 "output": "{cache}/{nodeType}/{uid0}/"
             }
         },
+        "Patchmatchnet_1": {
+            "nodeType": "Patchmatchnet",
+            "position": [
+                1178,
+                53
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "2aa6ecb6ece780fdc94fde54b966984b8a0b2495"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "colmapFolder": "{ModelsAligner_1.output}",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputPLY": "{cache}/{nodeType}/{uid0}//fused.ply"
+            }
+        },
         "DensePointcloudFilter_2": {
             "nodeType": "DensePointcloudFilter",
             "position": [
@@ -529,7 +553,7 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "containerName": "",
+                "containerName": "/local/artwin/mapping/codes/hololens_mapper/alicevision.sif",
                 "containerPrefix": "",
                 "input": "{HoloLensIO_3.outputMeshroomSfM}",
                 "depthMapsFolder": "",
@@ -697,30 +721,6 @@
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/",
                 "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
-            }
-        },
-        "Patchmatchnet_1": {
-            "nodeType": "Patchmatchnet",
-            "position": [
-                1178,
-                53
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "2aa6ecb6ece780fdc94fde54b966984b8a0b2495"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "colmapFolder": "{ModelsAligner_1.output}",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/",
-                "outputPLY": "{cache}/{nodeType}/{uid0}//fused.ply"
             }
         }
     }

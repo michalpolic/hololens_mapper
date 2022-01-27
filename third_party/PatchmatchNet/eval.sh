@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CHECKPOINT_FILE="./checkpoints/params_000007.ckpt"
+# CHECKPOINT_FILE="./checkpoints/params_000007.ckpt"
 
 # test on DTU's evaluation set
 # DTU_TESTING="/home/dtu/"
@@ -21,6 +21,10 @@ CHECKPOINT_FILE="./checkpoints/params_000007.ckpt"
 
 # -------------------------------------------------------------------------------------
 # test on your custom dataset
-CUSTOM_TESTING="/data/"
-python eval.py --input_folder=$CUSTOM_TESTING --output_folder=$CUSTOM_TESTING --checkpoint_path $CHECKPOINT_FILE \
---parallel --num_views 10 --image_max_dim 2048 --geo_mask_thres 5 --photo_thres 0.5 "$@"
+# CUSTOM_TESTING="/data/"
+# python eval.py --input_folder=$CUSTOM_TESTING --output_folder=$CUSTOM_TESTING --checkpoint_path $CHECKPOINT_FILE \
+# --parallel --num_views 10 --image_max_dim 2048 --geo_mask_thres 5 --photo_thres 0.5 "$@"
+
+. ~/anaconda3/etc/profile.d/conda.sh
+conda activate meshroom
+python3 /app/eval.py --input_folder=$1 --output_folder=$2 --checkpoint_path=$3 --num_views=$4 --image_max_dim=$5 --geo_mask_thres=$6 --photo_thres=$7

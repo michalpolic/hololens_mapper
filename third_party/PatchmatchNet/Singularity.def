@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: nvidia/cuda:10.2-cudnn7-devel
+From: nvidia/cuda:11.3.1-devel-ubuntu18.04
 
 %files
 ./third_party/PatchmatchNet /app
@@ -31,20 +31,21 @@ conda config --file /.condarc --add channels defaults
 conda config --file /.condarc --add channels conda-forge
 conda update conda
 
-echo ". /home/policmic/anaconda3/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
-echo "conda activate meshroom" >> $SINGULARITY_ENVIRONMENT
 conda env create -f /app/environment.yml
+echo ". /home/ciirc/anaconda3/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+echo "conda activate meshroom" >> $SINGULARITY_ENVIRONMENT
 cd /app
 
 %environment
 export PYTHONPATH=/app
 
 %runscript
-. /home/policmic/anaconda3/etc/profile.d/conda.sh
+. /home/ciirc/anaconda3/etc/profile.d/conda.sh
 conda activate meshroom
 cd /app
 exec "$@"
 
 %startscript
-conda activate meshroom
+. /home/ciirc/anaconda3/etc/profile.d/conda.sh
+conda activate meshroom 
 cd /app

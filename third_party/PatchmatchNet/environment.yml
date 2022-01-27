@@ -1,14 +1,15 @@
 name: meshroom
 channels:
-  - pytorch
+  - pytorch-nightly
   - conda-forge
   - defaults
 dependencies:
   - python=3.8
+  - pytorch 
+  - torchvision 
+  - cudatoolkit=11
   - pip  
   - pip:
-      - torch
-      - torchvision
       - opencv-python
       - numpy
       - plyfile
