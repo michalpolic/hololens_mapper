@@ -5,7 +5,8 @@ conda env create -f environment.yml
 conda activate meshroom
 
 # download large files 
-wget https://cvg-data.inf.ethz.ch/hloc/netvlad/Pitts30K_struct.mat -O /third_party/Hierarchical-Localization/third_party/netvlad/VGG16-NetVLAD-Pitts30K.mat
+mkdir ./third_party/Hierarchical-Localization/third_party/netvlad
+wget --no-check-certificate https://cvg-data.inf.ethz.ch/hloc/netvlad/Pitts30K_struct.mat -O ./third_party/Hierarchical-Localization/third_party/netvlad/VGG16-NetVLAD-Pitts30K.mat
 
 # create containers
 if [ "$(uname)" == "Darwin" || "$(expr substr $(uname -s) 1 5)" == "Linux"]; then

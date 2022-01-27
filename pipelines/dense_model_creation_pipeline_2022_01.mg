@@ -38,8 +38,8 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "recordingDir": "/local1/projects/artwin/datasets/Kitchen__2021_11_25",
-                "UVfile": "/local1/projects/artwin/datasets/uvdata.txt",
+                "recordingDir": "/home/policmic/artwin/datasets/Kitchen__2021_11_25",
+                "UVfile": "/home/policmic/artwin/datasets/uvdata.txt",
                 "verboseLevel": "info"
             },
             "outputs": {
