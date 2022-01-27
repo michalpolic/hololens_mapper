@@ -11,22 +11,22 @@ from scipy.io import savemat
 dir_path_root = __file__
 for i in range(3):
     dir_path_root = os.path.dirname(dir_path_root)
-sys.path.append(dir_path_root + "/third_party")
-sys.path.append(dir_path_root + "/third_party/patch2pix")
+# sys.path.append(dir_path_root + "/third_party")
+# sys.path.append(dir_path_root + "/third_party/patch2pix")
 
-# import pydegensac
-from patch2pix.utils.common.plotting import plot_matches
-from patch2pix.utils.eval.model_helper import *
-from SuperGluePretrainedNetwork.models.matching import Matching
-from SuperGluePretrainedNetwork.models.utils import (compute_pose_error, compute_epipolar_error,
-                          estimate_pose, make_matching_plot,
-                          error_colormap, AverageTimer, pose_auc, read_image,
-                          rotate_intrinsics, rotate_pose_inplane,
-                          scale_intrinsics)
+# # import pydegensac
+# from patch2pix.utils.common.plotting import plot_matches
+# from patch2pix.utils.eval.model_helper import *
+# from SuperGluePretrainedNetwork.models.matching import Matching
+# from SuperGluePretrainedNetwork.models.utils import (compute_pose_error, compute_epipolar_error,
+#                           estimate_pose, make_matching_plot,
+#                           error_colormap, AverageTimer, pose_auc, read_image,
+#                           rotate_intrinsics, rotate_pose_inplane,
+#                           scale_intrinsics)
 
 np.set_printoptions(precision=2)
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-torch.set_grad_enabled(False)
+# torch.set_grad_enabled(False)
 
 class UtilsMatcher:
 
@@ -37,30 +37,30 @@ class UtilsMatcher:
 
     def __init__(self, matcher_name, colmap=None):
         self._root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        self._device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # self._device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         known_matcher = False
         self._matcher_name = matcher_name
-        if matcher_name == "patch2pix":
-            known_matcher = True
-            args = Namespace(io_thres=0.9, imsize=1344, ksize=2, ckpt=f'{self._root_dir}/lib/patch2pix/pretrained/patch2pix_pretrained.pth')
-            self._matcher = init_patch2pix_matcher(args)
+        # if matcher_name == "patch2pix":
+        #     known_matcher = True
+        #     args = Namespace(io_thres=0.9, imsize=1344, ksize=2, ckpt=f'{self._root_dir}/lib/patch2pix/pretrained/patch2pix_pretrained.pth')
+        #     self._matcher = init_patch2pix_matcher(args)
         
-        if matcher_name == "SuperGlue":
-            known_matcher = True
-            config = {
-                'superpoint': {
-                    'nms_radius': 4,
-                    'keypoint_threshold': 0.005,
-                    'max_keypoints': 2048
-                },
-                'superglue': {
-                    'weights': 'indoor',
-                    'sinkhorn_iterations': 20,
-                    'match_threshold': 0.2,
-                }
-            }
-            self._matcher = Matching(config).eval().to(self._device)
+        # if matcher_name == "SuperGlue":
+        #     known_matcher = True
+        #     config = {
+        #         'superpoint': {
+        #             'nms_radius': 4,
+        #             'keypoint_threshold': 0.005,
+        #             'max_keypoints': 2048
+        #         },
+        #         'superglue': {
+        #             'weights': 'indoor',
+        #             'sinkhorn_iterations': 20,
+        #             'match_threshold': 0.2,
+        #         }
+        #     }
+        #     self._matcher = Matching(config).eval().to(self._device)
         
         if matcher_name == "SIFT" and colmap != None:
             known_matcher = True
@@ -172,52 +172,52 @@ class UtilsMatcher:
         return (obs_for_image, all_matches)
 
 
-    def holo_matcher(self, images_dir, holo_cameras, radius = 4, err_threshold = 10, database_path=""):
-        all_matches = {}
-        filenames = os.listdir(images_dir)
-        for i in range(len(filenames)):
-            for j in range(i+1, len(filenames)):
-                im1_path = images_dir + '/' + filenames[i]
-                im2_path = images_dir + '/' + filenames[j]
-                pair_id = filenames[i][:-4] + '-' + filenames[j][:-4]
+    # def holo_matcher(self, images_dir, holo_cameras, radius = 4, err_threshold = 10, database_path=""):
+    #     all_matches = {}
+    #     filenames = os.listdir(images_dir)
+    #     for i in range(len(filenames)):
+    #         for j in range(i+1, len(filenames)):
+    #             im1_path = images_dir + '/' + filenames[i]
+    #             im2_path = images_dir + '/' + filenames[j]
+    #             pair_id = filenames[i][:-4] + '-' + filenames[j][:-4]
 
-                # run matching
-                if self._matcher_name == "SuperGlue":
-                    image0, inp0, scales0 = read_image(im1_path, self._device, [1344, 756], 0, False)
-                    image1, inp1, scales1 = read_image(im2_path, self._device, [1344, 756], 0, False)
-                    pred = self._matcher({'image0': inp0, 'image1': inp1})
-                    pred = {k: v[0].cpu().numpy() for k, v in pred.items()}
-                    kpts0, kpts1 = pred['keypoints0'], pred['keypoints1']
-                    matches_ids1, conf = pred['matches0'], pred['matching_scores0']
-                    n = np.sum(np.array([1 for t in range(np.shape(kpts0)[0]) if matches_ids1[t] != -1]))
-                    k = 0 
-                    matches = np.zeros((n,4))
-                    for t in range(np.shape(kpts0)[0]):
-                        if matches_ids1[t] != -1:
-                            matches[k,::] = np.concatenate((kpts0[t,::],kpts1[matches_ids1[t],::]), axis=0)
-                            k += 1
+    #             # run matching
+    #             if self._matcher_name == "SuperGlue":
+    #                 image0, inp0, scales0 = read_image(im1_path, self._device, [1344, 756], 0, False)
+    #                 image1, inp1, scales1 = read_image(im2_path, self._device, [1344, 756], 0, False)
+    #                 pred = self._matcher({'image0': inp0, 'image1': inp1})
+    #                 pred = {k: v[0].cpu().numpy() for k, v in pred.items()}
+    #                 kpts0, kpts1 = pred['keypoints0'], pred['keypoints1']
+    #                 matches_ids1, conf = pred['matches0'], pred['matching_scores0']
+    #                 n = np.sum(np.array([1 for t in range(np.shape(kpts0)[0]) if matches_ids1[t] != -1]))
+    #                 k = 0 
+    #                 matches = np.zeros((n,4))
+    #                 for t in range(np.shape(kpts0)[0]):
+    #                     if matches_ids1[t] != -1:
+    #                         matches[k,::] = np.concatenate((kpts0[t,::],kpts1[matches_ids1[t],::]), axis=0)
+    #                         k += 1
 
-                if self._matcher_name == "patch2pix":
-                    matches, _, _ = self._matcher(im1_path, im2_path)
+    #             if self._matcher_name == "patch2pix":
+    #                 matches, _, _ = self._matcher(im1_path, im2_path)
 
-                if self._matcher_name == "SIFT":
-                    matches = self._matcher.load_matches_from_db(database_path, filenames[i], filenames[j])
+    #             if self._matcher_name == "SIFT":
+    #                 matches = self._matcher.load_matches_from_db(database_path, filenames[i], filenames[j])
 
-                if np.shape(matches)[0] < 4:
-                    continue
+    #             if np.shape(matches)[0] < 4:
+    #                 continue
 
-                # verify matches by hololens geometry
-                inls, E, F = self.holo_verificator(matches[:, 0:2], matches[:, 2:4], holo_cameras[filenames[i][:-4]], holo_cameras[filenames[j][:-4]], err_threshold)
-                print(f'{pair_id}     matches={len(matches)}, inliers={np.sum(inls)}')
+    #             # verify matches by hololens geometry
+    #             inls, E, F = self.holo_verificator(matches[:, 0:2], matches[:, 2:4], holo_cameras[filenames[i][:-4]], holo_cameras[filenames[j][:-4]], err_threshold)
+    #             print(f'{pair_id}     matches={len(matches)}, inliers={np.sum(inls)}')
                 
-                all_matches[pair_id] = {"matches": matches, "inliers": inls, "E": E, "F": F}
+    #             all_matches[pair_id] = {"matches": matches, "inliers": inls, "E": E, "F": F}
                 
-                # debuging plot of the matches
-                # Path(f'{self._root_dir}/tmp/patch2pix').mkdir(parents=True, exist_ok=True)
-                #inls = [i for i in range(len(inls)) if inls[i]]     # range(np.shape(matches)[0])]
-                # plot_matches(im1_path, im2_path, matches, inliers=inls, lines=True, radius=1, sav_fig=f'{self._root_dir}/tmp/patch2pix/{filenames[i][:-4]}__{filenames[j][:-4]}.jpg')
+    #             # debuging plot of the matches
+    #             # Path(f'{self._root_dir}/tmp/patch2pix').mkdir(parents=True, exist_ok=True)
+    #             #inls = [i for i in range(len(inls)) if inls[i]]     # range(np.shape(matches)[0])]
+    #             # plot_matches(im1_path, im2_path, matches, inliers=inls, lines=True, radius=1, sav_fig=f'{self._root_dir}/tmp/patch2pix/{filenames[i][:-4]}__{filenames[j][:-4]}.jpg')
 
-        return self.corresp_clustering(all_matches, radius)
+    #     return self.corresp_clustering(all_matches, radius)
 
     def pair_id_to_image_ids(self, pair_id):
         image_id2 = pair_id % 2147483647
