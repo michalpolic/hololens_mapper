@@ -1,4 +1,4 @@
-name: meshroom
+name: patchmatchnet
 channels:
   - pytorch-nightly
   - conda-forge
@@ -7,7 +7,7 @@ dependencies:
   - python=3.8
   - pytorch 
   - torchvision 
-  - cudatoolkit=11
+  - cudatoolkit=11.1
   - pip  
   - pip:
       - opencv-python

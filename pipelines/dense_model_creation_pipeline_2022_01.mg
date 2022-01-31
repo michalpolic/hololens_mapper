@@ -43,7 +43,7 @@
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//model.obj"
+                "output": "{cache}/{nodeType}/{uid0}/model.obj"
             }
         },
         "KeyframeSelector_1": {
@@ -94,7 +94,7 @@
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//model.obj"
+                "output": "{cache}/{nodeType}/{uid0}/model.obj"
             }
         },
         "MatchingPairsSelector_1": {
@@ -120,7 +120,7 @@
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//image_pairs.txt"
+                "output": "{cache}/{nodeType}/{uid0}/image_pairs.txt"
             }
         },
         "HoloLensMatcher_1": {
@@ -353,7 +353,7 @@
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//model.obj"
+                "output": "{cache}/{nodeType}/{uid0}/model.obj"
             }
         },
         "Texturing_1": {
@@ -509,7 +509,7 @@
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/",
-                "outputPLY": "{cache}/{nodeType}/{uid0}//fused.ply"
+                "outputPLY": "{cache}/{nodeType}/{uid0}/fused.ply"
             }
         },
         "DensePointcloudFilter_2": {
@@ -534,7 +534,7 @@
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//model.obj"
+                "output": "{cache}/{nodeType}/{uid0}/model.obj"
             }
         },
         "Meshing_2": {
@@ -553,8 +553,8 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "containerName": "/local/artwin/mapping/codes/hololens_mapper/alicevision.sif",
-                "containerPrefix": "",
+                "containerName": "/home/policmic/artwin/hololens_mapper/alicevision.sif",
+                "containerPrefix": "/opt/AliceVision_install/bin/",
                 "input": "{HoloLensIO_3.outputMeshroomSfM}",
                 "depthMapsFolder": "",
                 "outputMeshFileType": "obj",
@@ -671,8 +671,8 @@
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "containerName": "/local/artwin/mapping/codes/hololens_mapper/alicevision.sif",
-                "containerPrefix": "/opt/AliceVision_install/bin/",
+                "containerName": "{Meshing_2.containerName}",
+                "containerPrefix": "{Meshing_2.containerPrefix}",
                 "input": "{Meshing_2.output}",
                 "fileExt": "ply",
                 "describerTypes": [
