@@ -46,7 +46,9 @@ def save_depth(args):
         num_views=args.num_views,
         max_dim=args.image_max_dim,
         scan_list=args.scan_list,
-        num_light_idx=args.num_light_idx
+        num_light_idx=args.num_light_idx,
+        output_folder=args.output_folder,
+        file_format=args.file_format
     )
 
     image_loader = DataLoader(
@@ -201,84 +203,96 @@ def filter_depth(args, scan: str = ""):
 
     # for each reference view and the corresponding source views
     for ref_view, src_views in pair_data:
-        # load the reference image
-        ref_img, original_h, original_w = read_image(
-            os.path.join(args.input_folder, scan, "images/{:0>8}.jpg".format(ref_view)), args.image_max_dim)
-        # load the camera parameters
-        ref_intrinsics, ref_extrinsics = read_cam_file(
-            os.path.join(args.input_folder, scan, "cams/{:0>8}_cam.txt".format(ref_view)))[0:2]
-        ref_intrinsics[0] *= ref_img.shape[1] / original_w
-        ref_intrinsics[1] *= ref_img.shape[0] / original_h
+        vertices_file = os.path.join(args.output_folder, scan, "vertices/{:0>8}.npy".format(ref_view))
+        if not os.path.isfile(vertices_file):
+            # load the reference image
+            ref_img, original_h, original_w = read_image(
+                os.path.join(args.input_folder, scan, "images/{:0>8}.jpg".format(ref_view)), args.image_max_dim)
+            # load the camera parameters
+            ref_intrinsics, ref_extrinsics = read_cam_file(
+                os.path.join(args.input_folder, scan, "cams/{:0>8}_cam.txt".format(ref_view)))[0:2]
+            ref_intrinsics[0] *= ref_img.shape[1] / original_w
+            ref_intrinsics[1] *= ref_img.shape[0] / original_h
 
-        # load the estimated depth of the reference view
-        ref_depth_est = read_map(
-            os.path.join(args.output_folder, scan, "depth_est/{:0>8}{}".format(ref_view, args.file_format))).squeeze(2)
-        # load the photometric mask of the reference view
-        confidence = read_map(
-            os.path.join(args.output_folder, scan, "confidence/{:0>8}{}".format(ref_view, args.file_format)))
+            # load the estimated depth of the reference view
+            ref_depth_est = read_map(
+                os.path.join(args.output_folder, scan, "depth_est/{:0>8}{}".format(ref_view, args.file_format))).squeeze(2)
+            # load the photometric mask of the reference view
+            confidence = read_map(
+                os.path.join(args.output_folder, scan, "confidence/{:0>8}{}".format(ref_view, args.file_format)))
 
-        photo_mask = (confidence > args.photo_thres).squeeze(2)
+            photo_mask = (confidence > args.photo_thres).squeeze(2)
 
-        all_src_view_depth_estimates = []
+            all_src_view_depth_estimates = []
 
-        # compute the geometric mask
-        geo_mask_sum = 0
-        for src_view in src_views:
-            # camera parameters of the source view
-            src_image, original_h, original_w = read_image(
-                os.path.join(args.input_folder, scan, "images/{:0>8}.jpg".format(src_view)), args.image_max_dim)
-            src_intrinsics, src_extrinsics = read_cam_file(
-                os.path.join(args.input_folder, scan, "cams/{:0>8}_cam.txt".format(src_view)))[0:2]
-            src_intrinsics[0] *= src_image.shape[1] / original_w
-            src_intrinsics[1] *= src_image.shape[0] / original_h
+            # compute the geometric mask
+            geo_mask_sum = 0
+            for src_view in src_views:
+                # camera parameters of the source view
+                src_image, original_h, original_w = read_image(
+                    os.path.join(args.input_folder, scan, "images/{:0>8}.jpg".format(src_view)), args.image_max_dim)
+                src_intrinsics, src_extrinsics = read_cam_file(
+                    os.path.join(args.input_folder, scan, "cams/{:0>8}_cam.txt".format(src_view)))[0:2]
+                src_intrinsics[0] *= src_image.shape[1] / original_w
+                src_intrinsics[1] *= src_image.shape[0] / original_h
 
-            # the estimated depth of the source view
-            src_depth_est = read_map(
-                os.path.join(args.output_folder, scan, "depth_est/{:0>8}{}".format(src_view, args.file_format)))
+                # the estimated depth of the source view
+                src_depth_est = read_map(
+                    os.path.join(args.output_folder, scan, "depth_est/{:0>8}{}".format(src_view, args.file_format)))
 
-            geo_mask, depth_reprojected = check_geometric_consistency(
-                ref_depth_est,
-                ref_intrinsics,
-                ref_extrinsics,
-                src_depth_est,
-                src_intrinsics,
-                src_extrinsics,
-                args.geo_pixel_thres,
-                args.geo_depth_thres
-            )
-            geo_mask_sum += geo_mask.astype(np.int32)
-            all_src_view_depth_estimates.append(depth_reprojected)
+                geo_mask, depth_reprojected = check_geometric_consistency(
+                    ref_depth_est,
+                    ref_intrinsics,
+                    ref_extrinsics,
+                    src_depth_est,
+                    src_intrinsics,
+                    src_extrinsics,
+                    args.geo_pixel_thres,
+                    args.geo_depth_thres
+                )
+                geo_mask_sum += geo_mask.astype(np.int32)
+                all_src_view_depth_estimates.append(depth_reprojected)
 
-        depth_est_averaged = (sum(all_src_view_depth_estimates) + ref_depth_est) / (geo_mask_sum + 1)
+            depth_est_averaged = (sum(all_src_view_depth_estimates) + ref_depth_est) / (geo_mask_sum + 1)
 
-        geo_mask = geo_mask_sum >= args.geo_mask_thres
-        final_mask = np.logical_and(photo_mask, geo_mask)
+            geo_mask = geo_mask_sum >= args.geo_mask_thres
+            final_mask = np.logical_and(photo_mask, geo_mask)
 
-        os.makedirs(os.path.join(args.output_folder, scan, "mask"), exist_ok=True)
-        save_image(os.path.join(args.output_folder, scan, "mask/{:0>8}_photo.png".format(ref_view)), photo_mask)
-        save_image(os.path.join(args.output_folder, scan, "mask/{:0>8}_geo.png".format(ref_view)), geo_mask)
-        save_image(os.path.join(args.output_folder, scan, "mask/{:0>8}_final.png".format(ref_view)), final_mask)
+            os.makedirs(os.path.join(args.output_folder, scan, "mask"), exist_ok=True)
+            save_image(os.path.join(args.output_folder, scan, "mask/{:0>8}_photo.png".format(ref_view)), photo_mask)
+            save_image(os.path.join(args.output_folder, scan, "mask/{:0>8}_geo.png".format(ref_view)), geo_mask)
+            save_image(os.path.join(args.output_folder, scan, "mask/{:0>8}_final.png".format(ref_view)), final_mask)
 
-        print("processing {}, ref-view{:0>3}, geo_mask:{:3f}, photo_mask:{:3f}, final_mask: {:3f}".format(
-            os.path.join(args.input_folder, scan), ref_view, geo_mask.mean(), photo_mask.mean(), final_mask.mean()))
+            print("processing {}, ref-view{:0>3}, geo_mask:{:3f}, photo_mask:{:3f}, final_mask: {:3f}".format(
+                os.path.join(args.input_folder, scan), ref_view, geo_mask.mean(), photo_mask.mean(), final_mask.mean()))
 
-        if args.display:
-            cv2.imshow("ref_img", ref_img[:, :, ::-1])
-            cv2.imshow("ref_depth", ref_depth_est)
-            cv2.imshow("ref_depth * photo_mask", ref_depth_est * photo_mask.astype(np.float32))
-            cv2.imshow("ref_depth * geo_mask", ref_depth_est * geo_mask.astype(np.float32))
-            cv2.imshow("ref_depth * mask", ref_depth_est * final_mask.astype(np.float32))
-            cv2.waitKey(1)
+            # if args.display:
+            #     cv2.imshow("ref_img", ref_img[:, :, ::-1])
+            #     cv2.imshow("ref_depth", ref_depth_est)
+            #     cv2.imshow("ref_depth * photo_mask", ref_depth_est * photo_mask.astype(np.float32))
+            #     cv2.imshow("ref_depth * geo_mask", ref_depth_est * geo_mask.astype(np.float32))
+            #     cv2.imshow("ref_depth * mask", ref_depth_est * final_mask.astype(np.float32))
+            #     cv2.waitKey(1)
 
-        height, width = depth_est_averaged.shape[:2]
-        x, y = np.meshgrid(np.arange(0, width), np.arange(0, height))
-        x, y, depth = x[final_mask], y[final_mask], depth_est_averaged[final_mask]
+            height, width = depth_est_averaged.shape[:2]
+            x, y = np.meshgrid(np.arange(0, width), np.arange(0, height))
+            x, y, depth = x[final_mask], y[final_mask], depth_est_averaged[final_mask]
 
-        color = ref_img[final_mask]
-        xyz_ref = np.matmul(np.linalg.inv(ref_intrinsics), np.vstack((x, y, np.ones_like(x))) * depth)
-        xyz_world = np.matmul(np.linalg.inv(ref_extrinsics), np.vstack((xyz_ref, np.ones_like(x))))[:3]
-        vertices.append(xyz_world.transpose((1, 0)))
-        vertex_colors.append((color * 255).astype(np.uint8))
+            color = ref_img[final_mask]
+            xyz_ref = np.matmul(np.linalg.inv(ref_intrinsics), np.vstack((x, y, np.ones_like(x))) * depth)
+            xyz_world = np.matmul(np.linalg.inv(ref_extrinsics), np.vstack((xyz_ref, np.ones_like(x))))[:3]
+            # vertices.append(xyz_world.transpose((1, 0)))
+            # vertex_colors.append((color * 255).astype(np.uint8))
+            os.makedirs(os.path.join(args.output_folder, scan, "vertices"), exist_ok=True)
+            np.save(vertices_file, { "vertices": xyz_world.transpose((1, 0)),
+                "vertex_colors": (color * 255).astype(np.uint8) })
+
+    # concatenate the pointclouds
+    for ref_view, src_views in pair_data:
+        vertices_file = os.path.join(args.output_folder, scan, "vertices/{:0>8}.npy".format(ref_view))
+        data = np.load(vertices_file)
+        vertices.append(data["vertices"])
+        vertex_colors.append(data["vertex_colors"])
 
     vertices = np.concatenate(vertices, axis=0)
     vertex_colors = np.concatenate(vertex_colors, axis=0)
@@ -368,6 +382,7 @@ if __name__ == "__main__":
         save_depth(input_args)
         # We can free all the GPU memory here since we don't need it for the fusion part
         torch.cuda.empty_cache()
+        print("Depthmap and confidence calculation are done.")
 
     # step2. filter saved depth maps and reconstruct point cloud
     if input_args.output_type == "fusion" or input_args.output_type == "both":

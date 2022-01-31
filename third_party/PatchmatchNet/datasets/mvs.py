@@ -19,7 +19,9 @@ class MVSDataset(Dataset):
             image_folder: str = "images",
             depth_folder: str = "depth_gt",
             image_extension: str = ".jpg",
-            robust_train: bool = False
+            robust_train: bool = False,
+            output_folder: str = "",
+            file_format: str = ""
     ) -> None:
         super(MVSDataset, self).__init__()
 
@@ -47,7 +49,12 @@ class MVSDataset(Dataset):
         for scan in scans:
             pair_data = read_pair_file(os.path.join(self.data_path, scan, pair_path))
             for light_idx in light_indexes:
-                self.metas += [(scan, light_idx, ref, src) for ref, src in pair_data]
+                for ref, src in pair_data:
+                    filename = os.path.join(scan, "{}", "{:0>8}".format(ref) + "{}")
+                    depth_file = os.path.join(output_folder, filename.format("depth_est", file_format))
+                    confidnece_file = os.path.join(output_folder, filename.format("confidence", file_format))
+                    if not os.path.isfile(depth_file) or not os.path.isfile(confidnece_file):
+                        self.metas.append((scan, light_idx, ref, src))
 
     def __len__(self):
         return len(self.metas)
