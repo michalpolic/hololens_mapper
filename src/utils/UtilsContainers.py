@@ -13,7 +13,7 @@ class UtilsContainers:
             lib_prefix - path to library in the container if executable is not in the path
             logger - object for Meshroom loging
         """
-        assert(container_type == "docker" or container_type == "singularity", f"The container type {container_type} is unknown.")
+        assert (container_type == "docker" or container_type == "singularity"), f"The container type {container_type} is unknown."
         
         self._container_type = container_type
         self._image = image

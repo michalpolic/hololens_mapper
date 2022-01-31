@@ -4,6 +4,7 @@ import numpy as np
 import os
 import shutil
 import struct
+import multiprocessing as mp
 from typing import Dict, List, NamedTuple, Tuple
 
 
@@ -333,12 +334,12 @@ if __name__ == "__main__":
         depth_ranges.append((depth_min, depth_max))
     print("depth_ranges[0]\n", depth_ranges[0], end="\n\n")
 
-    def calc_score(ind1: int, ind2: int) -> float:
-        id_i = images[ind1].point3d_ids
-        id_j = images[ind2].point3d_ids
+    def calc_score(ids) -> float:      # ind1: int, ind2: int
+        id_i = images[ids[0]].point3d_ids
+        id_j = images[ids[1]].point3d_ids
         id_intersect = [it for it in id_i if it in id_j]
-        cam_center_i = -np.matmul(extrinsic[ind1][:3, :3].transpose(), extrinsic[ind1][:3, 3:4])[:, 0]
-        cam_center_j = -np.matmul(extrinsic[ind2][:3, :3].transpose(), extrinsic[ind2][:3, 3:4])[:, 0]
+        cam_center_i = -np.matmul(extrinsic[ids[0]][:3, :3].transpose(), extrinsic[ids[0]][:3, 3:4])[:, 0]
+        cam_center_j = -np.matmul(extrinsic[ids[1]][:3, :3].transpose(), extrinsic[ids[1]][:3, 3:4])[:, 0]
         view_score_ = 0.0
         for pid in id_intersect:
             if pid == -1:
@@ -349,28 +350,34 @@ if __name__ == "__main__":
                     cam_center_j - p))
             view_score_ += np.exp(-(theta - args.theta0) * (theta - args.theta0) / (
                     2 * (args.sigma1 if theta <= args.theta0 else args.sigma2) ** 2))
-        return view_score_
+        return (ids, view_score_)
 
     # view selection
-    score = np.zeros((num_images, num_images))
-    queue: List[Tuple[int, int]] = []
-    for i in range(num_images):
-        for j in range(i + 1, num_images):
-            queue.append((i, j))
+    if not os.path.isfile(os.path.join(args.output_folder, "pair.txt")):
+        score = np.zeros((num_images, num_images))
+        queue: List[Tuple[int, int]] = []
+        for i in range(num_images):
+            for j in range(i + 1, num_images):
+                queue.append((i, j))
 
-    for i, j in queue:
-        s = calc_score(i, j)
-        score[i, j] = s
-        score[j, i] = s
+        # test = calc_score(queue[0])
+        chunksize = mp.cpu_count()
+        with mp.Pool(chunksize) as pool:
+            for _, res in enumerate(pool.imap(calc_score, queue), chunksize):
+                i, j = res[0]
+                score[i, j] = res[1]
+                score[j, i] = res[1]
 
-    if args.num_src_images < 0:
-        args.num_src_images = num_images
+        if args.num_src_images < 0:
+            args.num_src_images = num_images
 
-    view_sel: List[List[Tuple[int, float]]] = []
-    for i in range(num_images):
-        sorted_score = np.argsort(score[i])[::-1]
-        view_sel.append([(k, score[i, k]) for k in sorted_score[:args.num_src_images]])
-    print("view_sel[0]\n", view_sel[0], end="\n\n")
+        view_sel: List[List[Tuple[int, float]]] = []
+        for i in range(num_images):
+            sorted_score = np.argsort(score[i])[::-1]
+            view_sel.append([(k, score[i, k]) for k in sorted_score[:args.num_src_images]])
+        print("view_sel[0]\n", view_sel[0], end="\n\n")
+    else:
+        print("view_sel - saved in pairs.txt\n\n")
 
     # write
     os.makedirs(cam_dir, exist_ok=True)
@@ -389,13 +396,14 @@ if __name__ == "__main__":
                 f.write("\n")
             f.write("\n%f %f \n" % (depth_ranges[i][0], depth_ranges[i][1]))
 
-    with open(os.path.join(args.output_folder, "pair.txt"), "w") as f:
-        f.write("%d\n" % len(images))
-        for i, sorted_score in enumerate(view_sel):
-            f.write("%d\n%d " % (i, len(sorted_score)))
-            for image_id, s in sorted_score:
-                f.write("%d %f " % (image_id, s))
-            f.write("\n")
+    if not os.path.isfile(os.path.join(args.output_folder, "pair.txt")):
+        with open(os.path.join(args.output_folder, "pair.txt"), "w") as f:
+            f.write("%d\n" % len(images))
+            for i, sorted_score in enumerate(view_sel):
+                f.write("%d\n%d " % (i, len(sorted_score)))
+                for image_id, s in sorted_score:
+                    f.write("%d %f " % (image_id, s))
+                f.write("\n")
 
     for i in range(num_images):
         if args.convert_format:
