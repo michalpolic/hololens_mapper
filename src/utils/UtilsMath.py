@@ -291,8 +291,8 @@ class UtilsMath:
         new_xyz_grid, new_xyz_mean, ids_old_to_new_xyz = self.hash_points(xyz, xyz_hash_scale)
 
         # holoio = HoloIO()
-        # holoio.write_pointcloud_to_file(new_xyz_grid, "/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/model_grid.obj" )
-        # holoio.write_pointcloud_to_file(new_xyz_mean, "/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/model_mean.obj" )
+        # holoio.write_pointcloud_to_file(new_xyz_grid, "/home/ciirc/policmic/model_grid.obj" )
+        # holoio.write_pointcloud_to_file(new_xyz_mean, "/home/ciirc/policmic/model_mean.obj" )
 
         # hash cameras
         cameras_hash = cameras
@@ -315,7 +315,7 @@ class UtilsMath:
         # test = self.estimate_visibility_for_image(all_data[0])
         # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/debug/data.mat", all_data[0])
 
-        chunksize = mp.cpu_count()
+        chunksize = 8  #mp.cpu_count()
         with mp.Pool(chunksize) as pool:
             for ind, res in enumerate(pool.imap(self.estimate_visibility_for_image, all_data), chunksize):
                 for i in range(0,len(res)):

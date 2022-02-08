@@ -115,14 +115,20 @@ class MeshroomIO:
         
         return sfm_dict
 
-    def add_points_to_sfm_structure(self, sfm_dict, points3D, images):
+    def add_points_to_sfm_structure(self, sfm_dict, points3D, images, outfile = None):
         images_dict = {}
         if isinstance(images,list):
             for img in images:
                 images_dict[int(img['image_id'])] = img
             images = images_dict
 
-        for pt in points3D:
+        last_valid_pt_idx = -1
+        for pt_idx, pt in enumerate(points3D):
+            if (len(pt['img_pt']) / 2) > 3 and pt['err'] < 2:
+                if last_valid_pt_idx < pt_idx:
+                    last_valid_pt_idx = pt_idx
+
+        for pt_idx, pt in enumerate(points3D):
             if (len(pt['img_pt']) / 2) > 3 and pt['err'] < 2:
                 landmark = {
                     "landmarkId": str(pt['point3D_id']),
@@ -144,7 +150,14 @@ class MeshroomIO:
                         "x": [str(uv[0]), str(uv[1])],
                         "scale": "0"
                     })
-                sfm_dict["structure"].append(landmark)
+
+                if outfile != None:
+                    str_landmark = json.dumps(landmark)
+                    if pt_idx != last_valid_pt_idx:
+                        str_landmark += ","
+                    outfile.write(str_landmark)
+                else:
+                    sfm_dict["structure"].append(landmark)
 
         return sfm_dict
 
@@ -216,9 +229,18 @@ class MeshroomIO:
         sfm_dict = self.init_sfm_structure()
         sfm_dict = self.add_cameras_to_sfm_structure(sfm_dict, cameras)
         sfm_dict = self.add_views_to_sfm_structure(sfm_dict, images, cameras)
-        sfm_dict = self.add_points_to_sfm_structure(sfm_dict, points3D, images)
-        with open(out_path, 'w') as outfile:
-            json.dump(sfm_dict, outfile)
+        
+        outfile = open(out_path, 'w')
+        outfile.write(json.dumps(sfm_dict)[0:-2])
+        self.add_points_to_sfm_structure({"structure":[]}, points3D, images, outfile)
+        outfile.write("]}")
+        outfile.close()
+
+        # sfm_dict = self.add_points_to_sfm_structure(sfm_dict, points3D, images)
+        # outfile = open(out_path + "2", 'w')
+        # json.dump(sfm_dict, outfile)
+        # outfile.close()
+
 
     def save_merged_mvs_to_json(self, out_path, pv_path, cameras, images, xyz, visibility_map, rgb):
         print("Saving Holo + MVS to Meshroom JSON.")

@@ -211,6 +211,8 @@ different format.
 
                 chunk.logger.info("Update points in 3D and their observations.")
                 images, points3D = colmap.compose_images_and_points3D_from_visibilty(images, visibility_map, new_xyz)
+                del visibility_map
+                del new_xyz
             else: 
                 chunk.logger.info("Dense pointcloud is not available.")
 
