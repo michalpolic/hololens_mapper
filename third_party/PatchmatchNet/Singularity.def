@@ -33,7 +33,7 @@ conda update conda
 
 conda env create -f /app/environment.yml
 echo ". /home/ciirc/anaconda3/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
-echo "conda activate meshroom" >> $SINGULARITY_ENVIRONMENT
+echo "conda activate patchmatchnet" >> $SINGULARITY_ENVIRONMENT
 cd /app
 
 %environment
@@ -41,11 +41,11 @@ export PYTHONPATH=/app
 
 %runscript
 . /home/ciirc/anaconda3/etc/profile.d/conda.sh
-conda activate meshroom
+conda activate patchmatchnet
 cd /app
 exec "$@"
 
 %startscript
 . /home/ciirc/anaconda3/etc/profile.d/conda.sh
-conda activate meshroom 
+conda activate patchmatchnet 
 cd /app
