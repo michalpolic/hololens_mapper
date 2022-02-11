@@ -454,6 +454,7 @@ class HoloIO:
         
         for imgs_dir in imgs_dir_list:
             if os.path.isdir(source_dir + imgs_dir):
+                Path(destination_dir + imgs_dir).mkdir(parents=True, exist_ok=True)
                 copy_tree(source_dir + imgs_dir, destination_dir + imgs_dir)   
         
 

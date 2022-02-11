@@ -113,8 +113,8 @@ different format.
             label="Output format",
             description="The output data format, e.g., COLMAP or Meshroom.",
             value="COLMAP",
-            values=["COLMAP", "Meshroom"], 
-            exclusive=True,
+            values=["COLMAP", "Meshroom","OBJ"], 
+            exclusive=False,
             uid=[0],
         ),
         desc.BoolParam(
@@ -213,6 +213,9 @@ different format.
                 images, points3D = colmap.compose_images_and_points3D_from_visibilty(images, visibility_map, new_xyz)
                 del visibility_map
                 del new_xyz
+                
+                chunk.logger.info("Update colors of points in 3D.")
+                points3D = utils_math.estimate_colors_of_points3D_fast(chunk.node.inputFolder.value, images, points3D)
             else: 
                 chunk.logger.info("Dense pointcloud is not available.")
 
@@ -232,13 +235,19 @@ different format.
             if chunk.node.cpoyImagesToOutput.value:
                 holo_io.copy_sfm_images(chunk.node.inputFolder.value, chunk.node.output.value)
 
-            if chunk.node.outputSfMFormat.value == "COLMAP":
+            if "COLMAP" in chunk.node.outputSfMFormat.value:
                 chunk.logger.info("Saving COLMAP SfM.")
                 colmap_io.write_model(chunk.node.output.value, cameras, images, points3D)
 
-            if chunk.node.outputSfMFormat.value == "Meshroom":
+            if "Meshroom" in chunk.node.outputSfMFormat.value:
                 chunk.logger.info("Saving Meshroom SfM.")
                 meshroom_io.write_model(chunk.node.outputMeshroomSfM.value, cameras, images, points3D)
+
+            if "OBJ" in chunk.node.outputSfMFormat.value:
+                chunk.logger.info("Saving pointcloud to OBJ.")
+                xyz, rgb, xyz_colored, rgb_colored = colmap_io.points3D_to_xyz(points3D)
+                holo_io.write_pointcloud_to_file(xyz, chunk.node.output.value + '/model.obj', rgb = rgb)
+                holo_io.write_pointcloud_to_file(xyz_colored, chunk.node.output.value + '/model_rgb.obj', rgb = rgb_colored)
 
             chunk.logger.info("HoloLensIO done.") 
 

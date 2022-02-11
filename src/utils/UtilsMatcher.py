@@ -226,10 +226,6 @@ class UtilsMatcher:
 
     def holo_matcher2(self, images_dir, cameras, images, err_threshold = 10, database_path=""):
         all_matches = {}
-        image_by_ids = {}
-        for img in images:
-            img['name'] = img['name'].replace('\\','/')
-            image_by_ids[img['image_id']] = img
 
         # load image pairs from database of tentative matches 
         all_matches = {}
@@ -243,8 +239,8 @@ class UtilsMatcher:
             matches = self._matcher.load_matches_for_pair_of_images(database_path, img1_id, img2_id)
             
             if matches.any():
-                img1 = image_by_ids[img1_id]
-                img2 = image_by_ids[img2_id]
+                img1 = images[img1_id]
+                img2 = images[img2_id]
                 inls, E, F = self.holo_verificator2(matches[:, 0:2], matches[:, 2:4], \
                     cameras[int(img1['camera_id'])], cameras[int(img2['camera_id'])], img1, img2, err_threshold)
                 
@@ -284,27 +280,26 @@ class UtilsMatcher:
         images_pairs_file.close()
 
     def update_images_observations(self, images, obs_for_images):
-        images_dict = {}
-        for img in images:
-            images_dict[img['image_id']] = img
-
         for img_id in obs_for_images:
             obs = obs_for_images[img_id]
-            images_dict[img_id]['uvs'] = np.ndarray.tolist(obs.reshape(-1))
-            images_dict[img_id]['point3D_ids'] = [-1 for i in range(int(len(images_dict[img_id]['uvs'])/2))]
+            images[img_id]['uvs'] = np.ndarray.tolist(obs.reshape(-1))
+            images[img_id]['point3D_ids'] = [-1 for i in range(int(len(images[img_id]['uvs'])/2))]
 
         return images
 
     def synchronize_images_ids_with_database(self, images, images_db):
         images_by_name = {}
         for img in images.values():
+            img['image_id'] = -1
             images_by_name[img['name'].replace('\\','/')] = img
 
         for image_db in images_db:
-            images_by_name[image_db['name']]['image_id'] = image_db['image_id']
+            if image_db['name'] in images_by_name:
+                images_by_name[image_db['name']]['image_id'] = image_db['image_id']
 
-        images = []
+        images = {}
         for i in images_by_name:
-            images.append(images_by_name[i])
+            if images_by_name[i]['image_id'] >= 0:
+                images[images_by_name[i]['image_id']] = images_by_name[i]
 
         return images

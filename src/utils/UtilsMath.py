@@ -1,13 +1,14 @@
 import ctypes
 import pathlib
 import numpy as np
-from numpy import linalg
+from numpy import Inf, linalg
 import numpy.matlib
 from scipy.io import savemat
 import scipy.spatial as spatial
 import os
 import sys
 import multiprocessing as mp
+import cv2
 
 from src.holo.HoloIO import HoloIO
 
@@ -15,9 +16,7 @@ sys.path.append(os.path.dirname(__file__) )
 import renderDepth
 
 
-
 class UtilsMath:
-
     def q2r(self, q):
         q = q / linalg.norm(np.matrix(q))
         return np.matrix([
@@ -315,7 +314,7 @@ class UtilsMath:
         # test = self.estimate_visibility_for_image(all_data[0])
         # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/debug/data.mat", all_data[0])
 
-        chunksize = 8  #mp.cpu_count()
+        chunksize = 16  #mp.cpu_count()
         with mp.Pool(chunksize) as pool:
             for ind, res in enumerate(pool.imap(self.estimate_visibility_for_image, all_data), chunksize):
                 for i in range(0,len(res)):
@@ -347,3 +346,122 @@ class UtilsMath:
                     view_graph[image_id1, image_id2] += 1
         
         return (images_to_ids, view_graph)
+
+
+    def add_colors_to_dict(self, colors_of_points3D, distance_of_points3D, rgb, img, points3D):
+        for i, pt_id in enumerate(img['point3D_ids']):
+            if not pt_id in colors_of_points3D:
+                colors_of_points3D[pt_id] = []
+                distance_of_points3D[pt_id] = []
+            pt_rgb = rgb[int(round(img['uvs'][2*i+1])),int(round(img['uvs'][2*i])),:]    
+            colors_of_points3D[pt_id].append(pt_rgb[0])
+            colors_of_points3D[pt_id].append(pt_rgb[1])
+            colors_of_points3D[pt_id].append(pt_rgb[2])
+            d_tmp = (points3D[pt_id]['X'] - img['C'].T)
+            distance_of_points3D[pt_id].append(np.sqrt(d_tmp * d_tmp.T)[0,0])
+        return (colors_of_points3D,distance_of_points3D)
+
+
+    def estimate_colors_of_points3D(self, images_folder, images, points3D):
+        colors_of_points3D = {}
+        gray_of_points3D = {}
+        distance_of_rgb_points3D = {}
+        distance_of_gray_points3D = {}
+
+        for img in images.values():
+            img_data = cv2.imread(images_folder + "/" + img["name"])
+            if not 'vlc' in img["name"]:
+                colors_of_points3D, distance_of_rgb_points3D = \
+                    self.add_colors_to_dict(colors_of_points3D, distance_of_rgb_points3D, img_data, img, points3D)
+            else:
+                gray_of_points3D, distance_of_gray_points3D = \
+                    self.add_colors_to_dict(gray_of_points3D, distance_of_gray_points3D, img_data, img, points3D)
+        
+        for pt in points3D:
+            found_colors = False
+            if pt['point3D_id'] in colors_of_points3D.keys():
+                found_colors = True
+                pt_colors = np.reshape(np.matrix(colors_of_points3D[pt['point3D_id']]),(3,-1), order='F')
+                distances = np.matrix(distance_of_rgb_points3D[pt['point3D_id']])
+            else: 
+                if pt['point3D_id'] in gray_of_points3D.keys():
+                    found_colors = True
+                    pt_colors = np.reshape(np.array(gray_of_points3D[pt['point3D_id']]),(3,-1))
+                    distances = np.matrix(distance_of_gray_points3D[pt['point3D_id']])
+            if found_colors:
+                pt['rgb'] = np.matrix.tolist(pt_colors[:,np.argmin(distances)])
+                # score = 1/distances
+                # weights = np.exp(score)/np.sum(np.exp(score))
+                # pt_rgb = np.round(np.sum(np.multiply(pt_colors,np.matlib.repmat(weights,3,1)), axis=1).T)
+                # pt['rgb'] = np.matrix.tolist(pt_rgb.astype(dtype=int))[0]
+
+        return points3D
+
+
+    shared_array = None
+
+    def add_colors_to_array(self, data):
+        rgb = cv2.imread(data["path"])
+        for i in range(len(data['point3D_ids'])):
+            pt_id = data['point3D_ids'][i]
+            if pt_id >= 0:
+                d_tmp = np.array([self.shared_array[1,pt_id] - data['C'][0,0], 
+                    self.shared_array[2,pt_id] - data['C'][1,0], 
+                    self.shared_array[3,pt_id] - data['C'][2,0]])
+                d = np.sqrt(np.sum(d_tmp * d_tmp))
+
+                if d < self.shared_array[0,pt_id]:
+                    pt_bgr = rgb[int(round(data['uvs'][2*i+1])),int(round(data['uvs'][2*i])),:]    
+                    if self.shared_array[4,pt_id] != self.shared_array[5,pt_id] or self.shared_array[5,pt_id] != self.shared_array[6,pt_id]:
+                        if pt_bgr[0] != pt_bgr[1] or pt_bgr[1] != pt_bgr[2]:
+                            self.shared_array[4,pt_id] = pt_bgr[2]
+                            self.shared_array[5,pt_id] = pt_bgr[1]
+                            self.shared_array[6,pt_id] = pt_bgr[0]
+                            self.shared_array[0,pt_id] = d
+                    else:
+                        self.shared_array[4,pt_id] = pt_bgr[2]
+                        self.shared_array[5,pt_id] = pt_bgr[1]
+                        self.shared_array[6,pt_id] = pt_bgr[0]
+                        self.shared_array[0,pt_id] = d
+
+    def init_shared_array_for_coloring_points(self, shared_array_base, points3D):
+        self.shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
+        self.shared_array = self.shared_array.reshape(7, -1)
+        for pt in points3D:
+            self.shared_array[0,pt['point3D_id']] = Inf
+            self.shared_array[1,pt['point3D_id']] = pt['X'][0]
+            self.shared_array[2,pt['point3D_id']] = pt['X'][1]
+            self.shared_array[3,pt['point3D_id']] = pt['X'][2]
+            self.shared_array[4,pt['point3D_id']] = pt['rgb'][0]
+            self.shared_array[5,pt['point3D_id']] = pt['rgb'][1]
+            self.shared_array[6,pt['point3D_id']] = pt['rgb'][2]
+
+    def estimate_colors_of_points3D_fast(self, images_folder, images, points3D):
+        max_pt_id = -1
+        for pt in points3D:
+            if pt['point3D_id'] > max_pt_id:
+                max_pt_id = pt['point3D_id']
+        shared_array_base = mp.Array(ctypes.c_double, 7*(max_pt_id + 1))  # [distance, x, y, z, r, g, b]
+        self.init_shared_array_for_coloring_points(shared_array_base, points3D)
+
+        all_data = []
+        for img in images.values():
+            all_data.append({'path': (images_folder + "/" + img["name"]).replace("\\","/"), \
+                'uvs': img['uvs'], 'point3D_ids': img['point3D_ids'], 'C': img['C']})
+
+        # pool = mp.Pool(processes=mp.cpu_count())
+        # self.add_colors_to_array(all_data[0])     # test
+        # # pool.map(self.add_colors_to_array, all_data)
+
+        for data in all_data:
+            self.add_colors_to_array(data)
+        
+        for pt in points3D:
+            pt['X'][0] = self.shared_array[1,pt['point3D_id']]
+            pt['X'][1] = self.shared_array[2,pt['point3D_id']]
+            pt['X'][2] = self.shared_array[3,pt['point3D_id']]
+            pt['rgb'][0] = int(self.shared_array[4,pt['point3D_id']])
+            pt['rgb'][1] = int(self.shared_array[5,pt['point3D_id']])
+            pt['rgb'][2] = int(self.shared_array[6,pt['point3D_id']])
+
+        return points3D

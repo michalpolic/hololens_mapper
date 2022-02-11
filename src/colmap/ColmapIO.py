@@ -269,7 +269,7 @@ class ColmapIO:
         cursor = con.cursor()
         sqlite_insert = """INSERT INTO images (image_id, name, camera_id, prior_qw, prior_qx, prior_qy, prior_qz, prior_tx, prior_ty, prior_tz) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""         
         utils_math = UtilsMath()
-        for img in images:
+        for img in images.values():
             q = np.ndarray.tolist(utils_math.r2q(img['R']).reshape(-1))[0]
             t = np.ndarray.tolist((- img['R'] * img['C']).reshape(-1))[0]
             data_tuple = (img['image_id'], img['name'].replace('\\','/'), int(img['camera_id']), \
@@ -282,7 +282,7 @@ class ColmapIO:
         con = sqlite3.connect(physical_database_path)
         cursor = con.cursor()
         sqlite_insert = """INSERT INTO keypoints (image_id, rows, cols, data) VALUES (?, ?, ?, ?)"""
-        for img in images:
+        for img in images.values():
             n = int(len(img['uvs'])/2)
             uvs = np.array(img['uvs']).reshape(-1,2)
             data = np.concatenate((uvs, np.zeros((n,2))), axis=1).astype(np.float32).tobytes(order='C')
@@ -345,3 +345,24 @@ class ColmapIO:
             images_db.append({'image_id': item[0], 'name': item[1]})
 
         return images_db
+
+    def points3D_to_xyz(self, points3D):
+        xyz = np.zeros((3,len(points3D)), dtype=float)
+        rgb = np.zeros((3,len(points3D)), dtype=float)
+        xyz_colored = []
+        rgb_colored = []
+        for i, pt in enumerate(points3D):
+            xyz[0,i] = pt['X'][0]
+            xyz[1,i] = pt['X'][1]
+            xyz[2,i] = pt['X'][2]
+            rgb[0,i] = float(pt['rgb'][0]) / 255.0
+            rgb[1,i] = float(pt['rgb'][1]) / 255.0
+            rgb[2,i] = float(pt['rgb'][2]) / 255.0
+            if pt['rgb'][0] != pt['rgb'][1] or pt['rgb'][1] != pt['rgb'][2]:
+                xyz_colored.append(pt['X'][0])
+                xyz_colored.append(pt['X'][1])
+                xyz_colored.append(pt['X'][2])
+                rgb_colored.append(float(pt['rgb'][0]) / 255.0)
+                rgb_colored.append(float(pt['rgb'][1]) / 255.0)
+                rgb_colored.append(float(pt['rgb'][2]) / 255.0)
+        return (xyz, rgb, np.reshape(np.array(xyz_colored),(3,-1),order='F'), np.reshape(np.array(rgb_colored),(3,-1),order='F'))
