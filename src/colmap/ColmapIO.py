@@ -79,12 +79,13 @@ class ColmapIO:
             p = line.split(" ")
             if first_row:
                 R = utils_math.q2r([float(p[1]), float(p[2]), float(p[3]), float(p[4])])
-                C = - np.matrix(R).T * np.matrix([float(p[5]), float(p[6]), float(p[7])]).T
+                C = - np.matrix(R).T @ np.matrix([float(p[5]), float(p[6]), float(p[7])]).T
                 img = {
                     'image_id': int(p[0]),
-                    'camera_id': p[8],
+                    'camera_id': int(p[8]),
                     'R': R,
                     'C': C,
+                    't': np.array([float(p[5]), float(p[6]), float(p[7])]),
                     'name': p[9],
                     'uvs': [],
                     'point3D_ids': []
