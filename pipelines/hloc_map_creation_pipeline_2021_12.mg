@@ -4,9 +4,9 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "HololensPointcloudComposer": "0.1",
             "KeyframeSelector": "0.1",
             "HoloLensIO": "0.1",
+            "HololensPointcloudComposer": "0.1",
             "HlocMapCreator": "0.1"
         }
     },
@@ -23,16 +23,16 @@
                 "split": 1
             },
             "uids": {
-                "0": "310b96a95d4761b9dff24b8ffe77756259eb1e0b"
+                "0": "eeb3b4fb22f386cdd7da001c1bdf5e961fa0bd0d"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "recordingDir": "/local1/projects/artwin/datasets/Munich/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1",
+                "recordingDir": "/local1/projects/artwin/datasets/LibrarySmall",
                 "UVfile": "/local1/projects/artwin/datasets/uvdata.txt",
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}//model.obj"
+                "output": "{cache}/{nodeType}/{uid0}/model.obj"
             }
         },
         "KeyframeSelector_1": {
@@ -47,7 +47,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "be61e554269bbdd24d1d86248f6736f20a8316f2"
+                "0": "71ba24bba32ecc44d6ddfc78a1c09f3dd0a9c5b9"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -73,7 +73,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "1566af91261140f64b84c297dc15f627f5ef8c78"
+                "0": "d79fe38ca0de0a6f95f8950c49b4b09be02cc831"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -97,7 +97,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "0a9c42b43b7e572d88ded619db123c0cb8434900"
+                "0": "99eb499f9b42e3a3fc518ecdb593055d24665912"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -208,13 +208,14 @@
                     }
                 ],
                 "inputSfMFormat": "HoloLens",
-                "outputSfMFormat": "COLMAP",
+                "outputSfMFormat": ["COLMAP"],
                 "cpoyImagesToOutput": true,
                 "imagesPath": "original",
                 "verboseLevel": "info"
             },
             "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
             }
         }
     }
