@@ -231,7 +231,7 @@ class HoloIO:
         return C2W * xyz1
 
 
-    def read_dense_pointcloud(self, depthmaps_dir, uvdata_path, depthmap_poses_path, logger=None):
+    def compose_common_pointcloud(self, depthmaps_dir, uvdata_path, depthmap_poses_path, logger=None):
         """Read, decode and transform depthmaps into common HoloLens world coordinate system.
         Input: 
             depthmaps_dir - path to depthmaps directory
