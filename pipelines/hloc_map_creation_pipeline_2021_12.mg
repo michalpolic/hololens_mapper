@@ -4,10 +4,10 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "KeyframeSelector": "0.1",
-            "HoloLensIO": "0.1",
             "HololensPointcloudComposer": "0.1",
-            "HlocMapCreator": "0.1"
+            "KeyframeSelector": "0.1",
+            "HlocMapCreator": "0.1",
+            "HoloLensIO": "0.1"
         }
     },
     "graph": {
@@ -73,7 +73,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "d79fe38ca0de0a6f95f8950c49b4b09be02cc831"
+                "0": "14d6d96d2516973e7d91be9ce559044510a28867"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -97,7 +97,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "99eb499f9b42e3a3fc518ecdb593055d24665912"
+                "0": "55303fa38b669b9346a0aa130e2fb78dc8026b97"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -208,7 +208,9 @@
                     }
                 ],
                 "inputSfMFormat": "HoloLens",
-                "outputSfMFormat": ["COLMAP"],
+                "outputSfMFormat": [
+                    "COLMAP"
+                ],
                 "cpoyImagesToOutput": true,
                 "imagesPath": "original",
                 "verboseLevel": "info"
