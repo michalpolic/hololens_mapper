@@ -340,10 +340,15 @@ class UtilsMath:
             pt_visible_in_images = list(map(int, pt['img_pt'][0::2]))
 
             for i in range(len(pt_visible_in_images)):
-                image_id1 = images_to_ids[pt_visible_in_images[i]]
-                for j in range(i+1,len(pt_visible_in_images)):
-                    image_id2 = images_to_ids[pt_visible_in_images[j]]
-                    view_graph[image_id1, image_id2] += 1
+                if pt_visible_in_images[i] in images_to_ids:
+                    image_id1 = images_to_ids[pt_visible_in_images[i]]
+                    for j in range(i+1,len(pt_visible_in_images)):
+                        if pt_visible_in_images[j] in images_to_ids:
+                            image_id2 = images_to_ids[pt_visible_in_images[j]]
+                            # print('image_id2:' + str(image_id2) + '\n')
+                            # if image_id1 == 0 and image_id2 == 1309:
+                            #     print('xxx')
+                            view_graph[image_id1, image_id2] += 1
         
         return (images_to_ids, view_graph)
 
