@@ -465,3 +465,25 @@ class UtilsMath:
             pt['rgb'][2] = int(self.shared_array[6,pt['point3D_id']])
 
         return points3D
+
+    def update_camera_ids(self, cameras, images):
+        '''Update the camera ids. Change camera ids if some images are missing in SfM.'''
+        # compose new camera ids, if some camera miss, the ids will go from zero to len(cameras)
+        camera_keys = list(cameras.keys())
+        camera_map = dict()
+        for i in range(0,len(camera_keys)):
+            camera_map[camera_keys[i]] = i
+
+        # get dict of cameras with new ids
+        new_cameras = dict()
+        for camera in cameras.values():
+            camera['camera_id'] = camera_map[camera['camera_id']]
+            new_cameras[camera['camera_id']] = camera
+        
+        # update references in the images 
+        new_images = dict()
+        for img in images.values():
+            img['camera_id'] = str(camera_map[int(img['camera_id'])])
+            new_images[img['image_id']] = img
+
+        return (new_cameras, new_images)

@@ -89,6 +89,9 @@ This node COLMAP mapper on database which contains matches.
             transformed_images = utils_math.transform_colmap_images(images, transformation)
             transformed_points3D = utils_math.transform_colmap_points(points3D, transformation)
 
+            # simplify the reconstruction for Patchmatch
+            cameras, transformed_images = utils_math.update_camera_ids(cameras, transformed_images)
+
             # save transformed model
             colmap_io.write_model(chunk.node.output.value, cameras, transformed_images, transformed_points3D)
 
