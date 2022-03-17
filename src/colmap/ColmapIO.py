@@ -71,12 +71,15 @@ class ColmapIO:
         first_row = True
         for line in data_lines:
             if len(line) == 0:
-                break
+                continue
             if line[0] == "#":
                 continue
 
             p = line.split(" ")
             if first_row:
+                if float(p[1]) == 1 and float(p[2]) == 0 and float(p[3]) == 0 and float(p[4]) == 0 \
+                    and float(p[5]) == 0 and float(p[6]) == 0 and float(p[7]) == 0:
+                    continue
                 R = utils_math.q2r([float(p[1]), float(p[2]), float(p[3]), float(p[4])])
                 C = - np.matrix(R).T * np.matrix([float(p[5]), float(p[6]), float(p[7])]).T
                 img = {
@@ -219,10 +222,19 @@ class ColmapIO:
             points3D_file.write(line + "\n")
 
     def save_image_pairs(self, out_file_path, images, view_graph, min_common_pts):
+        # images may have any ids
+        order_to_image_id = {}  
+        i = 0
+        for image in images.values(): 
+            order_to_image_id[i] = image['image_id']
+            i += 1
+        
         list_image_pairs = []
         img_pair_ids = np.where(view_graph>min_common_pts)
         for i in range(np.shape(img_pair_ids)[1]):
-           list_image_pairs.append(f"{images[img_pair_ids[0][i]]['name']} {images[img_pair_ids[1][i]]['name']}\n") 
+            image1_id = order_to_image_id[img_pair_ids[0][i]]
+            image2_id = order_to_image_id[img_pair_ids[1][i]]
+            list_image_pairs.append(f"{images[image1_id]['name']} {images[image2_id]['name']}\n") 
 
         out_file = open(out_file_path, "w")
         out_file.write("".join(list_image_pairs))

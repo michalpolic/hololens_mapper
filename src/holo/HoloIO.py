@@ -126,7 +126,7 @@ class HoloIO:
                 vals = line.split(",")
                 D2C = np.matrix([float(num_str) for num_str in vals[25:41]]).reshape((4, 4)).T
                 D2O = np.matrix([float(num_str) for num_str in vals[9:25]]).reshape((4, 4)).T
-                O2D = np.linalg.inv(D2O)
+                O2D = np.linalg.pinv(D2O)
 
                 known_camera_type = False
                 if camera_type == 'pv':
