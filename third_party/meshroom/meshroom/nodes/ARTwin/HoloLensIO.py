@@ -13,6 +13,7 @@ for i in range(6):
     dir_path = os.path.dirname(dir_path)
 sys.path.append(dir_path)
 from src.holo.HoloIO import HoloIO
+from src.holo.HoloIO2 import HoloIO2
 from src.meshroom.MeshroomIO import MeshroomIO
 from src.colmap.Colmap import Colmap
 from src.colmap.ColmapIO import ColmapIO
@@ -20,12 +21,7 @@ from src.utils.UtilsMath import UtilsMath
 
 Intrinsic = [
     desc.IntParam(name="intrinsicId", label="Id", description="Intrinsic UID", value=-1, uid=[0], range=None),
-    desc.ListAttribute(
-            name="csvPrefixes",
-            elementDesc=desc.StringParam(name="csvPrefix", label="CSV prefix", description="The name of csv and images dir, e.g. pv for pv.csv.", value="", uid=[]),
-            label="CSV prefixes",
-            description="The name of csv and images dir, e.g. pv for pv.csv. List of names if we have common intrinsics for set of cameras.",
-        ),
+    desc.StringParam(name="trackingFile", label="Tracking file", description="Shortcut for the tracking file, e.g., pv for pv.csv or <record.>_pv.txt.", value="", uid=[]),
     desc.IntParam(name="width", label="Width", description="Image Width", value=0, uid=[0], range=(0, 10000, 1)),
     desc.IntParam(name="height", label="Height", description="Image Height", value=0, uid=[0], range=(0, 10000, 1)),
     desc.GroupAttribute(name="pxFocalLength", label="Focal Length", description="Focal Length (in pixels).", groupDesc=[
@@ -104,7 +100,7 @@ different format.
             label="Input format",
             description="The input data format, e.g., COLMAP or HoloLens recording.",
             value="HoloLens",
-            values=["COLMAP", "HoloLens"],   # , "Meshroom"
+            values=["COLMAP", "HoloLens", "HoloLens2"],   # , "Meshroom"
             exclusive=True,
             uid=[0],
         ),
@@ -183,6 +179,7 @@ different format.
             colmap = Colmap()
             colmap_io = ColmapIO()
             holo_io = HoloIO()
+            holo_io2 = HoloIO2()
             meshroom_io = MeshroomIO() 
             utils_math = UtilsMath()
 
@@ -192,6 +189,13 @@ different format.
                 intrinsics = chunk.node.intrinsics.getPrimitiveValue(exportDefault=True)
                 chunk.logger.info("Loading HoloLens tracking.")
                 cameras, images, points3D = holo_io.load_model(chunk.node.inputFolder.value, intrinsics)
+
+            if chunk.node.inputSfMFormat.value == "HoloLens2":
+                chunk.logger.info("Loading intrinsics.")
+                intrinsics = chunk.node.intrinsics.getPrimitiveValue(exportDefault=True)
+                chunk.logger.info("Loading HoloLens tracking.")
+                cameras, images, points3D = holo_io2.load_model(chunk.node.inputFolder.value, intrinsics)
+
 
             if chunk.node.inputSfMFormat.value == "Meshroom":
                 assert False, "TODO: Meshroom input format."

@@ -361,11 +361,9 @@ class HoloIO:
         images = []
         for camera_params in intrinsics:
             cameras.append(self.get_hololens_camera_from_intrinsics(camera_params))
-
-            for csv_prefix in camera_params["csvPrefixes"]:
-                views_dict = self.read_hololens_csv(recording_dir + csv_prefix + ".csv")
-                images.extend(self.get_hololens_images(views_dict, \
-                    camera_id = camera_params["intrinsicId"], image_id = len(images)))
+            views_dict = self.read_hololens_csv(recording_dir + camera_params["trackingFile"] + ".csv")
+            images.extend(self.get_hololens_images(views_dict, \
+                camera_id = camera_params["intrinsicId"], image_id = len(images)))
         images_dict = {}
         for img in images:
             images_dict[img['image_id']] = img
