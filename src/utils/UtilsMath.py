@@ -312,7 +312,7 @@ class UtilsMath:
                 "new_xyz_mean": new_xyz_mean, "ids_old_to_new_xyz": ids_old_to_new_xyz, \
                 "t": t, "dt": 1.1/xyz_hash_scale, "all_points": all_points})
         # test = self.estimate_visibility_for_image(all_data[0])
-        # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/HoloLensRecording__2021_08_02__11_23_59_MUCLab_1/HoloLensIO/8f8bf7620e25e35c87e56b054161b053b92730e2/debug/data.mat", all_data[0])
+        # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/LibrarySmall_Holo2/data.mat", all_data[0])
 
         chunksize = 16  #mp.cpu_count()
         with mp.Pool(chunksize) as pool:
