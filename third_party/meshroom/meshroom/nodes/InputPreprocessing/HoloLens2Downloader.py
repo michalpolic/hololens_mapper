@@ -19,11 +19,11 @@ for i in range(6):
 sys.path.append(dir_path)
 from src.holo.HoloIO import HoloIO
 
-class HoloLens1Downloader(desc.Node):
+class HoloLens2Downloader(desc.Node):
 
     category = 'InputPreprocessing'
     documentation = '''
-This node download the recordings available at HoloLens 1. 
+This node download the recordings available at HoloLens 2. 
 The data are formated such a way to be processed by OI Convertor.
 '''
 
