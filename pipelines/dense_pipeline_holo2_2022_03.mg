@@ -4,21 +4,21 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "MatchingPairsSelector": "0.1",
-            "Texturing": "6.0",
+            "ModelsAligner": "0.1",
+            "Patchmatchnet": "0.1",
             "FilterColmapSfM": "0.1",
             "DensePonitcloudsAligner": "0.1",
             "DensePointcloudFilter": "0.1",
-            "HoloLensMatcher": "0.1",
-            "HoloLensIO": "0.1",
+            "MatchingPairsSelector": "0.1",
+            "PointcloudComposer": "0.1",
+            "ColmapMapper": "0.1",
             "MeshFiltering": "3.0",
             "KeyframeSelector": "0.1",
-            "ColmapMapper": "0.1",
-            "PointcloudComposer": "0.1",
             "ConvertSfMFormat": "2.1",
-            "ModelsAligner": "0.1",
-            "Patchmatchnet": "0.1",
-            "Meshing": "7.0"
+            "Texturing": "6.0",
+            "HoloLensMatcher": "0.1",
+            "Meshing": "7.0",
+            "HoloLensIO": "0.1"
         }
     },
     "graph": {
@@ -159,7 +159,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "cde0bb3f4be172a6cf23c5515f09ff60b86a9ad3"
+                "0": "90d9fc0143177970b5eb784028c525c68f1a53a2"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -227,7 +227,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "84387c282b6b0167e58775ccaada713c20ee721b"
+                "0": "7e16f5027cb81395f0bde079180e2b107f6d00f1"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -516,7 +516,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "1f2b3fc9ad71d73564aa4f5ef3c92613481d7be6"
+                "0": "7313254f9e250bf3784e6aa238f2b8ffb2592cda"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -629,7 +629,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "5b61f4da776b1c860a9de9a162d013cd106eb015"
+                "0": "6ed49a8fa4d25847f42bee9892d966cc27ae7978"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -665,21 +665,20 @@
                 "split": 1
             },
             "uids": {
-                "0": "f1d189e204f9eacac957352dd2ef0821fab0b247"
+                "0": "a2dd2c140c8893ec774e5dd58839e9a95236e414"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "inputFolder": "{ModelsAligner_1.output}",
                 "pointcloudFile": "{DensePointcloudFilter_2.output}",
-                "hashScale": 100,
+                "hashScale": 200,
                 "allPoints": false,
                 "intrinsics": [],
                 "inputSfMFormat": "COLMAP",
                 "outputSfMFormat": [
-                    "OBJ",
-                    "Meshroom"
+                    "OBJ"
                 ],
-                "cpoyImagesToOutput": true,
+                "cpoyImagesToOutput": false,
                 "imagesPath": "container",
                 "verboseLevel": "info"
             },
@@ -700,7 +699,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "0195e5f0f3ec19621b30a74fcaa3ee3cce850f81"
+                "0": "3f0dadc3e5298771add8104f6e8296a77475d2f2"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
