@@ -4,6 +4,9 @@ import os
 from pathlib import Path
 import re
 import multiprocessing as mp
+import urllib.request
+import json
+from PIL import Image
 from distutils.dir_util import copy_tree
 
 import numpy as np
@@ -472,5 +475,159 @@ class HoloIO:
 
         return images
 
+
+    def connect(self, address, username, password, logger=None):
+        if logger:
+            logger.info("Connecting to HoloLens Device Portal...")
+        url = "http://{}".format(address)
+        password_manager = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        password_manager.add_password(None, url, username, password)
+        handler = urllib.request.HTTPBasicAuthHandler(password_manager)
+        opener = urllib.request.build_opener(handler)
+        opener.open(url)
+        urllib.request.install_opener(opener)
+
+        if logger:
+            logger.info(f"=> Connected to HoloLens at address: {url}")
+
+        response = urllib.request.urlopen(
+            "{}/api/app/packagemanager/packages".format(url))
+        packages = json.loads(response.read().decode())
+
+        package_full_name = None
+        for package in packages["InstalledPackages"]:
+            if package["Name"] == "CV: Recorder":
+                package_full_name = package["PackageFullName"]
+                break
+        assert package_full_name is not None, \
+            "App not found"
+
+        if logger:
+            logger.info(f"=> Found application with name: {package_full_name}")
+
+        if logger:
+            logger.info("Searching for recordings...")
+
+        response = urllib.request.urlopen(
+            "{}/api/filesystem/apps/files?knownfolderid="
+            "LocalAppData&packagefullname={}&path=\\\\TempState".format(
+                url, package_full_name))
+        recordings = json.loads(response.read().decode())
+
+        recording_names = []
+        for recording in recordings["Items"]:
+            # Check if the recording contains any file data.
+            response = urllib.request.urlopen(
+                "{}/api/filesystem/apps/files?knownfolderid="
+                "LocalAppData&packagefullname={}&path=\\\\TempState\\{}".format(
+                    url, package_full_name, recording["Id"]))
+            files = json.loads(response.read().decode())
+            if len(files["Items"]) > 0:
+                recording_names.append(recording["Id"])
+        recording_names.sort()
+
+        if logger:
+            logger.info(f"=> Found a total of {len(recording_names)} recordings")
+        return url, recording_names, package_full_name
+
+
+    def download_recordings(self, url, package_full_name, recordings, workspace_path, logger=None):
+        recording_folders = []
+        for recording_name in recordings:
+            if recording_name is None:
+                return
+
+            recording_folders.append(recording_name)
+            recording_path = os.path.join(workspace_path, recording_name)
+            self.mkdir_if_not_exists(recording_path)
+
+            if logger:
+                logger.info(f"Downloading recording {recording_name}...")
+
+            response = urllib.request.urlopen(
+                "{}/api/filesystem/apps/files?knownfolderid="
+                "LocalAppData&packagefullname={}&path=\\\\TempState\\{}".format(
+                    url, package_full_name, recording_name))
+            files = json.loads(response.read().decode())
+
+            for file in files["Items"]:
+                if file["Type"] != 32:
+                    continue
+
+                destination_path = os.path.join(recording_path, file["Id"])
+                fid = file["Id"]
+                if os.path.exists(destination_path):
+                    if logger:
+                        logger.info(f"=> Skipping, already downloaded: {fid}")
+                    continue
+
+                if logger:
+                    logger.info(f"=> Downloading: {fid}")
+                urllib.request.urlretrieve(
+                    "{}/api/filesystem/apps/file?knownfolderid=LocalAppData&" \
+                    "packagefullname={}&filename=\\\\TempState\\{}\\{}".format(
+                        url, package_full_name,
+                        recording_name, file["Id"]), destination_path)
+
+
+    def delete_recordings(self, url, package_full_name, recordings, logger=None):
+        for recording_name in recordings:
+            if recording_name is None:
+                return
+
+            if logger:
+                logger.info(f"Deleting recording {recording_name}...")
+
+            response = urllib.request.urlopen(
+                "{}/api/filesystem/apps/files?knownfolderid="
+                "LocalAppData&packagefullname={}&path=\\\\TempState\\{}".format(
+                    url, package_full_name, recording_name))
+            files = json.loads(response.read().decode())
+
+            for file in files["Items"]:
+                if file["Type"] != 32:
+                    continue
+
+                if logger:
+                    fid = file["Id"]
+                    logger.info(f"=> Deleting: {fid}")
+                urllib.request.urlopen(urllib.request.Request(
+                    "{}/api/filesystem/apps/file?knownfolderid=LocalAppData&" \
+                    "packagefullname={}&filename=\\\\TempState\\{}\\{}".format(
+                        url, package_full_name,
+                        recording_name, file["Id"]), method="DELETE"))
+
+
+    def mkdir_if_not_exists(self, path, logger=None):
+        if not os.path.exists(path):
+            os.makedirs(path)
+            if logger:
+                logger.info("Directory " + path + " created")
+
+    def convert_images(self, folder, logger=None):
+        for r, d, f in os.walk(folder):
+            for file in f:
+                if '.pgm' in file or '.ppm' in file:
+                    if logger:
+                        logger.info(file)
+                    if '.pgm' in file:
+                        img = Image.open(os.path.join(r,file))
+                        img = img.transpose(Image.ROTATE_270)
+                    else:
+                        f = open(os.path.join(r,file), 'rb')
+                        line = f.readline()
+                        line = f.readline()
+                        width = int(line.split(b' ')[0])
+                        height = int(line.split(b' ')[1])
+                        line = f.readline()
+                        data = f.read()
+
+                        img = Image.frombytes("RGB", (width, height), data, "raw", "BGRX", 0, 1)
+                        f.close()
+                    filename = os.path.join(r,file.split(".")[0] + ".jpg")
+                    if logger:
+                        logger.info("saving  as: " + filename)
+                    img.save(filename)
+                    os.remove(os.path.join(r,file)) 
 
 

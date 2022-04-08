@@ -19,7 +19,7 @@ from src.utils.UtilsKeyframes import UtilsKeyframes
 
 class KeyframeSelector(desc.Node):
 
-    category = 'ARTwin'
+    category = 'InputPreprocessing'
     documentation = '''
 This node select subset of images (keyframes) and copy them to output path. 
 
