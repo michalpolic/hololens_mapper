@@ -134,17 +134,17 @@ class HoloIO:
                 known_camera_type = False
                 if camera_type == 'pv':
                     known_camera_type = True
-                    Rt = np.diag([1, -1, -1, 1]) * D2C * O2D
+                    P = np.diag([1, -1, -1, 1]) * D2C * O2D
 
                 if camera_type == 'vlc':
                     known_camera_type = True
                     perm = np.matrix([[0, 1, 0, 0],[1, 0, 0, 0],[0, 0, -1, 0],[0, 0, 0, 1]])
-                    Rt = perm * D2C * O2D
+                    P = perm * D2C * O2D
 
                 assert known_camera_type, f"Unknown camera '{camera_type}' type in parse_poseinfo_to_cameras function."
 
-                R = Rt[0:3, 0:3]
-                C = - R.T * Rt[0:3, 3]
+                R = P[0:3, 0:3]
+                C = - R.T * P[0:3, 3]
                 cameras[k] = {
                     "id": view_id,
                     "timestamp": vals[0],
@@ -155,8 +155,8 @@ class HoloIO:
                     "D2O": D2O,
                     "R": R,
                     "C": C,
-                    "t": Rt[0:3, 3],
-                    "Rt": Rt
+                    "t": P[0:3, 3],
+                    "Rt": P
                 }
                 view_id += 1
         except:

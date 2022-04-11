@@ -17,7 +17,11 @@ dir_path = __file__
 for i in range(6):
     dir_path = os.path.dirname(dir_path)
 sys.path.append(dir_path)
-from src.holo.HoloIO import HoloIO
+from src.holo.HoloIO2 import HoloIO2
+
+sys.path.append(os.path.join(dir_path, 'third_party', 'HoloLens2ForCV','Samples','StreamRecorder','StreamRecorderConverter'))
+from recorder_console import *
+from process_all import process_all
 
 class HoloLens2Downloader(desc.Node):
 
@@ -100,6 +104,22 @@ The data are formated such a way to be processed by OI Convertor.
                 file_object.close()
         return locked
     
+
+    def filter_auxilary_files(self, w_path):
+        onlydirs = [f for f in os.listdir(w_path) if os.path.isdir(os.path.join(w_path, f))]
+        for dir_name in onlydirs:
+            recodring_dir = os.path.join(w_path, dir_name)
+            files = os.listdir(recodring_dir)
+            for file in files:
+                if file[-4:] == ".tar":
+                    os.remove(os.path.join(recodring_dir,file))
+                if file == "Depth Long Throw":      
+                    depth_files = os.listdir(os.path.join(recodring_dir,file))
+                    for depth_file in depth_files:
+                        if depth_file[-4:] == ".pgm":
+                            os.remove(os.path.join(recodring_dir,file,depth_file))
+
+
     def processChunk(self, chunk):
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
@@ -117,58 +137,34 @@ The data are formated such a way to be processed by OI Convertor.
                 chunk.logger.warning('Missing recordings folder field.')
                 return
 
-            # init
-            holo_io = HoloIO()
-            folder = chunk.node.recordingsFolder.value
-            sensors = ["pv", "vlc_ll", "vlc_lf", "vlc_rf", "vlc_rr", "long_throw_depth"]
-            holo_io.mkdir_if_not_exists(folder, logger = chunk.logger)
+            w_path = Path(chunk.node.recordingsFolder.value)
+            w_path.mkdir(exist_ok=True)
 
-            # list recordings
-            url, records, package_full_name = holo_io.connect(chunk.node.ip.value, \
-                chunk.node.username.value, chunk.node.password.value, logger = chunk.logger)
-            
-            # download recordings
+            dev_portal_browser = DevicePortalBrowser()
+            dev_portal_browser.connect(chunk.node.ip.value,
+                               chunk.node.username.value,
+                               chunk.node.password.value)
+            dev_portal_browser.list_recordings()
+
+            # download from device
+            rs = RecorderShell(w_path, dev_portal_browser)
             if chunk.node.download.value:
-                holo_io.download_recordings(url, package_full_name, records, folder, logger = chunk.logger)
+                rs.do_download_all(None)
 
-                #extract tars
-                if len(records) > 0:
-                    chunk.logger.info("Extracting images")
-                    for recording in records:
-                        tarfiles_to_remove = []
-                        for sensor in sensors:
-                            tarpath = os.path.join(folder,recording,sensor + ".tar")
-                            if os.path.isfile(tarpath):
-                                chunk.logger.info("Extracting from: " + tarpath)
-                                with tarfile.open(tarpath) as tar:
-                                    tar.extractall(os.path.join(folder,recording) + "/")
-                                tarfiles_to_remove.append(tarpath)
-
-                        # wait until the extraction ends
-                        for tarpath in tarfiles_to_remove:
-                            file_removed = False
-                            while not file_removed:
-                                try:
-                                    os.remove(tarpath) 
-                                except Exception as e:
-                                    time.sleep(1)
-                                finally:
-                                    if not os.path.isfile(tarpath):
-                                        file_removed = True
-
-                        # convert PV and rotate vlc images
-                        chunk.logger.info("Converting image files")
-                        cams = sensors[0:5]
-                        for cam in cams:
-                            chunk.logger.info("Converting files in: " + folder + recording + "/" + cam)
-                            holo_io.convert_images(os.path.join(folder,recording,cam))
-                        
+            # decompress files
+            recording_names = sorted(w_path.glob("*"))
+            for recording_name in recording_names:
+                process_all(recording_name)
 
             # delete recordings on device
             if chunk.node.delete.value:
-                holo_io.delete_recordings(url, package_full_name, records, logger = chunk.logger)
+                for i in range(len(dev_portal_browser.recording_names)):
+                    dev_portal_browser.delete_recording(i)
 
-            chunk.logger.info('HoloLens1Downloader is done.') 
+            # clear tar and binary files
+            self.filter_auxilary_files(w_path)
+
+            chunk.logger.info('HoloLens2Downloader is done.') 
 
         except AssertionError as err:
             chunk.logger.error("Error in keyframe selector: " + err)
