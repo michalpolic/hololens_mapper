@@ -21,7 +21,7 @@ from src.holo.HoloIO import HoloIO
 
 class HoloLens1Downloader(desc.Node):
 
-    category = 'InputPreprocessing'
+    category = 'Input Preprocessing'
     documentation = '''
 This node download the recordings available at HoloLens 1. 
 The data are formated such a way to be processed by OI Convertor.

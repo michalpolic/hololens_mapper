@@ -31,7 +31,7 @@ Parameters = [
 
 class PointcloudComposer(desc.Node):
     size = desc.DynamicNodeSize("parameters")
-    category = 'InputPreprocessing'
+    category = 'Input Preprocessing'
     documentation = '''
 This node creates single sparse/dense pointcloud out of the input recording directory.
 Supported recodring direcotries are HoloLens, HoloLens 2. 

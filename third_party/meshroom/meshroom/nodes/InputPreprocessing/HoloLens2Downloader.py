@@ -25,7 +25,7 @@ from process_all import process_all
 
 class HoloLens2Downloader(desc.Node):
 
-    category = 'InputPreprocessing'
+    category = 'Input Preprocessing'
     documentation = '''
 This node download the recordings available at HoloLens 2. 
 The data are formated such a way to be processed by OI Convertor.

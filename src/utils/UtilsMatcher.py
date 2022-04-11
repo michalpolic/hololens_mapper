@@ -62,7 +62,7 @@ class UtilsMatcher:
         #     }
         #     self._matcher = Matching(config).eval().to(self._device)
         
-        if matcher_name == "SIFT" and colmap != None:
+        if matcher_name == "COLMAP" and colmap != None:
             known_matcher = True
             self._matcher = colmap
 
@@ -255,8 +255,8 @@ class UtilsMatcher:
                     "img2": images_dir + '/' + img2["name"], 
                     "matches": matches, "inliers": inls
                     }
-                Path(images_dir + '/debug').mkdir(parents=True, exist_ok=True)
-                savemat(f'{images_dir}/debug/{img1_name[:-4]}__{img2_name[:-4]}.mat', data)
+                # Path(images_dir + '/debug').mkdir(parents=True, exist_ok=True)
+                # savemat(f'{images_dir}/debug/{img1_name[:-4]}__{img2_name[:-4]}.mat', data)
 
         return self.corresp_clustering(all_matches, 1)
  

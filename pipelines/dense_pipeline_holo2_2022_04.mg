@@ -4,11 +4,14 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
+            "TentativeMatcher": "0.1",
             "MatchingPairsSelector": "0.1",
+            "IOConvertor": "0.1",
+            "KeypointsDetector": "0.1",
             "PointcloudComposer": "0.1",
+            "ColmapMapper": "0.1",
             "DensePointcloudFilter": "0.1",
-            "KeyframeSelector": "0.1",
-            "IOConvertor": "0.1"
+            "KeyframeSelector": "0.1"
         }
     },
     "graph": {
@@ -40,8 +43,8 @@
         "MatchingPairsSelector_1": {
             "nodeType": "MatchingPairsSelector",
             "position": [
-                481,
-                140
+                585,
+                104
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -49,7 +52,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "78121d10c375dd260c9b994e3b57d2297c8d7d30"
+                "0": "b34cffba4d66a7768eef3258cc046d6450c3db05"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -88,46 +91,19 @@
                 "output": "{cache}/{nodeType}/{uid0}//model.obj"
             }
         },
-        "KeyframeSelector_2": {
-            "nodeType": "KeyframeSelector",
-            "position": [
-                62,
-                -10
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "d6369fdfa53c7a82e1b098e8a9f1b2155714154a"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "recordingDir": "{PointcloudComposer_1.recordingDir}",
-                "recordingSource": "{PointcloudComposer_1.recordingSource}",
-                "pvBlurThreshold": 15.0,
-                "pvMinFrameOffset": 5,
-                "vlcMinFrameOffset": 5,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/"
-            }
-        },
         "IOConvertor_1": {
             "nodeType": "IOConvertor",
             "position": [
                 267,
-                47
+                60
             ],
             "parallelization": {
                 "blockSize": 0,
-                "size": 0,
+                "size": 5,
                 "split": 1
             },
             "uids": {
-                "0": "93bd52d4ccfbfad19ce1e818ae5dbbbb335d8c56"
+                "0": "319d87162344af2a97210b40856b3c89221ac841"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -238,6 +214,113 @@
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/",
                 "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json"
+            }
+        },
+        "KeypointsDetector_1": {
+            "nodeType": "KeypointsDetector",
+            "position": [
+                590,
+                -10
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "147d672991805efba60dbdb795777c1a7886b082"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputSfM": "{IOConvertor_1.output}",
+                "imagesFolder": "{KeyframeSelector_2.output}",
+                "algorithm": "SIFT",
+                "removeImages": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/database.db"
+            }
+        },
+        "KeyframeSelector_2": {
+            "nodeType": "KeyframeSelector",
+            "position": [
+                62,
+                -10
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "d6369fdfa53c7a82e1b098e8a9f1b2155714154a"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "recordingDir": "{PointcloudComposer_1.recordingDir}",
+                "recordingSource": "{PointcloudComposer_1.recordingSource}",
+                "pvBlurThreshold": 15.0,
+                "pvMinFrameOffset": 5,
+                "vlcMinFrameOffset": 5,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
+            }
+        },
+        "TentativeMatcher_1": {
+            "nodeType": "TentativeMatcher",
+            "position": [
+                783,
+                18
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "a6c5b777b9ae41f712379ddbcc4776e2252b995d"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "sfmfolder": "{IOConvertor_1.output}",
+                "databaseFile": "{KeypointsDetector_1.output}",
+                "imagesFolder": "{KeypointsDetector_1.imagesFolder}",
+                "imagePairs": "{MatchingPairsSelector_1.output}",
+                "algorithm": "COLMAP",
+                "matchingTreshold": 10,
+                "removeImages": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "databaseOutputFile": "{cache}/{nodeType}/{uid0}/database.db",
+                "tentativeMatches": "{cache}/{nodeType}/{uid0}/tentative_matches.txt"
+            }
+        },
+        "ColmapMapper_1": {
+            "nodeType": "ColmapMapper",
+            "position": [
+                1111,
+                21
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "07b824bbb757203d9bfa7e659ffe0e8083060347"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "colmapFolder": "",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/"
             }
         }
     }

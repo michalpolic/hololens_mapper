@@ -3,8 +3,6 @@ from __future__ import print_function
 __version__ = '0.1'
 
 from meshroom.core import desc
-import shutil
-import glob
 import os
 import sys
 from pathlib import Path
@@ -16,14 +14,13 @@ for i in range(6):
     dir_path = os.path.dirname(dir_path)
 sys.path.append(dir_path)
 from src.holo.HoloIO import HoloIO
-from src.colmap.ColmapIO import ColmapIO
 from src.colmap.Colmap import Colmap
 from src.utils.UtilsContainers import UtilsContainers
-from src.utils.UtilsMatcher import UtilsMatcher
+
 
 class KeypointsDetector(desc.Node):
 
-    category = 'SfMRefinement'
+    category = 'Sparse Reconstruction'
     documentation = '''
 This node compute keypoints in the images and save them into the database.
 The database is in the COLMAP format.
@@ -49,23 +46,22 @@ The database is in the COLMAP format.
             value='',
             uid=[0],
         ),
-        desc.File(
-            name='imagePairs',
-            label='Image pairs to match',
-            description='File with image names to match. ' \
-                'Each image pair is on one line, e.g. img1 img2.',
-            value='',
-            uid=[0],
-        ),
         desc.ChoiceParam(
             name='algorithm',
-            label='Matching algorithm',
-            description='The algorithm used to extract matches between images',
+            label='Detector',
+            description='The algorithm used to extract keypoints and descriptors.',
             value='SIFT',
-            values=['SIFT'], #, 'SuperGlue', 'patch2pix'],
+            values=['SIFT'],
             uid=[0],
             exclusive=True,
-        ),   
+        ),  
+        desc.BoolParam(
+            name='removeImages', 
+            label='Remove images',
+            description='Remove images from cache after keypoint detection.',
+            value=True,
+            uid=[],
+        ),  
         desc.ChoiceParam(
             name='verboseLevel',
             label='Verbose Level',
@@ -80,9 +76,9 @@ The database is in the COLMAP format.
     outputs = [
         desc.File(
             name='output',
-            label='Output Folder',
+            label='Database file',
             description='',
-            value=desc.Node.internalFolder,
+            value=os.path.join(desc.Node.internalFolder,'database.db'),
             uid=[],
             ),
     ]
@@ -97,20 +93,15 @@ The database is in the COLMAP format.
             if not chunk.node.imagesFolder:
                 chunk.logger.warning('Folder with images is missing.')
                 return
-            if not chunk.node.imagePairs.value:
-                chunk.logger.info('Image pairs missing, all pairs will be assumed.')
             if not chunk.node.output.value:
                 return
 
             chunk.logger.info('Start matching.')
-            out_dir = chunk.node.output.value
+            out_dir = os.path.dirname(chunk.node.output.value)
             holo_io = HoloIO()
 
             # copy images/image_pairs.txt to working directory
             holo_io.copy_sfm_images(chunk.node.imagesFolder.value, out_dir)
-            if chunk.node.imagePairs:
-                copy2(chunk.node.imagePairs.value, out_dir)
-                rel_path_to_img_pairs = '/data/' + os.path.basename(chunk.node.imagePairs.value)
             
             # init contriners
             chunk.logger.info('Init COLMAP container')
@@ -119,17 +110,20 @@ The database is in the COLMAP format.
                 colmap_container = UtilsContainers('docker', 'uodcvip/colmap', '/host_mnt/' + out_dir.replace(':',''))
             else:
                 colmap_container = UtilsContainers('singularity', dir_path + '/colmap.sif', out_dir)
-            colmap = Colmap(colmap_container)
-            matcher = UtilsMatcher(chunk.node.algorithm.value, colmap)        
+            colmap = Colmap(colmap_container)       
 
             # init db for keypoints 
             colmap.prepare_database(out_dir + '/database.db', '/data/database.db')
 
             # COLMAP detector
-            if matcher._matcher_name == 'SIFT':
+            if chunk.node.algorithm.value == 'SIFT':
                 chunk.logger.info('COLMAP --> compute SIFT features')
                 colmap.extract_features('/data/database.db', '/data')           # COLMAP feature extractor
             
+            # remove images in cache
+            if chunk.node.removeImages.value:
+                holo_io.remove_images_from_cache(out_dir)
+
             chunk.logger.info('KeypointsDetector done.')
           
         except AssertionError as err:

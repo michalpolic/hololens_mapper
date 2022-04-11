@@ -23,7 +23,7 @@ from src.utils.UtilsMatcher import UtilsMatcher
 
 class HoloLensMatcher(desc.Node):
 
-    category = 'SfMRefinement'
+    category = 'Sparse Reconstruction'
     documentation = '''
 This node compute matches between all pairs of HoloLens rgb images.
 '''
@@ -130,10 +130,10 @@ This node compute matches between all pairs of HoloLens rgb images.
             else:
                 colmap_container = UtilsContainers("singularity", dir_path + "/colmap.sif", out_dir)
             colmap = Colmap(colmap_container)
-            matcher = UtilsMatcher(chunk.node.algorithm.value, colmap)          # patch2pix / SuperGlue / SIFT
+            matcher = UtilsMatcher('COLMAP', colmap)          # patch2pix / SuperGlue / SIFT
 
             # colmap matches_importer --help
-            if matcher._matcher_name == "SIFT":
+            if chunk.node.algorithm.value == "SIFT":
                 chunk.logger.info('COLMAP --> compute SIFT features')
                 colmap.prepare_database(out_dir + "/database.db", "/data/database.db")
                 colmap.extract_features("/data/database.db", "/data")           # COLMAP feature extractor

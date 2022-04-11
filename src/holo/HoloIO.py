@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 import multiprocessing as mp
 import urllib.request
+import shutil
 import json
 from PIL import Image
 from distutils.dir_util import copy_tree
@@ -457,7 +458,15 @@ class HoloIO:
             if os.path.isdir(source_dir + imgs_dir):
                 Path(destination_dir + imgs_dir).mkdir(parents=True, exist_ok=True)
                 copy_tree(source_dir + imgs_dir, destination_dir + imgs_dir)   
-        
+
+
+    def remove_images_from_cache(self, cache_dir, imgs_dir_list = ["pv", "vlc_ll", "vlc_lf", "vlc_rf", "vlc_rr"]):
+        if not cache_dir[-1] == '/':
+            cache_dir = cache_dir + '/' 
+        for imgs_dir in imgs_dir_list:
+            if os.path.isdir(cache_dir + imgs_dir):
+                shutil.rmtree(cache_dir + imgs_dir)
+
 
     def update_images_paths(self, images, prefix_to_add):
         if not prefix_to_add[-1] == '/':
