@@ -1,0 +1,13 @@
+Bootstrap: docker
+From: nvidia/cuda:10.2-devel-ubuntu18.04
+
+%files
+./third_party/Fast-Robust-ICP /app
+
+%post
+
+ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+apt-get update && apt-get -y install cmake libeigen3-dev && apt-get install -y git build-essential
+cd /usr/include && ln -sf eigen3 eigen
+mkdir /app/build && cd /app/build && cmake -DCMAKE_BUILD_TYPE=Release /app && make
+cd /app/build
