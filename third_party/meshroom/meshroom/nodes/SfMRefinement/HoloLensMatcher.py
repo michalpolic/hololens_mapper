@@ -23,7 +23,7 @@ from src.utils.UtilsMatcher import UtilsMatcher
 
 class HoloLensMatcher(desc.Node):
 
-    category = 'ARTwin'
+    category = 'SfMRefinement'
     documentation = '''
 This node compute matches between all pairs of HoloLens rgb images.
 '''

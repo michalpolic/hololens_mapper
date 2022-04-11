@@ -22,7 +22,7 @@ from src.holo.HoloIO import HoloIO
 
 class ColmapMapper(desc.Node):
 
-    category = 'ARTwin'
+    category = 'SfMRefinement'
     documentation = '''
 This node COLMAP mapper on database which contains matches.
 '''
