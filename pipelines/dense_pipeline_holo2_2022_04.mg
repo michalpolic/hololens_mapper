@@ -139,91 +139,91 @@
                     {
                         "intrinsicId": 0,
                         "trackingFile": "pv",
-                        "width": 1344,
-                        "height": 756,
+                        "width": 760,
+                        "height": 428,
                         "pxFocalLength": {
-                            "x": 1083.8628,
-                            "y": 1082.8471
+                            "x": 585.7849,
+                            "y": 583.6563
                         },
                         "principalPoint": {
-                            "x": 665.5559,
-                            "y": 400.5432
+                            "x": 376.3103,
+                            "y": 196.7361
                         },
                         "distortionParams": [
-                            -0.0168,
-                            0.0044
+                            0.0028,
+                            -0.0125
                         ]
                     },
                     {
                         "intrinsicId": 1,
-                        "trackingFile": "vlc_ll",
-                        "width": 480,
-                        "height": 640,
+                        "trackingFile": "vlc_lf",
+                        "width": 640,
+                        "height": 480,
                         "pxFocalLength": {
-                            "x": 449.2613,
-                            "y": 449.2928
+                            "x": 363.2337,
+                            "y": 365.0553
                         },
                         "principalPoint": {
-                            "x": 249.9525,
-                            "y": 304.7976
+                            "x": 319.4072,
+                            "y": 241.7827
                         },
                         "distortionParams": [
-                            -0.03371,
-                            0.0236
+                            -0.0136,
+                            0.0082
                         ]
                     },
                     {
                         "intrinsicId": 2,
-                        "trackingFile": "vlc_lf",
-                        "width": 480,
-                        "height": 640,
+                        "trackingFile": "vlc_ll",
+                        "width": 640,
+                        "height": 480,
                         "pxFocalLength": {
-                            "x": 458.5854,
-                            "y": 454.1538
+                            "x": 365.7522,
+                            "y": 366.1228
                         },
                         "principalPoint": {
-                            "x": 233.5316,
-                            "y": 324.1116
+                            "x": 317.4559,
+                            "y": 235.186
                         },
                         "distortionParams": [
-                            -0.00717,
-                            0.00725
+                            -0.0154,
+                            0.0129
                         ]
                     },
                     {
                         "intrinsicId": 3,
                         "trackingFile": "vlc_rf",
-                        "width": 480,
-                        "height": 640,
+                        "width": 640,
+                        "height": 480,
                         "pxFocalLength": {
-                            "x": 460.7706,
-                            "y": 456.1151
+                            "x": 365.3355,
+                            "y": 366.6003
                         },
                         "principalPoint": {
-                            "x": 257.1324,
-                            "y": 320.1994
+                            "x": 317.4216,
+                            "y": 239.2051
                         },
                         "distortionParams": [
-                            -0.0102,
-                            0.0194
+                            -0.016,
+                            0.0146
                         ]
                     },
                     {
                         "intrinsicId": 4,
                         "trackingFile": "vlc_rr",
-                        "width": 480,
-                        "height": 640,
+                        "width": 640,
+                        "height": 480,
                         "pxFocalLength": {
-                            "x": 445.7555,
-                            "y": 445.6442
+                            "x": 365.3515,
+                            "y": 365.8378
                         },
                         "principalPoint": {
-                            "x": 240.7121,
-                            "y": 313.0296
+                            "x": 316.0903,
+                            "y": 235.9292
                         },
                         "distortionParams": [
-                            -0.02997,
-                            0.01758
+                            -0.0152,
+                            0.0129
                         ]
                     }
                 ],
