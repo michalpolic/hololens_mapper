@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from src import colmap
 
-__version__ = "0.1"
+__version__ = '0.1'
 
 from meshroom.core import desc
 import os
@@ -18,34 +18,36 @@ from src.colmap.ColmapIO import ColmapIO
 from src.utils.UtilsMath import UtilsMath
 
 class MatchingPairsSelector(desc.Node):
-    category = "ARTwin"
-    documentation = """
+    category = 'ARTwin'
+    documentation = '''
 This node select image pairs looking at the same 3D structure, i.e., images with specified overlap. 
-"""
+'''
 
     inputs = [
         desc.File(
-            name="sfmFile",
-            label="SfM file(s)",
-            description="The output of SfM or any course composition of SfM output.",
-            value="",
+            name='sfm',
+            label='Rough SfM',
+            description='''
+            The sparse reconstruction that will be used to select images
+            that has to be matched.''',
+            value='',
             uid=[0],
         ),
         desc.ChoiceParam(
-            name="inputSfMFormat",
-            label="Input format",
-            description="The input data format, e.g., COLMAP or Meshroom.",
-            value="COLMAP",
-            values=["COLMAP"],  #, "Meshroom"
+            name='inputSfMFormat',
+            label='Input format',
+            description='The input data format, e.g., COLMAP or Meshroom.',
+            value='COLMAP',
+            values=['COLMAP'],  #, 'Meshroom'
             exclusive=True,
             uid=[],
             ),
         desc.ChoiceParam(
-            name="outputSfMFormat",
-            label="Output format",
-            description="The output data format, e.g., COLMAP or Meshroom.",
-            value="COLMAP",
-            values=["COLMAP"],  #, "Meshroom"
+            name='outputSfMFormat',
+            label='Output format',
+            description='The output data format, e.g., COLMAP or Meshroom.',
+            value='image pairs',
+            values=['image pairs'],  
             exclusive=True,
             uid=[0],
         ),
@@ -59,11 +61,11 @@ This node select image pairs looking at the same 3D structure, i.e., images with
             uid=[0],
         ),
         desc.ChoiceParam(
-            name="verboseLevel",
-            label="Verbose Level",
-            description="verbosity level (critical, error, warning, info, debug).",
-            value="info",
-            values=["critical", "error", "warning", "info", "debug"],
+            name='verboseLevel',
+            label='Verbose Level',
+            description='verbosity level (critical, error, warning, info, debug).',
+            value='info',
+            values=['critical', 'error', 'warning', 'info', 'debug'],
             exclusive=True,
             uid=[],
             ),
@@ -71,10 +73,10 @@ This node select image pairs looking at the same 3D structure, i.e., images with
 
     outputs = [
         desc.File(
-            name="output",
-            label="Output Folder",
-            description="",
-            value=desc.Node.internalFolder + "/image_pairs.txt",
+            name='output',
+            label='Output Folder',
+            description='',
+            value=desc.Node.internalFolder + '/image_pairs.txt',
             uid=[],
             ),
     ]
@@ -84,8 +86,8 @@ This node select image pairs looking at the same 3D structure, i.e., images with
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             
-            if not chunk.node.sfmFile:
-                chunk.logger.warning("Nothing to process")
+            if not chunk.node.sfm:
+                chunk.logger.warning('Nothing to process')
                 return
             if not chunk.node.output.value:
                 return
@@ -94,8 +96,8 @@ This node select image pairs looking at the same 3D structure, i.e., images with
 
             # load HoloLens from CSV files
             colmap_io = ColmapIO()
-            chunk.logger.info("Loading SfM model.")
-            cameras, images, points3D = colmap_io.load_model(chunk.node.sfmFile.value)
+            chunk.logger.info('Loading SfM model.')
+            cameras, images, points3D = colmap_io.load_model(chunk.node.sfm.value)
 
             # get view graph
             utils_math = UtilsMath()
@@ -105,9 +107,9 @@ This node select image pairs looking at the same 3D structure, i.e., images with
             colmap_io.save_image_pairs(chunk.node.output.value, images, \
                 view_graph, chunk.node.minCommonPts.value)
 
-            chunk.logger.info("Image pairs exported.") 
+            chunk.logger.info('Image pairs exported.') 
 
         except AssertionError as err:
-            chunk.logger.error("Error in keyframe selector: " + err)
+            chunk.logger.error('Error in keyframe selector: ' + err)
         finally:
             chunk.logManager.end()

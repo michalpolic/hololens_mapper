@@ -20,7 +20,7 @@ from src.utils.UtilsContainers import UtilsContainers
 
 class Patchmatchnet(desc.Node):
 
-    category = 'ARTwin'
+    category = 'Dense Reconstruction'
     documentation = '''
 This node prepare inputs for PatchmatchNet and run it. The output are depthmaps and 
 fused pointcloud file.

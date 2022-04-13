@@ -18,6 +18,7 @@ from src.meshroom.MeshroomIO import MeshroomIO
 from src.colmap.Colmap import Colmap
 from src.colmap.ColmapIO import ColmapIO
 from src.utils.UtilsMath import UtilsMath
+from src.hloc.Hloc import Hloc
 
 Intrinsic = [
     desc.IntParam(name='intrinsicId', label='Id', description='Intrinsic UID', value=-1, uid=[0], range=None),
@@ -117,14 +118,21 @@ different format.
             label='Output format',
             description='The output data format, e.g., COLMAP or Meshroom.',
             value=['COLMAP'],
-            values=['COLMAP', 'Meshroom','OBJ'], 
+            values=['COLMAP', 'Meshroom','OBJ','LQuery'], 
             exclusive=False,
             uid=[0],
         ),
         desc.BoolParam(
-            name='cpoyImagesToOutput', 
+            name='copyImagesToOutput', 
             label='Copy images to output',
             description='If True, the images are copied into the output directory.',
+            value=False, 
+            uid=[0],
+        ),
+        desc.BoolParam(
+            name='convertImgsToJpeg', 
+            label='Convert images to JPG',
+            description='If True and images copied in cache folder, the images converted to JPG.',
             value=False, 
             uid=[0],
         ),
@@ -164,9 +172,18 @@ different format.
         ),
         desc.File(
             name='outputMeshroomSfM',
-            label='Meshroom SfM file',
+            label='Meshroom SfM',
             description='Link to Meshroom SfM if conversion is to Meshroom format.',
-            value=desc.Node.internalFolder + 'meshroom_sfm.json',
+            value=os.path.join(desc.Node.internalFolder, 'meshroom_sfm.json'),
+            uid=[],
+            group='',
+            advanced=True
+        ),
+        desc.File(
+            name='lQueryFile',
+            label='HLOC query file',
+            description='LQuery = localization query file composed from SfM.',
+            value=os.path.join(desc.Node.internalFolder,'hloc_queries.txt'),
             uid=[],
             group='',
             advanced=True
@@ -191,6 +208,7 @@ different format.
             holo_io2 = HoloIO2()
             meshroom_io = MeshroomIO() 
             utils_math = UtilsMath()
+            hloc = Hloc()
 
             # inputs 
             if chunk.node.inputSfMFormat.value == 'HoloLens':
@@ -233,6 +251,13 @@ different format.
                 chunk.logger.info('Dense pointcloud is not available.')
 
 
+            # images
+            if chunk.node.copyImagesToOutput.value:
+                holo_io.copy_sfm_images(chunk.node.inputFolder.value, chunk.node.output.value)
+                if chunk.node.convertImgsToJpeg.value:
+                    images = holo_io.convert_images_to_jpeg(chunk.node.output.value, images)
+
+
             # update images paths
             working_dir = os.path.dirname(chunk.logFile)
             if chunk.node.imagesPath.value == 'absolute':
@@ -245,9 +270,6 @@ different format.
 
 
             # output structures
-            if chunk.node.cpoyImagesToOutput.value:
-                holo_io.copy_sfm_images(chunk.node.inputFolder.value, chunk.node.output.value)
-
             if 'COLMAP' in chunk.node.outputSfMFormat.value:
                 chunk.logger.info('Saving COLMAP SfM.')
                 colmap_io.write_model(chunk.node.output.value, cameras, images, points3D)
@@ -261,6 +283,13 @@ different format.
                 xyz, rgb, xyz_colored, rgb_colored = colmap_io.points3D_to_xyz(points3D)
                 holo_io.write_pointcloud_to_file(xyz, chunk.node.output.value + '/model.obj', rgb = rgb)
                 holo_io.write_pointcloud_to_file(xyz_colored, chunk.node.output.value + '/model_rgb.obj', rgb = rgb_colored)
+
+            if 'LQuery' in chunk.node.outputSfMFormat.value:
+                chunk.logger.info('Composing the localization query file.')
+                holo_io.copy_sfm_images(chunk.node.inputFolder.value, os.path.join(chunk.node.output.value,'query'))
+                hloc.compose_localization_query_from_model(chunk.node.lQueryFile.value, cameras, images)
+                
+
 
             chunk.logger.info('HoloLensIO done.') 
 

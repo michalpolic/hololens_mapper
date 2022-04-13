@@ -19,7 +19,7 @@ from src.utils.UtilsContainers import UtilsContainers
 
 class HlocLocalizer(desc.Node):
 
-    category = 'ARTwin'
+    category = 'Localization'
     documentation = '''
 Runs Hloc localization on input images.
                     
@@ -65,31 +65,25 @@ Runs Hloc localization on input images.
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             output_folder = chunk.node.output.value
-            
-            if not output_folder:
-                return
-
             map_folder = chunk.node.hlocMapDir.value
+            query_file = chunk.node.queryFile.value
 
             if not map_folder:
                 chunk.logger.warning('Nothing to process, Hloc map required')
                 return
-
-            query_file = chunk.node.queryFile.value
             if not query_file:
                 chunk.logger.warning('Nothing to process, query file required')
                 return
 
             if output_folder[-1] != '/':
                 output_folder = output_folder + '/'
-
             if map_folder[-1] != '/':
                 map_folder = map_folder + '/'
 
             
             hloc_container = UtilsContainers("singularity", dir_path + "/hloc.sif", './third_party/Hierarchical-Localization/')
             chunk.logger.info('Running Hloc Localization.')   
-            hloc_container.command_dict("python3 ./third_party/Hierarchical-Localization/run_hloc.py " + map_folder + " " + query_file + " " + output_folder, {})
+            hloc_container.command("python3 ./third_party/Hierarchical-Localization/run_hloc.py " + map_folder + " " + query_file + " " + output_folder)
 
 
             chunk.logger.info('Localization done.') 

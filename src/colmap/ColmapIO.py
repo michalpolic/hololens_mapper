@@ -201,7 +201,7 @@ class ColmapIO:
 
             observations = []
             for i in range(len(img["point3D_ids"])):
-                observations.extend([img['uvs'][2*i], img['uvs'][2*i + 1], img['point3D_ids'][i]])
+                observations.extend([img['uvs'][2*i], img['uvs'][2*i + 1], int(img['point3D_ids'][i])])
             line = " ".join(map(str, observations))
             images_file.write(line + "\n")
 
@@ -338,6 +338,7 @@ class ColmapIO:
                 corresp_ids = corresp_ids[:, [1, 0]]
             for i in range(np.shape(corresp_ids)[0]):
                 raw_matches.append(f"{corresp_ids[i][0]} {corresp_ids[i][1]}\n")
+            raw_matches.append("\n")
 
         out_file.write("".join(raw_matches))
         out_file.close()        

@@ -32,7 +32,7 @@ class ICP(enum.Enum):
 
 class DensePonitcloudsAligner(desc.Node):
 
-    category = 'ARTwin'
+    category = 'Alignment'
     documentation = '''
 This filter loads two dense pointclouds and merge them into one. \n
 Merging algorithms: \n

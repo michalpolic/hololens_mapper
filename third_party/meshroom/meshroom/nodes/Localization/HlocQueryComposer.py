@@ -28,7 +28,7 @@ Intrinsic = [
 
 class HlocQueryComposer(desc.Node):
 
-    category = 'ARTwin'
+    category = 'Localization'
     documentation = '''
 Compose query file for Hloc on input images.
                     
@@ -93,7 +93,7 @@ Compose query file for Hloc on input images.
             name="output",
             label="Output query file",
             description="",
-            value=desc.Node.internalFolder + 'hloc_queries.txt',
+            value=os.path.join(desc.Node.internalFolder, 'hloc_queries.txt'),
             uid=[],
             ),
     ]

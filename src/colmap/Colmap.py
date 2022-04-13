@@ -30,10 +30,13 @@ class Colmap():
         self._colmap_container.command_dict("colmap exhaustive_matcher", 
             {"database_path": database_path})
 
-    def custom_matching(self, database_path, match_list_path):
+    def custom_matching(self, database_path, match_list_path, 
+        match_type = 'pairs', max_error = 4):
         self._colmap_container.command_dict("colmap matches_importer", 
             {"database_path": database_path,
-            "match_list_path": match_list_path})
+            "match_list_path": match_list_path,
+            "match_type": match_type,
+            "SiftMatching.max_error": max_error})
 
     def mapper(self, database_path, image_path, output_path):
         self._colmap_container.command_dict("colmap mapper", 

@@ -7,6 +7,7 @@ import multiprocessing as mp
 import urllib.request
 import shutil
 import json
+import cv2
 from PIL import Image
 from distutils.dir_util import copy_tree
 
@@ -459,6 +460,14 @@ class HoloIO:
                 Path(destination_dir + imgs_dir).mkdir(parents=True, exist_ok=True)
                 copy_tree(source_dir + imgs_dir, destination_dir + imgs_dir)   
 
+    def convert_images_to_jpeg(self, working_dir, images):
+        for img in images.values():
+            image = cv2.imread(os.path.join(working_dir,img['name']))
+            new_img_name = img['name'][:-3] + 'jpg'
+            cv2.imwrite(os.path.join(working_dir,new_img_name), image)
+            os.remove(os.path.join(working_dir,img['name']))
+            images[img['image_id']]['name'] = new_img_name
+        return images
 
     def remove_images_from_cache(self, cache_dir, imgs_dir_list = ["pv", "vlc_ll", "vlc_lf", "vlc_rf", "vlc_rr"]):
         if not cache_dir[-1] == '/':

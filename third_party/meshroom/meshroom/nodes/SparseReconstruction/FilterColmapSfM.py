@@ -19,7 +19,7 @@ from src.colmap.ColmapIO import ColmapIO
 
 
 class FilterColmapSfM(desc.Node):
-    category = "ARTwin"
+    category = "Sparse Reconstruction"
     documentation = """
 This node load SfM structures and remove images which you select. 
 """

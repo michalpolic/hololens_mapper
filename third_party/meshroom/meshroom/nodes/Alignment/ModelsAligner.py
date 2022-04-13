@@ -20,7 +20,7 @@ from src.utils.UtilsMath import UtilsMath
 
 class ModelsAligner(desc.Node):
 
-    category = 'ARTwin'
+    category = 'Alignment'
     documentation = '''
 This node COLMAP mapper on database which contains matches.
 '''
@@ -29,6 +29,13 @@ This node COLMAP mapper on database which contains matches.
         desc.File(
             name="sfmTransform",
             label="SfM to transform",
+            description="The directory containing COLMAP SfM output.",
+            value="",
+            uid=[0],
+        ),
+        desc.File(
+            name="ptsTransform",
+            label="PTS to transform",
             description="The directory containing COLMAP SfM output.",
             value="",
             uid=[0],

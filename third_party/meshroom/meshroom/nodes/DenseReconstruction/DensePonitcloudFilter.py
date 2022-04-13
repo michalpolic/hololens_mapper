@@ -19,7 +19,7 @@ from src.meshroom.MeshroomIO import MeshroomIO
 
 class DensePointcloudFilter(desc.Node):
 
-    category = 'ARTwin'
+    category = 'Dense Reconstruction'
     documentation = '''
 This filter noise out of the dense pointcloud. 
 '''
