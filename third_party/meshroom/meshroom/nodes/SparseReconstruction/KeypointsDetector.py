@@ -1,4 +1,5 @@
 from __future__ import print_function
+import shutil
 
 __version__ = '0.1'
 
@@ -43,6 +44,15 @@ The database is in the COLMAP format.
             description='''
             The directory containing input images.
             The subdirectories are specified in images.txt.''',
+            value='',
+            uid=[0],
+        ),
+        desc.File(
+            name='database',
+            label='Input database',
+            description='''
+            The database with keypoints and matches for some subreconstruction. 
+            The keypoints will be find for the new images.''',
             value='',
             uid=[0],
         ),
@@ -113,7 +123,10 @@ The database is in the COLMAP format.
             colmap = Colmap(colmap_container)       
 
             # init db for keypoints 
-            colmap.prepare_database(out_dir + '/database.db', '/data/database.db')
+            if not chunk.node.database.value:
+                colmap.prepare_database(out_dir + '/database.db', '/data/database.db')
+            else:
+                shutil.copy2(chunk.node.database.value, chunk.node.output.value)
 
             # COLMAP detector
             if chunk.node.algorithm.value == 'SIFT':

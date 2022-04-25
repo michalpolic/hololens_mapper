@@ -28,7 +28,7 @@ db_descriptors_path = map_path / 'global-feats-netvlad.h5'
 # output paths
 output_path = Path(output_folder)
 query_pairs_path = output_path / 'pairs-query-netvlad50.txt' 
-results_path = output_path / 'superpoint+superglue_netvlad50.txt' 
+results_path = output_path / 'query_localization_results.txt' 
 
 
 # ---------------------------------------------------

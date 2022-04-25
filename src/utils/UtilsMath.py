@@ -75,7 +75,47 @@ class UtilsMath:
                 reference_C = np.concatenate((reference_C, ref_img["C"]), axis=1)
                 transformed_C = np.concatenate((transformed_C, img["C"]), axis=1)
 
+        savemat('/local1/projects/artwin/mapping/hololens_mapper/pipelines/MeshroomCache/HlocLocalizer/78e3afadb7ad4b73fff4d28b47372162efb55e9e', \
+            {'reference_C':reference_C, 'transformed_C': transformed_C})
+
         return self.estimate_euclidean_transformation(reference_C, transformed_C)
+
+
+    def align_local_and_global_sfm(self, db_cameras, db_images, db_points3D, \
+        q_cameras, q_images, q_points3D, loc_images):
+        # transform = self.estimate_colmap_to_colmap_transformation(loc_images, q_images)
+        
+        # savemat('/local1/projects/artwin/mapping/hololens_mapper/pipelines/MeshroomCache/HlocLocalizer/transform.mat', \
+        #     {'transform':transform})
+
+        db_C = np.array([]).reshape(3,0)
+        q_C = np.array([]).reshape(3,0)
+        new_q_C = np.array([]).reshape(3,0)
+        orig_q_C = np.array([]).reshape(3,0)
+
+        reference_images_by_name = {}
+        for img in loc_images.values():
+            reference_images_by_name[img['name'].replace('\\','/')] = img
+
+        for img in loc_images.values():
+            transformed_img_name = img['name'].replace('\\','/')
+            if transformed_img_name in reference_images_by_name:
+                ref_img = reference_images_by_name[transformed_img_name]
+                new_q_C = np.concatenate((new_q_C, ref_img["C"]), axis=1)
+                orig_q_C = np.concatenate((orig_q_C, img["C"]), axis=1)
+        transform = self.estimate_euclidean_transformation(new_q_C, orig_q_C)
+
+        for img in db_images.values():
+            db_C = np.concatenate((db_C, img["C"]), axis=1)
+
+        for img in q_images.values():
+            q_C = np.concatenate((q_C, img["C"]), axis=1)
+
+        savemat('/home/ciirc/policmic/demo/all_data.mat', \
+            {'db_C':db_C, 'q_C':q_C, 'new_q_C': new_q_C, 'orig_q_C': orig_q_C, 'T': transform})
+        # TODO here
+        pass
+
 
     def estimate_colmap_to_holo_transformation(self, colmap_cameras, holo_cameras):
         print('Estimate COLMAP to HoloLens transformation.')
@@ -113,6 +153,11 @@ class UtilsMath:
             colmap_points[i]["X"] =  (transform["scale"] * transform["rotation"] * np.matrix(colmap_points[i]["X"]).T + transform["translation"]).T.tolist()[0]
 
         return colmap_points
+
+    def transform_pointcloud(self, xyz, transform):
+        for i in range(0,np.shape(xyz)[1]):
+            xyz[:,i] = np.asarray(transform["scale"] * transform["rotation"] * np.matrix(xyz[:,i]).T + transform["translation"]).T[0]
+        return xyz
 
     def transform_colmap_images(self, cameras, transform):
         for cam_id in cameras:

@@ -1,8 +1,10 @@
 import os
+from re import I
 import sys
+import numpy as np
 from ctypes import *
 from src.utils.UtilsContainers import UtilsContainers
-
+from src.utils.UtilsMath import UtilsMath
 
 class Hloc():
 
@@ -51,3 +53,26 @@ class Hloc():
 
         out_file.write("".join(lquery_list))
         out_file.close() 
+    
+    def get_imgs_from_localization_results(self, localization_results_file):
+        images = {}
+        um = UtilsMath()
+        with open(localization_results_file, 'r') as loc_file:
+            loc_data = loc_file.read()
+            parsed_data = loc_data.split("\n")
+            parsed_data = [x for x in parsed_data if x]
+            
+            for i, line in enumerate(parsed_data):
+                p = line.split(" ")
+                R = um.q2r([float(p[1]), float(p[2]), float(p[3]), float(p[4])])
+                C = - np.matrix(R).T * np.matrix([float(p[5]), float(p[6]), float(p[7])]).T
+                images[i] = {
+                    'image_id': i,
+                    'camera_id': -1,
+                    'R': R,
+                    'C': C,
+                    'name': p[0],
+                    'uvs': [],
+                    'point3D_ids': []
+                }
+        return images

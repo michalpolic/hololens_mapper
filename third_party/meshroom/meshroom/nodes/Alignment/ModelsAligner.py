@@ -17,6 +17,7 @@ sys.path.append(dir_path)
 from src.holo.HoloIO import HoloIO
 from src.colmap.ColmapIO import ColmapIO
 from src.utils.UtilsMath import UtilsMath
+from src.meshroom.MeshroomIO import MeshroomIO
 
 class ModelsAligner(desc.Node):
 
@@ -36,7 +37,7 @@ This node COLMAP mapper on database which contains matches.
         desc.File(
             name="ptsTransform",
             label="PTS to transform",
-            description="The directory containing COLMAP SfM output.",
+            description="The pointcloud file in format obj or ply.",
             value="",
             uid=[0],
         ),
@@ -66,6 +67,13 @@ This node COLMAP mapper on database which contains matches.
             value=desc.Node.internalFolder,
             uid=[],
             ),
+        desc.File(
+            name="transforedPts",
+            label="Transformed points",
+            description="",
+            value=os.path.join(desc.Node.internalFolder,'model.obj'),
+            uid=[],
+            ),
         ]
 
     def processChunk(self, chunk):
@@ -90,17 +98,31 @@ This node COLMAP mapper on database which contains matches.
             cameras, images, points3D = colmap_io.load_model(chunk.node.sfmTransform.value)
             _, ref_images, _ = colmap_io.load_model(chunk.node.sfmReference.value)
 
+            # load dense pointcloud if available
+            meshroom_io = MeshroomIO()
+            if chunk.node.ptsTransform.value:
+                xyz, rgb = meshroom_io.load_vertices(chunk.node.ptsTransform.value) 
+
             # align the models using camera poses
             utils_math = UtilsMath()
             transformation = utils_math.estimate_colmap_to_colmap_transformation(ref_images, images)
             transformed_images = utils_math.transform_colmap_images(images, transformation)
             transformed_points3D = utils_math.transform_colmap_points(points3D, transformation)
 
+            # transform pointcloud if available
+            if chunk.node.ptsTransform.value:
+                transformed_xyz = utils_math.transform_pointcloud(xyz, transformation)
+
             # simplify the reconstruction for Patchmatch
             cameras, transformed_images = utils_math.update_camera_ids(cameras, transformed_images)
 
             # save transformed model
             colmap_io.write_model(chunk.node.output.value, cameras, transformed_images, transformed_points3D)
+
+            if chunk.node.ptsTransform.value:
+                chunk.logger.info('Saving transformed pointcloud.')
+                holo_io.write_pointcloud_to_file(transformed_xyz, chunk.node.transforedPts.value, rgb = rgb)
+
 
             chunk.logger.info('Aligner done.')
           

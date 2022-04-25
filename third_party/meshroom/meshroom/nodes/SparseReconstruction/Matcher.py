@@ -38,11 +38,22 @@ This node compute matches between selected / all pairs of images.
             value='',
             uid=[0],
         ),
-        desc.File(
-            name='tentativeMatches',
-            label='Tentative matches',
+        desc.ChoiceParam(
+            name='inputMatchesFormat',
+            label='Input matches format',
             description='''
-            File with image pairs and tentative matches.
+            Does the "Input matches" contain the tentative matches or 
+            the image pairs only.''',
+            value='image pairs',
+            values=['no data','image pairs','image pairs + tentative matches'],
+            uid=[0],
+            exclusive=True,
+        ),
+        desc.File(
+            name='inputMatches',
+            label='Input matches',
+            description='''
+            File with image pairs or image pairs + tentative matches.
             This file follow the format required by COLMAP matches_importer 
             in the case of matching raw correspondences.''',
             value='',
@@ -101,7 +112,7 @@ This node compute matches between selected / all pairs of images.
             if not chunk.node.databaseFile:
                 chunk.logger.warning('Database file is missing.')
                 return
-            if not chunk.node.tentativeMatches:
+            if not chunk.node.inputMatches:
                 chunk.logger.warning('Tentative matches are missing. Running exhaustive matching.')
             if not chunk.node.output.value:
                 return
@@ -109,9 +120,9 @@ This node compute matches between selected / all pairs of images.
             chunk.logger.info('Start matching.')
             out_dir = chunk.node.output.value
             copy2(chunk.node.databaseFile.value, out_dir)
-            if chunk.node.tentativeMatches:
-                copy2(chunk.node.tentativeMatches.value, out_dir)
-                rel_path_tentative_matches = '/data/' + os.path.basename(chunk.node.tentativeMatches.value)
+            if chunk.node.inputMatches:
+                copy2(chunk.node.inputMatches.value, out_dir)
+                rel_path_tentative_matches = '/data/' + os.path.basename(chunk.node.inputMatches.value)
 
             # init containers
             chunk.logger.info('Init containers')
@@ -123,13 +134,18 @@ This node compute matches between selected / all pairs of images.
             colmap = Colmap(colmap_container)
 
             # matcher
-            if not chunk.node.tentativeMatches:
+            if not chunk.node.inputMatches or chunk.node.inputMatchesFormat.value == 'no data':
                 chunk.logger.info('COLMAP --> exhaustive matching')
                 colmap.exhaustive_matcher('/data/database.db')               # COLMAP matcher
             else:
-                chunk.logger.info('COLMAP --> exhaustive matching of imported image pairs')
+                if chunk.node.inputMatchesFormat.value == 'image pairs':
+                    chunk.logger.info('COLMAP --> matching of imported image pairs')
+                    matcher_type = 'pairs'
+                if chunk.node.inputMatchesFormat.value == 'image pairs + tentative matches':
+                    chunk.logger.info('COLMAP --> matching of imported tentative matches')
+                    matcher_type = 'raw'
                 colmap.custom_matching('/data/database.db', rel_path_tentative_matches, \
-                    match_type = 'raw', max_error = chunk.node.matchingTreshold.value)
+                    match_type = matcher_type, max_error = chunk.node.matchingTreshold.value)
 
             chunk.logger.info('Matcher done.')
           
