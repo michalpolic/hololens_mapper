@@ -25,9 +25,11 @@ class Hloc():
             img['name'] = img['name'].replace('\\','/')
         return images
     
-    def compose_localization_query_from_model(self, lquery_path, cameras, images):
-        out_file = open(lquery_path, 'w')
+    def compose_localization_query_from_model(self, output_folder, cameras, images):
+        # compose data
+        um = UtilsMath()
         lquery_list = []
+        lquery_poses_list = []
         for img in images.values():
             cam = cameras[int(img['camera_id'])]
             known_camera_model = False
@@ -50,10 +52,24 @@ class Hloc():
                     ' ' + str(cam['rd'][0]) + ' ' + str(cam['rd'][1])
             assert known_camera_model, 'Unknown camera model in exporing localization query.'
             lquery_list.append('query/' + img['name'] + params + '\n') 
+            q_str = ' '.join(map(str, um.r2q(img['R']).flatten().tolist()[0]))
+            t = - img['R'] * img['C']
+            t_str = ' '.join(map(str, t.flatten().tolist()[0]))
+            lquery_poses_list.append('query/' + img['name'] + ' ' + q_str + ' ' + t_str + '\n') 
 
+        # save the queries
+        lquery_path = os.path.join(output_folder,'hloc_queries.txt')
+        out_file = open(lquery_path, 'w')
         out_file.write("".join(lquery_list))
         out_file.close() 
+
+        # save the query poses in local SfM
+        lquery_poses_path = os.path.join(output_folder,'hloc_queries_poses.txt')
+        out_file2 = open(lquery_poses_path, 'w')
+        out_file2.write("".join(lquery_poses_list))
+        out_file2.close() 
     
+
     def get_imgs_from_localization_results(self, localization_results_file):
         images = {}
         um = UtilsMath()

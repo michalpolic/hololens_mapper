@@ -136,6 +136,7 @@ def main(reference_sfm, queries, retrieval, features, matches, results,
         'loc': {},
     }
     logging.info('Starting localization...')
+    q_2d3d_cp = {}
     for qname, qinfo in tqdm(queries):
         if qname not in retrieval_dict:
             logging.warning(f'No images retrieved for query image {qname}. Skipping...')
@@ -183,6 +184,7 @@ def main(reference_sfm, queries, retrieval, features, matches, results,
             ret, mkpq, mp3d, mp3d_ids, num_matches, map_ = pose_from_cluster(
                 qname, qinfo, db_ids, db_images, points3D,
                 feature_file, match_file, thresh=ransac_thresh)
+            q_2d3d_cp[qname] = {'mkpq': mkpq, 'mp3d': mp3d, 'result': ret, 'thresh': ransac_thresh}
 
             if ret['success']:
                 poses[qname] = (ret['qvec'], ret['tvec'])
@@ -206,8 +208,6 @@ def main(reference_sfm, queries, retrieval, features, matches, results,
                 'keypoint_index_to_db': map_,
                 'covisibility_clustering': covisibility_clustering,
             }
-
-
 
 
     logging.info(f'Localized {len(poses)} / {len(queries)} images.')
@@ -239,6 +239,10 @@ def main(reference_sfm, queries, retrieval, features, matches, results,
     n_cameras, n_images, n_points3D = compose_simple_subreconstruction(\
         cameras, db_images, points3D, used_db_images.keys())
     write_model(n_cameras, n_images, n_points3D, results.parent, ext = '.txt')
+
+    corresp_path = results.parent / 'corresp_2d-3d.npy'
+    logging.info(f'Writing 2D-3D correspondences {corresp_path}...')
+    np.save(corresp_path, q_2d3d_cp)
 
     logs_path = f'{results}_logs.pkl'
     logging.info(f'Writing logs to {logs_path}...')

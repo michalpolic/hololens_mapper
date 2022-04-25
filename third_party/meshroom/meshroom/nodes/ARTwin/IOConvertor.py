@@ -287,7 +287,7 @@ different format.
             if 'LQuery' in chunk.node.outputSfMFormat.value:
                 chunk.logger.info('Composing the localization query file.')
                 holo_io.copy_sfm_images(chunk.node.inputFolder.value, os.path.join(chunk.node.output.value,'query'))
-                hloc.compose_localization_query_from_model(chunk.node.lQueryFile.value, cameras, images)
+                hloc.compose_localization_query_from_model(chunk.node.output.value, cameras, images)
                 
 
 
