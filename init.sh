@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+# install the poselib for testing 
+# install the Eigen 3.4.0 --> https://gitlab.com/libeigen/eigen/-/releases/3.4.0
+# conda env --name poselib python=3.8
+# conda activate poselib
+# conda install pybind11
+# cd third_party/poselib
+# cmake -S . -B _build/ -DPYTHON_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=_install
+# cmake --build _build/ --target pip-package
+# cmake --build _build/ --target install -j 8
+# cmake --build _build/ --target install-pip-package
+# cd ../..
+
 # create common conda enviroment
 conda env create -f environment.yml
 conda activate meshroom
