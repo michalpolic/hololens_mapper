@@ -117,6 +117,9 @@ Runs Hloc localization on input images.
             hloc_container = UtilsContainers("singularity", dir_path + "/hloc.sif", './third_party/Hierarchical-Localization/')
             chunk.logger.info('Running Hloc Localization.')   
             hloc_container.command("python3 ./third_party/Hierarchical-Localization/run_hloc.py " + map_folder + " " + query_file + " " + output_folder)
+            
+            # TODO: rewrite the call to use data path, update the container to run on GTX 3090
+            # TODO: wrap and run the generalized absolute pose solver
 
             # copy used map images into common directories
             colmap_io = ColmapIO()
@@ -132,9 +135,11 @@ Runs Hloc localization on input images.
                 um = UtilsMath()
                 hloc = Hloc()
                 q_cameras, q_images, q_points3D = colmap_io.load_model(chunk.node.localSfM.value)
-                loc_images = hloc.get_imgs_from_localization_results(chunk.node.localization.value)
+                # loc_images = hloc.get_imgs_from_localization_results(chunk.node.localization.value)
+                gap_file_path = os.path.join(output_folder,'generalized_absolute_pose.txt')
+                transform = hloc.read_generalized_absolute_pose_results(gap_file_path)
                 cameras, images, points3D = um.align_local_and_global_sfm(db_cameras, db_images, db_points3D, \
-                    q_cameras, q_images, q_points3D, loc_images)
+                    q_cameras, q_images, q_points3D, transform)
                 colmap_io.write_model(output_folder, cameras, images, points3D)
 
             chunk.logger.info('Localization done.') 

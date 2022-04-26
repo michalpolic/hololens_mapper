@@ -75,46 +75,69 @@ class UtilsMath:
                 reference_C = np.concatenate((reference_C, ref_img["C"]), axis=1)
                 transformed_C = np.concatenate((transformed_C, img["C"]), axis=1)
 
-        savemat('/local1/projects/artwin/mapping/hololens_mapper/pipelines/MeshroomCache/HlocLocalizer/78e3afadb7ad4b73fff4d28b47372162efb55e9e', \
-            {'reference_C':reference_C, 'transformed_C': transformed_C})
+        # savemat('/local1/projects/artwin/mapping/hololens_mapper/pipelines/MeshroomCache/HlocLocalizer/78e3afadb7ad4b73fff4d28b47372162efb55e9e', \
+        #     {'reference_C':reference_C, 'transformed_C': transformed_C})
 
         return self.estimate_euclidean_transformation(reference_C, transformed_C)
 
 
-    def align_local_and_global_sfm(self, db_cameras, db_images, db_points3D, \
-        q_cameras, q_images, q_points3D, loc_images):
-        # transform = self.estimate_colmap_to_colmap_transformation(loc_images, q_images)
+    def merge_common_cameras(self, cameras1, cameras2, eps = 10^-4):
+        common_cameras = {}
+        cam2_to_common_ids = {}
         
-        # savemat('/local1/projects/artwin/mapping/hololens_mapper/pipelines/MeshroomCache/HlocLocalizer/transform.mat', \
-        #     {'transform':transform})
+        max_id = np.max(list(cameras1.keys()))
+        common_cameras = cameras1
+        for cam2_id in cameras2:
+            cam2 = cameras2[cam2_id]
+            pp1 = np.matrix(cam2['pp'])
+            rd1 = np.matrix(cam2['rd'])
+            unknown_camera = True
+            for cam in common_cameras.values():
+                pp2 = np.matrix(cam['pp'])
+                rd2 = np.matrix(cam['rd'])
+                if cam2['model'] == cam['model'] and cam2['width'] == cam['width'] and \
+                    cam2['height'] == cam['height'] and abs(cam2['f']-cam['f']) < eps and \
+                    np.linalg.norm(pp1 - pp2) < 2*eps and np.linalg.norm(rd1 - rd2) < 2*eps:
+                    unknown_camera = False
+                    break
 
-        db_C = np.array([]).reshape(3,0)
-        q_C = np.array([]).reshape(3,0)
-        new_q_C = np.array([]).reshape(3,0)
-        orig_q_C = np.array([]).reshape(3,0)
+            if unknown_camera:
+                cam2_to_common_ids[cam2['camera_id']] = max_id+1
+                cam2['camera_id'] = max_id+1
+                common_cameras[max_id+1] = cam2
+                max_id += 1
 
-        reference_images_by_name = {}
-        for img in loc_images.values():
-            reference_images_by_name[img['name'].replace('\\','/')] = img
+        return (common_cameras, cam2_to_common_ids)
+                    
 
-        for img in loc_images.values():
-            transformed_img_name = img['name'].replace('\\','/')
-            if transformed_img_name in reference_images_by_name:
-                ref_img = reference_images_by_name[transformed_img_name]
-                new_q_C = np.concatenate((new_q_C, ref_img["C"]), axis=1)
-                orig_q_C = np.concatenate((orig_q_C, img["C"]), axis=1)
-        transform = self.estimate_euclidean_transformation(new_q_C, orig_q_C)
+    def align_local_and_global_sfm(self, db_cameras, db_images, db_points3D, q_cameras, q_images, q_points3D, transform):
+        cameras, qcam_to_cam_id = self.merge_common_cameras(db_cameras, q_cameras)
 
-        for img in db_images.values():
-            db_C = np.concatenate((db_C, img["C"]), axis=1)
+        images = {}
+        for qimg_id in q_images:
+            qimg = q_images[qimg_id]
+            qimg['camera_id'] = str(qcam_to_cam_id[int(qimg['camera_id'])])
+            qimg['C'] = transform['R'].T * (qimg['C'] - np.matrix(transform['t']).T)
+            qimg['R'] = qimg['R'] * transform['R']
+            #qimg['point3D_ids'] = [-1 for i in range(len(qimg['point3D_ids']))]
+            images[qimg_id] = qimg
+            
+        max_id = np.max(list(images.keys()))
+        for dbimg_id in db_images:
+            dbimg = db_images[dbimg_id]
+            if dbimg_id in images.keys():
+                dbimg['image_id'] = max_id + 1
+                max_id += 1
+            dbimg['point3D_ids'] = [-1 for i in range(len(dbimg['point3D_ids']))]
+            images[dbimg['image_id']] = dbimg
 
-        for img in q_images.values():
-            q_C = np.concatenate((q_C, img["C"]), axis=1)
+        points3D = []
+        for pt3D in q_points3D:
+            X = transform['R'].T * (np.matrix(pt3D['X']).reshape(3,1) - np.matrix(transform['t']).T)
+            pt3D['X'] = np.matrix.tolist(X.T)[0]
+            points3D.append(pt3D)
 
-        savemat('/home/ciirc/policmic/demo/all_data.mat', \
-            {'db_C':db_C, 'q_C':q_C, 'new_q_C': new_q_C, 'orig_q_C': orig_q_C, 'T': transform})
-        # TODO here
-        pass
+        return (cameras, images, points3D)
 
 
     def estimate_colmap_to_holo_transformation(self, colmap_cameras, holo_cameras):

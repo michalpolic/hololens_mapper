@@ -92,3 +92,16 @@ class Hloc():
                     'point3D_ids': []
                 }
         return images
+    
+
+    def read_generalized_absolute_pose_results(self, file_path):
+        q  = np.array([1, 0, 0, 0]).reshape(4,1).astype(dtype=float)
+        t  = np.zeros((3,1)).astype(dtype=float)
+        with open(file_path, 'r') as results_file:
+            loc_data = results_file.read()
+            qt = loc_data.split(" ")
+            q = np.array(list(map(float, qt[0:4])))
+            t = np.array(list(map(float, qt[4:])))
+        
+        um = UtilsMath()
+        return {'q': q, 'R': um.q2r(q), 't': t}
