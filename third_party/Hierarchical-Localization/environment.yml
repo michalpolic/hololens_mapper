@@ -1,0 +1,18 @@
+name: hloc
+channels:
+  - pytorch-nightly
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pytorch 
+  - torchvision 
+  - cudatoolkit=11.1
+  - pip  
+  - pip:
+      - opencv-python
+      - numpy
+      - tqdm
+      - matplotlib
+      - scipy
+      - h5py

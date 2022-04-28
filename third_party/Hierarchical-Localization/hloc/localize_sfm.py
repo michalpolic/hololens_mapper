@@ -8,7 +8,7 @@ from tqdm import tqdm
 import pickle
 import pycolmap
 
-from .utils.read_write_model import read_model, write_model
+from .utils.read_write_model import Point3D, read_model, write_model
 from .utils.parsers import parse_image_lists, parse_retrieval, names_to_pair
 
 
@@ -95,6 +95,9 @@ def pose_from_cluster(qname, qinfo, db_ids, db_images, points3D,
     ret['cfg'] = cfg
     return ret, mkpq, mp3d, mp3d_ids, num_matches, (mkp_idxs, mkp_to_3D_to_db)
 
+# import collections
+# Point3D = collections.namedtuple(
+#     "Point3D", ["id", "xyz", "rgb", "error", "image_ids", "point2D_idxs"])
 
 def compose_simple_subreconstruction(cameras, images, points3D, images_list):
     # do not check observations and points in 3D 
@@ -105,6 +108,18 @@ def compose_simple_subreconstruction(cameras, images, points3D, images_list):
         if img.name in images_list:
             nimages[img.id] = img
             ncameras[img.camera_id] = cameras[img.camera_id]
+    
+    new_img_ids = list(nimages.keys())
+    for pt_id in points3D:
+        pt = points3D[pt_id]
+        filter_images = [False for i in range(len(pt.image_ids))]
+        for i in range(len(pt.image_ids)):
+            if pt.image_ids[i] in new_img_ids:
+                filter_images[i] = True
+        npoints3D[pt.id] = Point3D(id=pt.id, xyz=pt.xyz, rgb=pt.rgb,
+            error=pt.error, image_ids=pt.image_ids[filter_images],
+            point2D_idxs=pt.point2D_idxs[filter_images])
+        
     return (ncameras, nimages, npoints3D)
 
 

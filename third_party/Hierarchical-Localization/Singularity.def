@@ -1,24 +1,76 @@
 Bootstrap: docker
-From: colmap/colmap:latest
-Stage: spython-base
+From: nvidia/cuda:11.3.1-devel-ubuntu18.04
 
 %files
 ./third_party/Hierarchical-Localization /app
 
 %post
-apt-get update -y
-apt-get install python3 python3-pip unzip wget -y
+apt-get update && apt-get install -y \
+git \
+cmake \
+build-essential \
+libboost-program-options-dev \
+libboost-filesystem-dev \
+libboost-graph-dev \
+libboost-system-dev \
+libboost-test-dev \
+libeigen3-dev \
+libsuitesparse-dev \
+libfreeimage-dev \
+libmetis-dev \
+libgoogle-glog-dev \
+libgflags-dev \
+libglew-dev \
+qtbase5-dev \
+libqt5opengl5-dev \
+libcgal-dev \
+wget \
+bzip2 \
+ca-certificates \
+libglib2.0-0 \
+libxext6 \
+libsm6 \
+libxrender1 \
+ffmpeg \
+libatlas-base-dev \
+libsuitesparse-dev
+rm -rf /var/lib/apt/lists/*
+apt-get clean
 
-cd /app
-pip3 install --upgrade pip
-pip3 install -r /app/requirements.txt
+# install ceres solver
+git clone https://github.com/ceres-solver/ceres-solver.git --tag 2.1.0
+cd 2.1.0
+mkdir build
+cd build
+cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF
+make -j
+make install
 
-cd /colmap
-git pull
-cd /colmap/build
-cmake ..
-make -j install
+# install colmap
+cd /
+git clone https://github.com/colmap/colmap.git --tag 3.7
+cd colmap && \
+mkdir build && \
+cd build && \
+cmake .. && \
+make -j4 && \
+make install
 
+
+#Installing Anaconda 3 
+wget -c https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+/bin/bash Anaconda3-2020.02-Linux-x86_64.sh -bfp /usr/local
+
+#Conda configuration of channels from .condarc file
+conda config --file /.condarc --add channels defaults
+conda config --file /.condarc --add channels conda-forge
+conda update conda
+
+conda env create -f /app/environment.yml
+echo ". /home/ciirc/anaconda3/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+echo "conda activate hloc" >> $SINGULARITY_ENVIRONMENT
+
+# install python extension
 pip3 install git+https://github.com/mihaidusmanu/pycolmap
 cd /app
 PYTHONPATH=/app
@@ -26,9 +78,14 @@ PYTHONPATH=/app
 %environment
 export PYTHONPATH=/app
 
+
 %runscript
+. /home/ciirc/anaconda3/etc/profile.d/conda.sh
+conda activate hloc
 cd /app
 exec "$@"
 
 %startscript
+. /home/ciirc/anaconda3/etc/profile.d/conda.sh
+conda activate hloc 
 cd /app

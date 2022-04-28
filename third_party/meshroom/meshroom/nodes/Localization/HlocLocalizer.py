@@ -9,6 +9,7 @@ import shutil
 import os
 import shutil
 import sys
+import numpy as np
 from pathlib import Path
 
 # import mapper packages
@@ -93,6 +94,20 @@ Runs Hloc localization on input images.
             Path(new_img_path).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(os.path.join(map_folder,img['name']), new_img_path)
 
+    def get_image_pairs_from_viewgraph(self, images, view_graph, min_common_pts = 50):
+        order_to_image_id = {}  
+        for i, image_id in enumerate(images): 
+            order_to_image_id[i] = image_id
+
+        list_image_pairs = []
+        img_pair_ids = np.where(view_graph>min_common_pts)
+        for i in range(np.shape(img_pair_ids)[1]):
+            image1_id = order_to_image_id[img_pair_ids[0][i]]
+            image2_id = order_to_image_id[img_pair_ids[1][i]]
+            list_image_pairs.append(f"{images[image1_id]['name']} {images[image2_id]['name']}\n") 
+        
+        return list_image_pairs
+
 
     def processChunk(self, chunk):
         try:
@@ -127,12 +142,12 @@ Runs Hloc localization on input images.
             self.copy_map_images(db_images, map_folder, output_folder)
 
             # copy local sfm images
+            um = UtilsMath()
             if chunk.node.localSfM.value:
                 holo_io = HoloIO()
                 holo_io.copy_sfm_images(chunk.node.localSfM.value, output_folder)
                 
                 # update the local sfm
-                um = UtilsMath()
                 hloc = Hloc()
                 q_cameras, q_images, q_points3D = colmap_io.load_model(chunk.node.localSfM.value)
                 # loc_images = hloc.get_imgs_from_localization_results(chunk.node.localization.value)
@@ -141,6 +156,15 @@ Runs Hloc localization on input images.
                 cameras, images, points3D = um.align_local_and_global_sfm(db_cameras, db_images, db_points3D, \
                     q_cameras, q_images, q_points3D, transform)
                 colmap_io.write_model(output_folder, cameras, images, points3D)
+
+            # extract and add pairs of images from DB and 
+            _, db_view_graph = um.get_view_graph(db_images, db_points3D)
+            db_pairs = self.get_image_pairs_from_viewgraph(db_images, db_view_graph)
+            _, q_view_graph = um.get_view_graph(q_images, q_points3D)
+            q_pairs = self.get_image_pairs_from_viewgraph(q_images, q_view_graph)
+            with open(chunk.node.image_pairs.value, 'a') as image_pairs_file:
+                image_pairs_file.write("".join(db_pairs))
+                image_pairs_file.write("".join(q_pairs))
 
             chunk.logger.info('Localization done.') 
 
