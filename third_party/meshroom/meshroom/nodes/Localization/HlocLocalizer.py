@@ -28,7 +28,6 @@ class HlocLocalizer(desc.Node):
     category = 'Localization'
     documentation = '''
 Runs Hloc localization on input images.
-                    
 '''
 
     inputs = [
@@ -112,52 +111,64 @@ Runs Hloc localization on input images.
     def processChunk(self, chunk):
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
-            output_folder = chunk.node.output.value
-            map_folder = chunk.node.hlocMapDir.value
-            query_file = chunk.node.queryFile.value
-
-            if not map_folder:
+            if not chunk.node.hlocMapDir.value:
                 chunk.logger.warning('Nothing to process, Hloc map required')
                 return
-            if not query_file:
+            if not chunk.node.queryFile.value:
                 chunk.logger.warning('Nothing to process, query file required')
                 return
 
-            if output_folder[-1] != '/':
-                output_folder = output_folder + '/'
-            if map_folder[-1] != '/':
-                map_folder = map_folder + '/'
+            # setup paths
+            output_folder = chunk.node.output.value
+            cache_dir = os.path.dirname(os.path.dirname(output_folder))
+            map_folder = chunk.node.hlocMapDir.value
+            query_file = chunk.node.queryFile.value
+            relative_output_folder = output_folder.replace(cache_dir, '/data')
+            relative_map_folder = map_folder.replace(cache_dir, '/data')
+            relative_query_file = query_file.replace(cache_dir, '/data')
+            relative_corresp_path = os.path.join(relative_output_folder,'corresp_2d-3d.npy')
+            relative_query_poses_path = relative_query_file.replace('hloc_queries.txt', 'hloc_queries_poses.txt')
 
-            # localize the images
-            hloc_container = UtilsContainers("singularity", dir_path + "/hloc.sif", './third_party/Hierarchical-Localization/')
-            chunk.logger.info('Running Hloc Localization.')   
-            hloc_container.command("python3 ./third_party/Hierarchical-Localization/run_hloc.py " + map_folder + " " + query_file + " " + output_folder)
+            chunk.logger.info('Init containers ...')
+            if sys.platform == 'win32':
+                cache_dir = cache_dir[0].lower() + cache_dir[1::]
+                cache_dir_win = cache_dir.replace(":","")
+                hloc_container = UtilsContainers("docker", "hloc", "/host_mnt/" + cache_dir_win)
+                poselib_container = UtilsContainers("docker", "poselib", "/host_mnt/" + cache_dir_win)
+            else:
+                hloc_container = UtilsContainers("singularity", dir_path + "/hloc.sif", cache_dir)
+                poselib_container = UtilsContainers("singularity", dir_path + "/poselib.sif", cache_dir)
+
+
+            chunk.logger.info('Running localization ...')   
+            hloc_container.command("sh eval.sh " + relative_map_folder + " " + relative_query_file + " " + relative_output_folder)
             
-            # TODO: rewrite the call to use data path, update the container to run on GTX 3090
-            # TODO: wrap and run the generalized absolute pose solver
+            chunk.logger.info('Running generalized absolute pose ...')   
+            poselib_container.command("sh eval.sh " + relative_corresp_path + " " + relative_query_poses_path)
 
-            # copy used map images into common directories
+
+            chunk.logger.info('Copy employed images from map to working directory ...')  
             colmap_io = ColmapIO()
             db_cameras, db_images, db_points3D = colmap_io.load_model(output_folder)
             self.copy_map_images(db_images, map_folder, output_folder)
 
-            # copy local sfm images
+            chunk.logger.info('Copy employed images from local sfm to working directory ...')  
             um = UtilsMath()
             if chunk.node.localSfM.value:
                 holo_io = HoloIO()
                 holo_io.copy_sfm_images(chunk.node.localSfM.value, output_folder)
                 
-                # update the local sfm
+                chunk.logger.info('Updating the local sfm ...') 
                 hloc = Hloc()
                 q_cameras, q_images, q_points3D = colmap_io.load_model(chunk.node.localSfM.value)
-                # loc_images = hloc.get_imgs_from_localization_results(chunk.node.localization.value)
+                # loc_images = hloc.get_imgs_from_localization_results(chunk.node.localization.value)   # localization of individual images
                 gap_file_path = os.path.join(output_folder,'generalized_absolute_pose.txt')
                 transform = hloc.read_generalized_absolute_pose_results(gap_file_path)
                 cameras, images, points3D = um.align_local_and_global_sfm(db_cameras, db_images, db_points3D, \
                     q_cameras, q_images, q_points3D, transform)
                 colmap_io.write_model(output_folder, cameras, images, points3D)
 
-            # extract and add pairs of images from DB and 
+            chunk.logger.info('Extract and write down image pairs to match ...') 
             _, db_view_graph = um.get_view_graph(db_images, db_points3D)
             db_pairs = self.get_image_pairs_from_viewgraph(db_images, db_view_graph)
             _, q_view_graph = um.get_view_graph(q_images, q_points3D)

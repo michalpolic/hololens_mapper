@@ -4,11 +4,10 @@ From: nvidia/cuda:11.3.1-devel-ubuntu18.04
 %files
 ./third_party/poselib /app
 
-%setup
-cd /
-touch .condarc
-
 %post
+cd /
+touch /root/.condarc
+
 apt-get update && apt-get -y upgrade
 apt-get -y install \
 build-essential \
@@ -49,8 +48,8 @@ wget -c https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
 /bin/bash Anaconda3-2020.02-Linux-x86_64.sh -bfp /usr/local
 
 #Conda configuration of channels from .condarc file
-conda config --file /.condarc --add channels defaults
-conda config --file /.condarc --add channels conda-forge
+conda config --file /root/.condarc --add channels defaults
+conda config --file /root/.condarc --add channels conda-forge
 conda update conda
 
 conda env create -f /app/environment.yml
@@ -59,27 +58,31 @@ echo "conda activate poselib" >> $SINGULARITY_ENVIRONMENT
 conda info -a
 conda list 
 conda init bash
+cat /root/.bashrc
+
+. /usr/local/etc/profile.d/conda.sh
+conda activate poselib
 
 # build poselib
 mkdir /app/_build
 mkdir /app/_install
-cd /app/_build
-cmake .. -DPYTHON_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=/app/_install
-cmake --build /app/_build/ --target pip-package
-cmake --build /app/_build/ --target install -j 8
-cmake --build /app/_build/ --target install-pip-package
+cd /app
+cmake -S . -B _build/ -DPYTHON_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=_install
+cmake --build _build/ --target install -j 8
+cmake --build _build/ --target pip-package
+cmake --build _build/ --target install-pip-package
 
 
 %environment
 export PYTHONPATH=/app
 
 %runscript
-. /home/ciirc/anaconda3/etc/profile.d/conda.sh
+. /usr/local/etc/profile.d/conda.sh
 conda activate poselib
 cd /app
 exec "$@"
 
 %startscript
-. /home/ciirc/anaconda3/etc/profile.d/conda.sh
+. /usr/local/etc/profile.d/conda.sh
 conda activate poselib
 cd /app

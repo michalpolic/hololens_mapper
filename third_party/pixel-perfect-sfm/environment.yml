@@ -1,0 +1,22 @@
+name: pixel-perfect-sfm
+channels:
+  - pytorch-nightly
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pytorch>=1.7
+  - torchvision>=0.8
+  - cudatoolkit=11.1
+  - pip  
+  - git
+  - pip:
+      - numpy
+      - tqdm>=4.36.0
+      - matplotlib
+      - plotly
+      - scipy
+      - h5py
+      - omegaconf
+      - packaging
+      - git+https://github.com/colmap/pycolmap

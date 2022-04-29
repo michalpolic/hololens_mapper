@@ -5,9 +5,9 @@ From: nvidia/cuda:11.3.1-devel-ubuntu18.04
 ./third_party/Hierarchical-Localization /app
 
 %post
+export DEBIAN_FRONTEND=noninteractive
 apt-get update && apt-get install -y \
 git \
-cmake \
 build-essential \
 libboost-program-options-dev \
 libboost-filesystem-dev \
@@ -37,6 +37,29 @@ libsuitesparse-dev
 rm -rf /var/lib/apt/lists/*
 apt-get clean
 
+
+# install last cmake
+apt-get update && \
+apt-get install -y software-properties-common lsb-release && \
+apt-get clean all
+wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6AF7F09730B3F0A4
+apt-get update
+apt-get -y install cmake
+cmake --version
+
+
+# update gcc
+add-apt-repository "ppa:ubuntu-toolchain-r/test"
+sudo apt-key adv --recv-key 1E9377A2BA9EF27F
+sudo apt-key adv --recv-key A4B469963BF863CC
+apt-get update && apt-get install -y \
+gcc-9 \
+g++-9 
+apt-get clean all
+
+
 # install ceres solver
 git clone https://github.com/ceres-solver/ceres-solver.git --tag 2.1.0
 cd 2.1.0
@@ -48,12 +71,13 @@ make install
 
 # install colmap
 cd /
-git clone https://github.com/colmap/colmap.git --tag 3.7
-cd colmap && \
-mkdir build && \
-cd build && \
-cmake .. && \
-make -j4 && \
+git clone https://github.com/colmap/colmap.git
+git checkout dev
+cd colmap
+mkdir build 
+cd build
+cmake ..
+make -j4
 make install
 
 
@@ -69,23 +93,24 @@ conda update conda
 conda env create -f /app/environment.yml
 echo ". /home/ciirc/anaconda3/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
 echo "conda activate hloc" >> $SINGULARITY_ENVIRONMENT
+conda init bash
+. /usr/local/etc/profile.d/conda.sh
+conda activate hloc
 
 # install python extension
+export PATH="$PATH:/usr/local/share/colmap"
 pip3 install git+https://github.com/mihaidusmanu/pycolmap
-cd /app
-PYTHONPATH=/app
 
 %environment
 export PYTHONPATH=/app
 
-
 %runscript
-. /home/ciirc/anaconda3/etc/profile.d/conda.sh
-conda activate hloc
+# . /usr/local/etc/profile.d/conda.sh
+# conda activate hloc
 cd /app
 exec "$@"
 
 %startscript
-. /home/ciirc/anaconda3/etc/profile.d/conda.sh
-conda activate hloc 
+# . /usr/local/etc/profile.d/conda.sh
+# conda activate hloc
 cd /app
