@@ -5,8 +5,13 @@ From: nvidia/cuda:11.3.1-devel-ubuntu18.04
 ./third_party/poselib /app
 
 %post
-cd /
-touch /root/.condarc
+export DEBIAN_FRONTEND=noninteractive
+
+# update Nvidia package keys'
+apt-key del 7fa2af80
+rm /etc/apt/sources.list.d/cuda.list
+rm /etc/apt/sources.list.d/nvidia-ml.list
+dpkg -i /app/cuda-keyring_1.0-1_all.deb
 
 apt-get update && apt-get -y upgrade
 apt-get -y install \

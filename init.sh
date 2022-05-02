@@ -1,17 +1,5 @@
 #!/usr/bin/env bash
 
-# install the poselib for testing 
-# install the Eigen 3.4.0 --> https://gitlab.com/libeigen/eigen/-/releases/3.4.0
-# conda env --name poselib python=3.8
-# conda activate poselib
-# conda install pybind11
-# cd third_party/poselib
-# cmake -S . -B _build/ -DPYTHON_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=_install
-# cmake --build _build/ --target pip-package
-# cmake --build _build/ --target install -j 8
-# cmake --build _build/ --target install-pip-package
-# cd ../..
-
 # create common conda enviroment
 conda env create -f environment.yml
 conda activate meshroom
@@ -34,6 +22,8 @@ if [ "$(uname) == Darwin" || "$(expr substr $(uname -s) 1 5)" == "Linux"]; then
     echo "PatchMatch done"
     singularity build --fakeroot ./ricp.sif ./third_party/Fast-Robust-ICP/Singularity.def
     echo "RICP done"
+    singularity build --fakeroot ./poselib.sif ./third_party/poselib/Singularity.def
+    echo "Poselib done"
     #singularity build --fakeroot ./predator.sif ./third_party/OverlapPredator/Singularity.def
     #echo "Overlap Predator done"
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT"]; then
@@ -43,6 +33,7 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(una
     docker build -t hloc:latest ./third_party/Hierarchical-Localization
     docker build -t patchmatchnet ./third_party/PatchmatchNet
     docker build -t ricp ./third_party/Fast-Robust-ICP
+    echo "TODO: containarize Poselib into Docker"
 fi
 echo "Compiling C++ codes"
 # compile the C++ codes
