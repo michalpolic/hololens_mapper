@@ -24,6 +24,8 @@ if [ "$(uname) == Darwin" || "$(expr substr $(uname -s) 1 5)" == "Linux"]; then
     echo "RICP done"
     singularity build --fakeroot ./poselib.sif ./third_party/poselib/Singularity.def
     echo "Poselib done"
+    singularity build --fakeroot ./pixel-perfect-sfm.sif ./third_party/pixel-perfect-sfm/Singularity.def 
+    echo "pixel-perfect-sfm done"
     #singularity build --fakeroot ./predator.sif ./third_party/OverlapPredator/Singularity.def
     #echo "Overlap Predator done"
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT"]; then
@@ -34,6 +36,7 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(una
     docker build -t patchmatchnet ./third_party/PatchmatchNet
     docker build -t ricp ./third_party/Fast-Robust-ICP
     echo "TODO: containarize Poselib into Docker"
+    echo "TODO: containarize pixel-perfect-sfm into Docker"
 fi
 echo "Compiling C++ codes"
 # compile the C++ codes

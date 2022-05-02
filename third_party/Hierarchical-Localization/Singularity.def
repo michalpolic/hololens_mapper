@@ -6,6 +6,7 @@ From: nvidia/cuda:11.3.1-devel-ubuntu20.04
 
 %post
 export DEBIAN_FRONTEND=noninteractive
+export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
 
 # update Nvidia package keys'
 apt-key del 7fa2af80
@@ -57,14 +58,6 @@ apt-get -y install cmake
 cmake --version
 
 
-# update gcc
-add-apt-repository "ppa:ubuntu-toolchain-r/test"
-apt-get update && apt-get install -y \
-gcc-9 \
-g++-9 
-apt-get clean all
-
-
 # install ceres solver
 git clone https://github.com/ceres-solver/ceres-solver.git --tag 2.1.0
 cd 2.1.0
@@ -96,11 +89,11 @@ conda config --file /.condarc --add channels conda-forge
 conda update conda
 
 conda env create -f /app/environment.yml
-echo ". /home/ciirc/anaconda3/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
-echo "conda activate hloc" >> $SINGULARITY_ENVIRONMENT
+echo ". /usr/local/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+echo "conda activate hloc2" >> $SINGULARITY_ENVIRONMENT
 conda init bash
 . /usr/local/etc/profile.d/conda.sh
-conda activate hloc
+conda activate hloc2
 
 # install python extension
 export PATH="$PATH:/usr/local/share/colmap"
@@ -108,14 +101,11 @@ pip3 install git+https://github.com/mihaidusmanu/pycolmap
 
 %environment
 export PYTHONPATH=/app
+export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
 
 %runscript
-# . /usr/local/etc/profile.d/conda.sh
-# conda activate hloc
 cd /app
 exec "$@"
 
 %startscript
-# . /usr/local/etc/profile.d/conda.sh
-# conda activate hloc
 cd /app

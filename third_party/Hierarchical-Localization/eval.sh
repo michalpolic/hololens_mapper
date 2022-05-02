@@ -1,3 +1,4 @@
 . /usr/local/etc/profile.d/conda.sh
-conda activate hloc
-python3 /app/run_hloc.py $1 $2 $3
+conda activate hloc2
+pip install pycolmap
+python /app/run_hloc.py $1 $2 $3

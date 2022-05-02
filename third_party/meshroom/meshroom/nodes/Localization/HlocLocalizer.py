@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from src.holo.HoloIO import HoloIO
 
-__version__ = "0.1"
+__version__ = '0.1'
 
 from meshroom.core import desc
 import shutil
@@ -32,25 +32,34 @@ Runs Hloc localization on input images.
 
     inputs = [
         desc.File(
-            name="queryFile",
-            label="Query file path",
-            description="Path to Hloc query file (.txt)",
-            value="",
+            name='queryFile',
+            label='Query file path',
+            description='Path to Hloc query file (.txt)',
+            value='',
             uid=[0],
         ),
         desc.File(
-            name="hlocMapDir",
-            label="Hloc Map directory",
-            description="Hloc map directory (database, images, features)",
-            value="",
+            name='hlocMapDir',
+            label='Hloc Map directory',
+            description='Hloc map directory (database, images, features)',
+            value='',
             uid=[0],
         ),
         desc.File(
-            name="localSfM",
-            label="SfM folder",
-            description="Path to folder with images and local SfM.",
-            value="",
+            name='localSfM',
+            label='SfM folder',
+            description='Path to folder with images and local SfM.',
+            value='',
             uid=[0],
+        ),
+        desc.BoolParam(
+            name='imagesRig',
+            label='Use rig of images',
+            description='''
+            Compute generalized absolute pose for the rig of cameras.
+            Require at the input camera poses of the query images.''',
+            value='True',
+            uid=[],
         ),
         desc.ChoiceParam(
             name='verboseLevel',
@@ -65,23 +74,23 @@ Runs Hloc localization on input images.
 
     outputs = [
         desc.File(
-            name="output",
-            label="Output folder",
-            description="",
+            name='output',
+            label='Output folder',
+            description='',
             value=desc.Node.internalFolder,
             uid=[],
         ),
         desc.File(
-            name="image_pairs",
-            label="Image Pairs",
-            description="",
+            name='image_pairs',
+            label='Image Pairs',
+            description='',
             value=os.path.join(desc.Node.internalFolder,'image_pairs.txt'),
             uid=[],
         ),
         desc.File(
-            name="localization",
-            label="Localization results",
-            description="",
+            name='localization',
+            label='Localization results',
+            description='',
             value=os.path.join(desc.Node.internalFolder,'query_localization_results.txt'),
             uid=[],
         ),
@@ -132,54 +141,56 @@ Runs Hloc localization on input images.
             chunk.logger.info('Init containers ...')
             if sys.platform == 'win32':
                 cache_dir = cache_dir[0].lower() + cache_dir[1::]
-                cache_dir_win = cache_dir.replace(":","")
-                hloc_container = UtilsContainers("docker", "hloc", "/host_mnt/" + cache_dir_win)
-                poselib_container = UtilsContainers("docker", "poselib", "/host_mnt/" + cache_dir_win)
+                cache_dir_win = cache_dir.replace(':','')
+                hloc_container = UtilsContainers('docker', 'hloc', '/host_mnt/' + cache_dir_win)
+                poselib_container = UtilsContainers('docker', 'poselib', '/host_mnt/' + cache_dir_win)
             else:
-                hloc_container = UtilsContainers("singularity", dir_path + "/hloc.sif", cache_dir)
-                poselib_container = UtilsContainers("singularity", dir_path + "/poselib.sif", cache_dir)
+                hloc_container = UtilsContainers('singularity', dir_path + '/hloc.sif', cache_dir)
+                poselib_container = UtilsContainers('singularity', dir_path + '/poselib.sif', cache_dir)
 
 
             chunk.logger.info('Running localization ...')   
-            hloc_container.command("sh eval.sh " + relative_map_folder + " " + relative_query_file + " " + relative_output_folder)
+            hloc_container.command('sh /app/eval.sh ' + relative_map_folder + ' ' + relative_query_file + ' ' + relative_output_folder)
             
-            chunk.logger.info('Running generalized absolute pose ...')   
-            poselib_container.command("sh eval.sh " + relative_corresp_path + " " + relative_query_poses_path)
 
-
-            chunk.logger.info('Copy employed images from map to working directory ...')  
-            colmap_io = ColmapIO()
-            db_cameras, db_images, db_points3D = colmap_io.load_model(output_folder)
-            self.copy_map_images(db_images, map_folder, output_folder)
-
-            chunk.logger.info('Copy employed images from local sfm to working directory ...')  
-            um = UtilsMath()
-            if chunk.node.localSfM.value:
-                holo_io = HoloIO()
-                holo_io.copy_sfm_images(chunk.node.localSfM.value, output_folder)
+            if chunk.node.imagesRig.value:
                 
-                chunk.logger.info('Updating the local sfm ...') 
-                hloc = Hloc()
-                q_cameras, q_images, q_points3D = colmap_io.load_model(chunk.node.localSfM.value)
-                # loc_images = hloc.get_imgs_from_localization_results(chunk.node.localization.value)   # localization of individual images
-                gap_file_path = os.path.join(output_folder,'generalized_absolute_pose.txt')
-                transform = hloc.read_generalized_absolute_pose_results(gap_file_path)
-                cameras, images, points3D = um.align_local_and_global_sfm(db_cameras, db_images, db_points3D, \
-                    q_cameras, q_images, q_points3D, transform)
-                colmap_io.write_model(output_folder, cameras, images, points3D)
+                chunk.logger.info('Running generalized absolute pose ...')   
+                poselib_container.command('sh /app/eval.sh ' + relative_corresp_path + ' ' + relative_query_poses_path)
 
-            chunk.logger.info('Extract and write down image pairs to match ...') 
-            _, db_view_graph = um.get_view_graph(db_images, db_points3D)
-            db_pairs = self.get_image_pairs_from_viewgraph(db_images, db_view_graph)
-            _, q_view_graph = um.get_view_graph(q_images, q_points3D)
-            q_pairs = self.get_image_pairs_from_viewgraph(q_images, q_view_graph)
-            with open(chunk.node.image_pairs.value, 'a') as image_pairs_file:
-                image_pairs_file.write("".join(db_pairs))
-                image_pairs_file.write("".join(q_pairs))
+                chunk.logger.info('Copy employed images from map to working directory ...')  
+                colmap_io = ColmapIO()
+                db_cameras, db_images, db_points3D = colmap_io.load_model(output_folder)
+                self.copy_map_images(db_images, map_folder, output_folder)
+
+                chunk.logger.info('Copy employed images from local sfm to working directory ...')  
+                um = UtilsMath()
+                if chunk.node.localSfM.value:
+                    holo_io = HoloIO()
+                    holo_io.copy_sfm_images(chunk.node.localSfM.value, output_folder)
+                    
+                    chunk.logger.info('Updating the local sfm ...') 
+                    hloc = Hloc()
+                    q_cameras, q_images, q_points3D = colmap_io.load_model(chunk.node.localSfM.value)
+                    # loc_images = hloc.get_imgs_from_localization_results(chunk.node.localization.value)   # localization of individual images
+                    gap_file_path = os.path.join(output_folder,'generalized_absolute_pose.txt')
+                    transform = hloc.read_generalized_absolute_pose_results(gap_file_path)
+                    cameras, images, points3D = um.align_local_and_global_sfm(db_cameras, db_images, db_points3D, \
+                        q_cameras, q_images, q_points3D, transform)
+                    colmap_io.write_model(output_folder, cameras, images, points3D)
+
+                chunk.logger.info('Extract and write down image pairs to match ...') 
+                _, db_view_graph = um.get_view_graph(db_images, db_points3D)
+                db_pairs = self.get_image_pairs_from_viewgraph(db_images, db_view_graph)
+                _, q_view_graph = um.get_view_graph(q_images, q_points3D)
+                q_pairs = self.get_image_pairs_from_viewgraph(q_images, q_view_graph)
+                with open(chunk.node.image_pairs.value, 'a') as image_pairs_file:
+                    image_pairs_file.write(''.join(db_pairs))
+                    image_pairs_file.write(''.join(q_pairs))
 
             chunk.logger.info('Localization done.') 
 
         except AssertionError as err:
-            chunk.logger.error("Error in hlocLocalizer selector: " + err)
+            chunk.logger.error('Error in hlocLocalizer selector: ' + err)
         finally:
             chunk.logManager.end()

@@ -137,7 +137,7 @@ Compose query file for Hloc on input images.
                 chunk.logger.warning('Nothing to process, at least one camera intrinsics input required')
                 return               
 
-            queryfolder = map_folder + 'query/'
+            queryfolder = os.path.dirname(chunk.node.output.value) + '/query/'
 
             
             # TODO Write code for more camera params! So far only one implemented

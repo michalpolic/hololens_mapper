@@ -1,4 +1,4 @@
-name: hloc
+name: hloc2
 channels:
   - pytorch-nightly
   - conda-forge

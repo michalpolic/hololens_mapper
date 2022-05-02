@@ -19,4 +19,3 @@ dependencies:
       - h5py
       - omegaconf
       - packaging
-      - git+https://github.com/colmap/pycolmap

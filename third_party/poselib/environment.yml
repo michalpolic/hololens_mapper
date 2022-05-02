@@ -1,4 +1,4 @@
-name: poselib
+name: poselib2
 channels:
   - conda-forge
   - defaults

@@ -2,10 +2,11 @@ Bootstrap: docker
 From: nvidia/cuda:11.3.1-devel-ubuntu20.04
 
 %files
-./third_party/poselib /app
+./third_party/pixel-perfect-sfm /app
 
 %post
 export DEBIAN_FRONTEND=noninteractive
+export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
 
 # update Nvidia package keys'
 apt-key del 7fa2af80
@@ -13,9 +14,24 @@ rm /etc/apt/sources.list.d/cuda.list
 rm /etc/apt/sources.list.d/nvidia-ml.list
 dpkg -i /app/cuda-keyring_1.0-1_all.deb
 
-apt-get update && apt-get -y upgrade
-apt-get -y install \
+apt-get update && apt-get install -y \
+git \
 build-essential \
+libboost-program-options-dev \
+libboost-filesystem-dev \
+libboost-graph-dev \
+libboost-system-dev \
+libboost-test-dev \
+libeigen3-dev \
+libsuitesparse-dev \
+libfreeimage-dev \
+libmetis-dev \
+libgoogle-glog-dev \
+libgflags-dev \
+libglew-dev \
+qtbase5-dev \
+libqt5opengl5-dev \
+libcgal-dev \
 wget \
 bzip2 \
 ca-certificates \
@@ -23,10 +39,12 @@ libglib2.0-0 \
 libxext6 \
 libsm6 \
 libxrender1 \
-git \
-ffmpeg
+ffmpeg \
+libatlas-base-dev \
+libsuitesparse-dev
 rm -rf /var/lib/apt/lists/*
 apt-get clean
+
 
 # install last cmake
 apt-get update && \
@@ -39,43 +57,51 @@ apt-get update
 apt-get -y install cmake
 cmake --version
 
-# install eigen 3.4.0
-git clone https://gitlab.com/libeigen/eigen.git
-cd eigen
-git checkout tags/3.4.0
+
+# install ceres solver
+git clone https://github.com/ceres-solver/ceres-solver.git --tag 2.1.0
+cd 2.1.0
 mkdir build
 cd build
-cmake ..
+cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF
+make -j
 make install
+
+# install colmap
+cd /
+git clone https://github.com/colmap/colmap.git
+cd colmap
+git checkout dev
+mkdir build 
+cd build
+cmake ..
+make -j4
+make install
+
 
 #Installing Anaconda 3 
 wget -c https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
 /bin/bash Anaconda3-2020.02-Linux-x86_64.sh -bfp /usr/local
 
 #Conda configuration of channels from .condarc file
-conda config --file /root/.condarc --add channels defaults
-conda config --file /root/.condarc --add channels conda-forge
+conda config --file /.condarc --add channels defaults
+conda config --file /.condarc --add channels conda-forge
 conda update conda
 
 conda env create -f /app/environment.yml
-echo ". /usr/local/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
-echo "conda activate poselib2" >> $SINGULARITY_ENVIRONMENT
+echo ". /home/ciirc/anaconda3/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+echo "conda activate pixel-perfect-sfm" >> $SINGULARITY_ENVIRONMENT
 conda init bash
 . /usr/local/etc/profile.d/conda.sh
-conda activate poselib2
+conda activate pixel-perfect-sfm
 
-# build poselib
-mkdir /app/_build
-mkdir /app/_install
-cd /app
-cmake -S . -B _build/ -DPYTHON_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=_install
-cmake --build _build/ --target install -j 8
-cmake --build _build/ --target pip-package
-cmake --build _build/ --target install-pip-package
-
+# install python extension
+export PATH="$PATH:/usr/local/share/colmap"
+pip3 install git+https://github.com/mihaidusmanu/pycolmap
 
 %environment
 export PYTHONPATH=/app
+export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
 
 %runscript
 cd /app
