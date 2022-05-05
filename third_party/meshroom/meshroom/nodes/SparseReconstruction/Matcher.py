@@ -112,7 +112,7 @@ This node compute matches between selected / all pairs of images.
             if not chunk.node.databaseFile:
                 chunk.logger.warning('Database file is missing.')
                 return
-            if not chunk.node.inputMatches:
+            if chunk.node.inputMatchesFormat.value == 'no data':
                 chunk.logger.warning('Tentative matches are missing. Running exhaustive matching.')
             if not chunk.node.output.value:
                 return
@@ -120,7 +120,7 @@ This node compute matches between selected / all pairs of images.
             chunk.logger.info('Start matching.')
             out_dir = chunk.node.output.value
             copy2(chunk.node.databaseFile.value, out_dir)
-            if chunk.node.inputMatches:
+            if chunk.node.inputMatchesFormat.value != "no data":
                 copy2(chunk.node.inputMatches.value, out_dir)
                 rel_path_tentative_matches = '/data/' + os.path.basename(chunk.node.inputMatches.value)
 

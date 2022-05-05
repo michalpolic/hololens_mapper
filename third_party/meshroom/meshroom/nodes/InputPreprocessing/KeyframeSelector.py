@@ -34,12 +34,21 @@ This node select subset of images (keyframes) and copy them to output path.
             value="",
             uid=[0],
         ),
+        desc.File(
+            name='imageFolderNames',
+            label='Image Folder Names',
+            description='''
+            A textfile containing the list of folder names, which have images.
+            If not supplied, the folder default hololens folder structure is assumed.''',
+            value='',
+            uid=[0],
+        ),
         desc.ChoiceParam(
             name='recordingSource',
             label='Recording source',
             description='The device/algorithm used to create recording folder.',
             value='HoloLens',
-            values=['HoloLens', 'HoloLens2', 'COLMAP', 'ORB SLAM', 'BAD SLAM','IOS AR', 'Android AR'],
+            values=['HoloLens', 'HoloLens2', 'COLMAP', 'ORB SLAM', 'BAD SLAM','IOS AR', 'Android AR', 'BROCA'],
             exclusive=True,
             uid=[0],
         ),
@@ -106,6 +115,19 @@ This node select subset of images (keyframes) and copy them to output path.
             chunk.node.output.value + "/vlc_rf", chunk.node.output.value + "/vlc_rr"]  
         return params
 
+    def get_params_for_broca_recording(self, chunk):
+        params = {}
+        with open(chunk.node.imageFolderNames.value, "r") as f:
+            img_folders = f.read().splitlines()
+        params['new_images_extensions'] = ["jpg"] * len(img_folders)
+        params['blur_thresholds'] = [chunk.node.pvBlurThreshold.value] * len(img_folders)
+        pv_offset = chunk.node.pvMinFrameOffset.value
+        # vlc_offset = chunk.node.vlcMinFrameOffset.value
+        params['min_frame_offsets'] = [pv_offset] * len(img_folders)
+        params['input_images_folders'] = [os.path.join(chunk.node.recordingDir.value, folder) for folder in img_folders]
+        params['output_images_folders'] = [os.path.join(chunk.node.output.value, folder) for folder in img_folders]
+        return params
+
 
     def get_params_for_hololens2_recording(self, chunk):
         params = {}
@@ -170,13 +192,20 @@ This node select subset of images (keyframes) and copy them to output path.
                 return
             if not chunk.node.output.value:
                 return
-
+            if (not chunk.node.imageFolderNames or chunk.node.imageFolderNames.value == '') and \
+                chunk.node.recordingSource.value == 'BROCA':
+                chunk.logger.warning('File specifying folder names missing. It has to be supplied when using BROCA.')
+                return
+                
             # setting
             if chunk.node.recordingSource.value == 'HoloLens':
                 params = self.get_params_for_hololens_recording(chunk)
 
             if chunk.node.recordingSource.value == 'HoloLens2':
                 params = self.get_params_for_hololens2_recording(chunk)
+
+            if chunk.node.recordingSource.value == 'BROCA':
+                params = self.get_params_for_broca_recording(chunk)
 
             if chunk.node.recordingSource.value in ['COLMAP', 'ORB SLAM', 'BAD SLAM','IOS AR', 'Android AR']:
                 chunk.logger.warning('This input is not supported yet.')

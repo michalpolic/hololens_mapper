@@ -38,10 +38,21 @@ This node creates HLOC map out of the images and COLMAP SfM.
             uid=[0],
         ),
         desc.File(
-            name="imagesFolder",
-            label="Images folder",
-            description="The directory containing input images used in SfM.",
-            value="",
+            name='imageDirectory',
+            label='Image Directory',
+            description='''
+            The directory containing input image folders.
+            Select a file specifying the subdirectories from with images are taken in "Image Folder Names".''',
+            value='',
+            uid=[0],
+        ),
+        desc.File(
+            name='imageFolderNames',
+            label='Image Folder Names',
+            description='''
+            A textfile containing the list of folder names, which have images.
+            If not supplied, the folder default hololens folder structure is assumed.''',
+            value='',
             uid=[0],
         ),
         desc.ChoiceParam(
@@ -72,16 +83,24 @@ This node creates HLOC map out of the images and COLMAP SfM.
             if not chunk.node.inputSfM:
                 chunk.logger.warning('Transformed SfM directory is missing.')
                 return
-            if not chunk.node.imagesFolder:
+            if not chunk.node.imageDirectory:
                 chunk.logger.warning('Transformed images directory is missing.')
                 return
+            if not chunk.node.imageFolderNames or chunk.node.imageFolderNames.value == '':
+                chunk.logger.warning('File specifying folder names missing, assuming default hololens folder structure.')
             if not chunk.node.output.value:
                 return
 
             # copy inputs into the working directory
             out_dir = chunk.node.output.value
             holo_io = HoloIO()
-            holo_io.copy_sfm_images(chunk.node.imagesFolder.value, out_dir)
+            # get folder names and copy image to out dir
+            if chunk.node.imageFolderNames and chunk.node.imageFolderNames.value != '':
+                with open(chunk.node.imageFolderNames.value, "r") as f:
+                    img_folders = f.read().splitlines()
+                holo_io.copy_sfm_images(chunk.node.imageDirectory.value, out_dir, imgs_dir_list=img_folders)
+            else:
+                holo_io.copy_sfm_images(chunk.node.imageDirectory.value, out_dir)
             copy2(chunk.node.inputSfM.value + '/cameras.txt', out_dir)
             copy2(chunk.node.inputSfM.value + '/images.txt', out_dir)
             copy2(chunk.node.inputSfM.value + '/points3D.txt', out_dir)

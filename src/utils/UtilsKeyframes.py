@@ -26,7 +26,7 @@ class UtilsKeyframes():
         return False
     
 
-    def keyframe_selector_simple(self, source_dir, blur_threshold, min_frame_offset, images_extension = ".jpg"):
+    def keyframe_selector_simple(self, source_dir, blur_threshold, min_frame_offset, images_extension = ".jpg", logger=None):
         """ Check which images are keyframes based on blur threshold and minimal frame offset
         Input: 
             source_dir - path to images folder
@@ -51,23 +51,28 @@ class UtilsKeyframes():
                 else:
                     blur_filer.append(True)
 
-        k = 0
-        set_zero = False
-        for i in range(len(filenames_jpg)):
-            k += 1
-            if not set_zero:
-                if blur_filer[i]:
-                    set_zero = True
-                    k = 0
-            else:    
-                if (k / min_frame_offset) < 1:
-                    blur_filer[i] = False
-                else:
-                    set_zero = False
+        if min_frame_offset > 1:
+            k = 0
+            set_zero = False
+            for i in range(len(filenames_jpg)):
+                k += 1
+                if not set_zero:
                     if blur_filer[i]:
                         set_zero = True
                         k = 0
-        return list(compress(filenames_jpg, blur_filer))
+                else:    
+                    if (k / min_frame_offset) < 1:
+                        blur_filer[i] = False
+                    else:
+                        set_zero = False
+                        if blur_filer[i]:
+                            set_zero = True
+                            k = 0
+
+        remaining_images = list(compress(filenames_jpg, blur_filer))
+        if logger:
+            logger.info(f'{len(remaining_images)} images selected out of {len(filenames_jpg)}')
+        return remaining_images
 
 
     def copy_keyframes(self, source_dirs, destination_dirs, blur_thresholds, min_frame_offsets, \
@@ -94,15 +99,17 @@ class UtilsKeyframes():
             Path(destination_dir).mkdir(parents=True, exist_ok=True)
             assert os.path.isdir(destination_dir), f"the destination dir does not exist"
 
+            logger.info(f'Selecting keyframes from {source_dir}')
             images_to_copy[i] = self.keyframe_selector_simple(source_dir, blur_threshold, \
-                min_frame_offset, images_extension)
-
+                min_frame_offset, images_extension, logger)
+            
+            logger.info(f'Copying {len(images_to_copy[i])} selected keyframes from {source_dir} to {destination_dir}.')
             try:
                 for image_path_src in images_to_copy[i]:
                     path_from = source_dir + '/' + image_path_src
                     path_to = destination_dir + '/' + image_path_src
                     if logger:
-                        logger.info(f'Copy: {path_from} --> {path_to}')
+                        logger.debug(f'Copy: {path_from} --> {path_to}')
 
                     shutil.copy(path_from, path_to) 
 
@@ -113,7 +120,7 @@ class UtilsKeyframes():
 
 
     def filter_pv_csv(self, images_to_copy, pv_csv):
-        """ Select the keyframes from a pv dictionary and cerate new pv with keyframes
+        """ Select the keyframes from a pv dictionary and create new pv with keyframes
         Input: 
             images_to_copy - keyframe names
             pv_csv - the dictionary with original pv records
