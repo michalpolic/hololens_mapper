@@ -4,21 +4,21 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
-            "Patchmatchnet": "0.1",
-            "HlocLocalizer": "0.1",
-            "ModelsAligner": "0.1",
-            "DensePointcloudFilter": "0.1",
-            "DensePonitcloudsAligner": "0.1",
-            "HoloLens1Downloader": "0.1",
-            "HlocMapCreator": "0.1",
-            "TentativeMatcher": "0.1",
-            "KeyframeSelector": "0.1",
-            "IOConvertor": "0.1",
-            "HoloLens2Downloader": "0.1",
-            "MatchingPairsSelector": "0.1",
-            "KeypointsDetector": "0.1",
-            "Matcher": "0.1",
             "Mapper": "0.1",
+            "Matcher": "0.1",
+            "HlocLocalizer": "0.1",
+            "HlocMapCreator": "0.1",
+            "IOConvertor": "0.1",
+            "Patchmatchnet": "0.1",
+            "ModelsAligner": "0.1",
+            "MatchingPairsSelector": "0.1",
+            "DensePonitcloudsConcatenator": "0.1",
+            "DensePointcloudFilter": "0.1",
+            "KeypointsDetector": "0.1",
+            "TentativeMatcher": "0.1",
+            "HoloLens2Downloader": "0.1",
+            "HoloLens1Downloader": "0.1",
+            "KeyframeSelector": "0.1",
             "PointcloudComposer": "0.1"
         }
     },
@@ -60,7 +60,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "863f1788e29c86d4c5a8c3c87046edb84636e147"
+                "0": "0764fdd890ab2b4f51b86a9ac224769234790638"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -143,7 +143,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "7b3ca410a7a1ae6d672ad0f6b1172ccb228097b7"
+                "0": "1b5c8ce5ffd9dfc4d5b73b0cb93986f509ff3d4b"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -183,8 +183,8 @@
         "KeyframeSelector_1": {
             "nodeType": "KeyframeSelector",
             "position": [
-                81,
-                -308
+                75,
+                -177
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -385,33 +385,6 @@
                 "output": "{cache}/{nodeType}/{uid0}//model.obj"
             }
         },
-        "KeypointsDetector_1": {
-            "nodeType": "KeypointsDetector",
-            "position": [
-                592,
-                -99
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "077ad895c44c91a9f9f3f988ac26e030b949a7e8"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "inputSfM": "{IOConvertor_1.output}",
-                "imagesFolder": "{IOConvertor_1.output}",
-                "database": "",
-                "algorithm": "SIFT",
-                "removeImages": true,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/database.db"
-            }
-        },
         "Matcher_1": {
             "nodeType": "Matcher",
             "position": [
@@ -424,7 +397,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "2eddaddd59c7a1786b0fcdc966b5ab3793826f89"
+                "0": "08dcad499d69b5c730c0da9f8e34a39285a69ad6"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -440,37 +413,11 @@
                 "databaseOutputFile": "{cache}/{nodeType}/{uid0}/database.db"
             }
         },
-        "ModelsAligner_1": {
-            "nodeType": "ModelsAligner",
-            "position": [
-                2207,
-                147
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "44ce0d25e4651bbffed68e853ed2c5adf3d49528"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "sfmTransform": "{ModelsAligner_2.output}",
-                "ptsTransform": "{DensePointcloudFilter_1.output}",
-                "sfmReference": "{HlocLocalizer_1.output}",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/",
-                "transforedPts": "{cache}/{nodeType}/{uid0}/model.obj"
-            }
-        },
         "Patchmatchnet_1": {
             "nodeType": "Patchmatchnet",
             "position": [
-                2021,
-                328
+                2999,
+                -14
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -478,11 +425,11 @@
                 "split": 1
             },
             "uids": {
-                "0": "1c7610c8c17ba021d378910beae2bc4ef6fce523"
+                "0": "758a475999fade0927a25569129ee676f939684c"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "colmapFolder": "{HlocLocalizer_1.output}",
+                "colmapFolder": "{Mapper_2.output}",
                 "verboseLevel": "info"
             },
             "outputs": {
@@ -490,11 +437,11 @@
                 "outputPLY": "{cache}/{nodeType}/{uid0}//fused.ply"
             }
         },
-        "HlocLocalizer_1": {
-            "nodeType": "HlocLocalizer",
+        "KeypointsDetector_1": {
+            "nodeType": "KeypointsDetector",
             "position": [
-                1801,
-                -146
+                592,
+                -99
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -502,25 +449,53 @@
                 "split": 1
             },
             "uids": {
-                "0": "cca29563304244a782063c4eb7fba74b3dfa1978"
+                "0": "eb76bd3353132b074ca39e98176962fcc76ee2c0"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "queryFile": "{IOConvertor_2.lQueryFile}",
-                "hlocMapDir": "{HlocMapCreator_1.output}",
-                "localSfM": "{ModelsAligner_2.output}",
+                "imagesFolder": "{IOConvertor_1.output}",
+                "database": "",
+                "algorithm": "SIFT",
+                "removeImages": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/database.db"
+            }
+        },
+        "ModelsAligner_1": {
+            "nodeType": "ModelsAligner",
+            "position": [
+                2992,
+                133
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "eae429531da8eac15de81db6d5eb00dd3e550df6"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "sfmTransform": "{ModelsAligner_2.sfmReference}",
+                "ptsTransform": "{DensePointcloudFilter_1.output}",
+                "sfmReference": "{Mapper_2.output}",
+                "alignerType": [
+                    "pointcloud"
+                ],
                 "verboseLevel": "info"
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/",
-                "image_pairs": "{cache}/{nodeType}/{uid0}/image_pairs.txt",
-                "localization": "{cache}/{nodeType}/{uid0}/query_localization_results.txt"
+                "transforedPts": "{cache}/{nodeType}/{uid0}/model.obj"
             }
         },
         "KeyframeSelector_2": {
             "nodeType": "KeyframeSelector",
             "position": [
-                62,
+                66,
                 20
             ],
             "parallelization": {
@@ -572,8 +547,8 @@
         "IOConvertor_2": {
             "nodeType": "IOConvertor",
             "position": [
-                1623,
-                99
+                1621,
+                67
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -581,7 +556,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "38e41ed88de3ae1a5127b2e400c69119d5a783b9"
+                "0": "14abc5115f24c698564b8d3c81b53ec19c45813d"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -608,8 +583,8 @@
         "Mapper_2": {
             "nodeType": "Mapper",
             "position": [
-                2601,
-                -29
+                2685,
+                -81
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -617,7 +592,7 @@
                 "split": 1
             },
             "uids": {
-                "0": "b0424e36393b7e5887cf41a318ae11d5a2c83994"
+                "0": "784c825a618cd7ab40dee109b29fe927f3e70ca1"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
@@ -630,38 +605,11 @@
                 "output": "{cache}/{nodeType}/{uid0}/"
             }
         },
-        "KeypointsDetector_2": {
-            "nodeType": "KeypointsDetector",
-            "position": [
-                2099,
-                -89
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "5ff79d09714442ed92c09edabc0fc8678cce9639"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "inputSfM": "{HlocLocalizer_1.output}",
-                "imagesFolder": "{HlocLocalizer_1.output}",
-                "database": "{Matcher_1.databaseOutputFile}",
-                "algorithm": "{KeypointsDetector_1.algorithm}",
-                "removeImages": true,
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/database.db"
-            }
-        },
         "Matcher_2": {
             "nodeType": "Matcher",
             "position": [
-                2405,
-                -35
+                2500,
+                -138
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -669,13 +617,13 @@
                 "split": 1
             },
             "uids": {
-                "0": "17dc9bd5b44534f474d6a163025fe78ffb967036"
+                "0": "fa9b4e93648ee2952a3a1caf71f4e123ddee09ca"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "databaseFile": "",
-                "inputMatchesFormat": "image pairs",
-                "inputMatches": "",
+                "databaseFile": "{TentativeMatcher_2.databaseOutputFile}",
+                "inputMatchesFormat": "image pairs + tentative matches",
+                "inputMatches": "{TentativeMatcher_2.tentativeMatches}",
                 "algorithm": "COLMAP",
                 "matchingTreshold": 2,
                 "verboseLevel": "info"
@@ -685,37 +633,11 @@
                 "databaseOutputFile": "{cache}/{nodeType}/{uid0}/database.db"
             }
         },
-        "ModelsAligner_2": {
-            "nodeType": "ModelsAligner",
-            "position": [
-                1349,
-                116
-            ],
-            "parallelization": {
-                "blockSize": 0,
-                "size": 1,
-                "split": 1
-            },
-            "uids": {
-                "0": "a13f2860d2b73470397086799cbdbc0759cb70a7"
-            },
-            "internalFolder": "{cache}/{nodeType}/{uid0}/",
-            "inputs": {
-                "sfmTransform": "{Mapper_1.output}",
-                "ptsTransform": "",
-                "sfmReference": "{IOConvertor_1.output}",
-                "verboseLevel": "info"
-            },
-            "outputs": {
-                "output": "{cache}/{nodeType}/{uid0}/",
-                "transforedPts": "{cache}/{nodeType}/{uid0}/model.obj"
-            }
-        },
         "TentativeMatcher_2": {
             "nodeType": "TentativeMatcher",
             "position": [
-                2271,
-                -231
+                2300,
+                -226
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -723,11 +645,11 @@
                 "split": 1
             },
             "uids": {
-                "0": "065bb06a66a145b5e6983ab85d67b15554cb5e11"
+                "0": "6671bac94092642ebb06e28f3ca20859b920f532"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "sfmfolder": "{KeypointsDetector_2.inputSfM}",
+                "sfmfolder": "{HlocLocalizer_1.output}",
                 "databaseFile": "{KeypointsDetector_2.output}",
                 "imagesFolder": "{HlocLocalizer_1.output}",
                 "imagePairs": "{HlocLocalizer_1.image_pairs}",
@@ -742,11 +664,66 @@
                 "tentativeMatches": "{cache}/{nodeType}/{uid0}/tentative_matches.txt"
             }
         },
+        "KeypointsDetector_2": {
+            "nodeType": "KeypointsDetector",
+            "position": [
+                2052,
+                -92
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "371ae6b08f2ef2ae0cc762a72d17a9bbbc8faad2"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "imagesFolder": "{HlocLocalizer_1.output}",
+                "database": "",
+                "algorithm": "{KeypointsDetector_1.algorithm}",
+                "removeImages": true,
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/database.db"
+            }
+        },
+        "ModelsAligner_2": {
+            "nodeType": "ModelsAligner",
+            "position": [
+                1349,
+                116
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 1,
+                "split": 1
+            },
+            "uids": {
+                "0": "27c603a8efad59b075dfec1a98bce5877e5efcc2"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "sfmTransform": "{Mapper_1.output}",
+                "ptsTransform": "",
+                "sfmReference": "{IOConvertor_1.output}",
+                "alignerType": [
+                    "sfm"
+                ],
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "transforedPts": "{cache}/{nodeType}/{uid0}/model.obj"
+            }
+        },
         "IOConvertor_3": {
             "nodeType": "IOConvertor",
             "position": [
-                267,
-                -284
+                264,
+                -287
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -869,11 +846,11 @@
                 "lQueryFile": "{cache}/{nodeType}/{uid0}/hloc_queries.txt"
             }
         },
-        "ModelsAligner_3": {
-            "nodeType": "ModelsAligner",
+        "HlocLocalizer_1": {
+            "nodeType": "HlocLocalizer",
             "position": [
-                2207,
-                276
+                1801,
+                -146
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -881,25 +858,27 @@
                 "split": 1
             },
             "uids": {
-                "0": "14097dffda5a3e0dcc4f7597a2ee523904f78fcb"
+                "0": "9f0fb5b70ca55322d0ce78069dd52de564a17345"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "sfmTransform": "{ModelsAligner_2.output}",
-                "ptsTransform": "{Patchmatchnet_1.outputPLY}",
-                "sfmReference": "{HlocLocalizer_1.output}",
+                "queryFile": "{IOConvertor_2.lQueryFile}",
+                "hlocMapDir": "{HlocMapCreator_1.output}",
+                "localSfM": "{ModelsAligner_2.output}",
+                "imagesRig": "True",
                 "verboseLevel": "info"
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}/",
-                "transforedPts": "{cache}/{nodeType}/{uid0}/model.obj"
+                "image_pairs": "{cache}/{nodeType}/{uid0}/image_pairs.txt",
+                "localization": "{cache}/{nodeType}/{uid0}/query_localization_results.txt"
             }
         },
-        "DensePonitcloudsAligner_1": {
-            "nodeType": "DensePonitcloudsAligner",
+        "DensePonitcloudsConcatenator_1": {
+            "nodeType": "DensePonitcloudsConcatenator",
             "position": [
-                2476,
-                249
+                3210,
+                67
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -907,19 +886,88 @@
                 "split": 1
             },
             "uids": {
-                "0": "3bff24ab82c517cc6d98bb943ab930221a4e4d70"
+                "0": "2538b500b723b7d092dd80bd77b79122db10d179"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
-                "pointclouds": [],
-                "alignmentMehod": "RICP",
-                "alignmentStrategy": "Sequential alignment",
-                "verboseLevel": "info",
-                "configFile": "",
-                "sampling": 1000
+                "pointcloud1": "{Patchmatchnet_1.outputPLY}",
+                "pointcloud2": "{ModelsAligner_1.transforedPts}",
+                "verboseLevel": "info"
             },
             "outputs": {
                 "output": "{cache}/{nodeType}/{uid0}//model.obj"
+            }
+        },
+        "IOConvertor_4": {
+            "nodeType": "IOConvertor",
+            "position": [
+                3414,
+                -31
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 0,
+                "split": 1
+            },
+            "uids": {
+                "0": "7311f56048f07f2439e0cebd23d4bb94085a2184"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputFolder": "{Patchmatchnet_1.colmapFolder}",
+                "pointcloudFile": "{DensePonitcloudsConcatenator_1.output}",
+                "hashScale": 100,
+                "allPoints": false,
+                "intrinsics": [],
+                "inputSfMFormat": "COLMAP",
+                "outputSfMFormat": [
+                    "OBJ"
+                ],
+                "copyImagesToOutput": false,
+                "convertImgsToJpeg": false,
+                "imagesPath": "original",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json",
+                "lQueryFile": "{cache}/{nodeType}/{uid0}/hloc_queries.txt"
+            }
+        },
+        "IOConvertor_5": {
+            "nodeType": "IOConvertor",
+            "position": [
+                444,
+                -449
+            ],
+            "parallelization": {
+                "blockSize": 0,
+                "size": 0,
+                "split": 1
+            },
+            "uids": {
+                "0": "8f68ba9a3fac30bd5593712c0ad1a935742f68c1"
+            },
+            "internalFolder": "{cache}/{nodeType}/{uid0}/",
+            "inputs": {
+                "inputFolder": "{IOConvertor_3.output}",
+                "pointcloudFile": "{PointcloudComposer_2.output}",
+                "hashScale": 1,
+                "allPoints": false,
+                "intrinsics": [],
+                "inputSfMFormat": "COLMAP",
+                "outputSfMFormat": [
+                    "OBJ"
+                ],
+                "copyImagesToOutput": false,
+                "convertImgsToJpeg": false,
+                "imagesPath": "original",
+                "verboseLevel": "info"
+            },
+            "outputs": {
+                "output": "{cache}/{nodeType}/{uid0}/",
+                "outputMeshroomSfM": "{cache}/{nodeType}/{uid0}/meshroom_sfm.json",
+                "lQueryFile": "{cache}/{nodeType}/{uid0}/hloc_queries.txt"
             }
         }
     }

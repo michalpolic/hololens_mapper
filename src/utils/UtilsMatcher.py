@@ -233,12 +233,15 @@ class UtilsMatcher:
         cursor = con.cursor()
         cursor.execute("SELECT pair_id FROM matches")
         row = cursor.fetchall()
+        image_ids = list(images.keys())
         for i in range(len(row)):
             pair_id = row[i][0]
+            # if pair_id == 302795194379:
+            #     a = 1
             img1_id, img2_id = self.pair_id_to_image_ids(pair_id)
             matches = self._matcher.load_matches_for_pair_of_images(database_path, img1_id, img2_id)
             
-            if matches.any():
+            if matches.any() and img1_id in image_ids and img2_id in image_ids:
                 img1 = images[img1_id]
                 img2 = images[img2_id]
                 inls, E, F = self.holo_verificator2(matches[:, 0:2], matches[:, 2:4], \

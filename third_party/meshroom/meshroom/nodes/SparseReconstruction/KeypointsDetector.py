@@ -29,16 +29,6 @@ The database is in the COLMAP format.
 
     inputs = [
         desc.File(
-            name='inputSfM',
-            label='Input SfM',
-            description='''
-            The directory containing rough input SfM in COLMAP format. 
-            The camera models are in cameras.txt, poses are in images.txt 
-            and points in points3D.txt.''',
-            value='',
-            uid=[0],
-        ),
-        desc.File(
             name='imagesFolder',
             label='Directory with images',
             description='''
@@ -97,9 +87,6 @@ The database is in the COLMAP format.
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             
-            if not chunk.node.inputSfM:
-                chunk.logger.warning('COLMAP SfM directory is missing.')
-                return
             if not chunk.node.imagesFolder:
                 chunk.logger.warning('Folder with images is missing.')
                 return

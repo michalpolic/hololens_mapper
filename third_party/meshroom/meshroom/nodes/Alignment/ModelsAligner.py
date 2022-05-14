@@ -49,6 +49,15 @@ This node COLMAP mapper on database which contains matches.
             uid=[0],
         ),
         desc.ChoiceParam(
+            name='alignerType',
+            label='Transform data',
+            description='''Select what data should be transformed.''',
+            value=['sfm'],
+            values=['pointcloud', 'sfm'],
+            exclusive=False,
+            uid=[0],
+        ),
+        desc.ChoiceParam(
             name='verboseLevel',
             label='Verbose Level',
             description='''verbosity level (critical, error, warning, info, debug).''',
@@ -56,7 +65,7 @@ This node COLMAP mapper on database which contains matches.
             values=['critical', 'error', 'warning', 'info', 'debug'],
             exclusive=True,
             uid=[],
-            ),
+        ),
         ]
 
     outputs = [
@@ -89,41 +98,44 @@ This node COLMAP mapper on database which contains matches.
             if not chunk.node.output.value:
                 return
 
-            # copy required resources
             holo_io = HoloIO()
-            holo_io.copy_sfm_images(chunk.node.sfmTransform.value, chunk.node.output.value)
-            
-            # load models
+            meshroom_io = MeshroomIO()
+            utils_math = UtilsMath()
             colmap_io = ColmapIO()
+            
+            chunk.logger.info('Load sfm models.')
+            holo_io.copy_sfm_images(chunk.node.sfmTransform.value, chunk.node.output.value)
             cameras, images, points3D = colmap_io.load_model(chunk.node.sfmTransform.value)
             _, ref_images, _ = colmap_io.load_model(chunk.node.sfmReference.value)
 
-            # load dense pointcloud if available
-            meshroom_io = MeshroomIO()
+            
             if chunk.node.ptsTransform.value:
+                chunk.logger.info('Load dense pointcloud.')
                 xyz, rgb = meshroom_io.load_vertices(chunk.node.ptsTransform.value) 
 
-            # align the models using camera poses
-            utils_math = UtilsMath()
+
+            chunk.logger.info('Find the transformation.')
             transformation = utils_math.estimate_colmap_to_colmap_transformation(ref_images, images)
-            transformed_images = utils_math.transform_colmap_images(images, transformation)
-            transformed_points3D = utils_math.transform_colmap_points(points3D, transformation)
 
-            # transform pointcloud if available
-            if chunk.node.ptsTransform.value:
+
+            if 'sfm' in chunk.node.alignerType.value: 
+                chunk.logger.info('Align the models using camera poses.')
+                transformed_images = utils_math.transform_colmap_images(images, transformation)
+                transformed_points3D = utils_math.transform_colmap_points(points3D, transformation)
+
+                chunk.logger.info('Simplify the reconstruction for Patchmatch.')
+                cameras, transformed_images = utils_math.update_camera_ids(cameras, transformed_images)
+                
+                chunk.logger.info('Save transformed model.')
+                colmap_io.write_model(chunk.node.output.value, cameras, transformed_images, transformed_points3D)
+
+
+            if 'pointcloud' in chunk.node.alignerType.value and chunk.node.ptsTransform.value:
+                chunk.logger.info('Transform the pointcloud.')
                 transformed_xyz = utils_math.transform_pointcloud(xyz, transformation)
-
-            # simplify the reconstruction for Patchmatch
-            cameras, transformed_images = utils_math.update_camera_ids(cameras, transformed_images)
-
-            # save transformed model
-            colmap_io.write_model(chunk.node.output.value, cameras, transformed_images, transformed_points3D)
-
-            if chunk.node.ptsTransform.value:
                 chunk.logger.info('Saving transformed pointcloud.')
                 holo_io.write_pointcloud_to_file(transformed_xyz, chunk.node.transforedPts.value, rgb = rgb)
-
-
+            
             chunk.logger.info('Aligner done.')
           
         except AssertionError as err:

@@ -7,6 +7,7 @@ import shutil
 import glob
 import os
 import sys
+import numpy as np
 
 # import mapper packages
 dir_path = __file__
@@ -113,7 +114,7 @@ This node select subset of images (keyframes) and copy them to output path.
         pv_files = [f for f in os.listdir(recordingDir) if len(f)>7 and f[-7:]=='_pv.txt']
         assert len(pv_files) > 0, 'Failed to find the tracking info for PV camera in recording dir.'
         params['tracking_files'] = ["/" + pv_files[0], "/VLC LF_rig2world.txt", "/VLC LL_rig2world.txt", 
-            "/VLC RF_rig2world.txt", "/VLC RR_extrinsics.txt", "/VLC RR_rig2world.txt"]
+            "/VLC RF_rig2world.txt", "/VLC RR_rig2world.txt"]
         params['skip_n_lines'] = [1, 0, 0, 0, 0]
         params['orig_images_extensions'] = ["png", "pgm", "pgm", "pgm", "pgm"]
         params['new_images_extensions'] = ["png", "pgm", "pgm", "pgm", "pgm"]
@@ -139,19 +140,23 @@ This node select subset of images (keyframes) and copy them to output path.
                 params['orig_images_extensions'][i], params['new_images_extensions'][i])
             holo_io.write_csv(new_csv_data, chunk.node.output.value + params['tracking_files'][i])
 
-    def compose_new_hololens2_tracking_files(self, chunk, keyframe_selector, keyframe_names, params):
-        # TODO: filter out the images (from tracking files) which were not selected by keyframe selector
+    def compose_new_hololens2_tracking_files(self, chunk, keyframe_selector, \
+        keyframe_names, params, max_time_diff = 100):
         holo_io2 = HoloIO2()
-        for i in range(len(params['tracking_files'])-1):
+        for i in range(len(params['tracking_files'])):
             csv_data, skipped = holo_io2.read_csv(
                 chunk.node.recordingDir.value + params['tracking_files'][i], 
                 params['skip_n_lines'][i])
             keyframes = keyframe_names[i]
             keyframes_ext = params['orig_images_extensions'][i]
             new_csv_data = {}
-            for img_id in csv_data:
-                if img_id + '.' + keyframes_ext in keyframes:
-                    new_csv_data[img_id] = csv_data[img_id]
+            csv_time = np.array(list(map(int,csv_data.keys())))
+            for keyframe in keyframes:
+                keyframe_time = int(keyframe[:-(len(keyframes_ext)+1)])
+                csv_id = np.argmin(np.abs(csv_time - keyframe_time))
+                if np.abs(csv_time[csv_id] - keyframe_time) < max_time_diff:
+                    csv_line = csv_data[str(csv_time[csv_id])]
+                    new_csv_data[str(keyframe_time)] = csv_line.replace(str(csv_time[csv_id]), str(keyframe_time))
             holo_io2.write_csv(skipped, new_csv_data, chunk.node.output.value + params['tracking_files'][i])
 
     def copy_extrinsic_files(self, chunk):

@@ -127,10 +127,10 @@ This node compute tentative matches between selected / all pairs of images.
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             
-            if not chunk.node.sfmfolder:
+            if not chunk.node.sfmfolder.value:
                 chunk.logger.warning('SfM directory is missing.')
                 return
-            if not chunk.node.databaseFile:
+            if not chunk.node.databaseFile.value:
                 chunk.logger.warning('Database file is missing.')
                 return
             if not chunk.node.imagePairs.value:
