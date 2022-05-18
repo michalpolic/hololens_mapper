@@ -1,14 +1,19 @@
 name: hloc2
 channels:
+  - pytorch
+  - anaconda
+  - defaults
   - pytorch-nightly
   - conda-forge
-  - defaults
 dependencies:
+  - mkl=2020
   - python=3.8
-  - pytorch 
-  - torchvision 
-  - cudatoolkit=11.1
+  - pytorch=1.11
+  - torchvision
+  - torchaudio
+  - cudatoolkit=11.3
   - pip  
+  - git
   - pip:
       - opencv-python
       - numpy

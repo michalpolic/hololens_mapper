@@ -6,7 +6,7 @@ From: nvidia/cuda:11.3.1-devel-ubuntu20.04
 
 %post
 export DEBIAN_FRONTEND=noninteractive
-export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
+# export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
 
 # update Nvidia package keys'
 apt-key del 7fa2af80
@@ -100,7 +100,6 @@ pip3 install git+https://github.com/mihaidusmanu/pycolmap
 
 %environment
 export PYTHONPATH=/app
-export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
 
 %runscript
 cd /app
