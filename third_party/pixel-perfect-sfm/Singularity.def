@@ -6,12 +6,10 @@ From: nvidia/cuda:11.3.0-devel-ubuntu20.04
 
 %post
 export DEBIAN_FRONTEND=noninteractive
-export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
 
 # update Nvidia package keys'
 apt-key del 7fa2af80
 rm /etc/apt/sources.list.d/cuda.list
-# rm /etc/apt/sources.list.d/nvidia-ml.list
 dpkg -i /app/cuda-keyring_1.0-1_all.deb
 
 apt-get update && apt-get install -y libhdf5-dev
@@ -102,9 +100,12 @@ conda activate pixel-perfect-sfm2
 export PATH="$PATH:/usr/local/share/colmap"
 pip3 install git+https://github.com/mihaidusmanu/pycolmap
 
+# install pixsfm in develop mode
+cd /app
+pip install -e .
+
 %environment
 export PYTHONPATH=/app
-export CMAKE_DISABLE_FIND_PACKAGE_MKL=TRUE
 
 %runscript
 cd /app
