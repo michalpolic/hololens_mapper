@@ -118,7 +118,7 @@ different format.
             label='Output format',
             description='The output data format, e.g., COLMAP or Meshroom.',
             value=['COLMAP'],
-            values=['COLMAP', 'Meshroom','OBJ','LQuery'], 
+            values=['COLMAP', 'Meshroom','OBJ','OBJ_grid_hash','OBJ_grid_mean','DepthMaps','LQuery'], 
             exclusive=False,
             uid=[0],
         ),
@@ -188,6 +188,13 @@ different format.
             group='',
             advanced=True
         ),
+        desc.File(
+            name='densePts',
+            label='Dense point cloud',
+            description='',
+            value=os.path.join(desc.Node.internalFolder,'model.obj'),
+            uid=[],
+        )
     ]
 
 
@@ -210,6 +217,18 @@ different format.
             utils_math = UtilsMath()
             hloc = Hloc()
 
+            # setting
+            save_grid_pts = False
+            save_grid_mean_pts = False
+            save_depthmaps = False
+            if 'OBJ_grid_hash' in chunk.node.outputSfMFormat.value: 
+                save_grid_pts = True
+            if 'OBJ_grid_mean' in chunk.node.outputSfMFormat.value:
+                save_grid_mean_pts = True    
+            if 'DepthMaps' in chunk.node.outputSfMFormat.value: 
+                save_depthmaps = True    
+                
+
             # inputs 
             if chunk.node.inputSfMFormat.value == 'HoloLens':
                 chunk.logger.info('Loading intrinsics.')
@@ -222,7 +241,6 @@ different format.
                 intrinsics = chunk.node.intrinsics.getPrimitiveValue(exportDefault=True)
                 chunk.logger.info('Loading HoloLens tracking.')
                 cameras, images, points3D = holo_io2.load_model(chunk.node.inputFolder.value, intrinsics)
-
 
             if chunk.node.inputSfMFormat.value == 'Meshroom':
                 assert False, 'TODO: Meshroom input format.'
@@ -238,7 +256,9 @@ different format.
                 
                 chunk.logger.info('Estimate visibility.')
                 visibility_map, new_xyz = utils_math.estimate_visibility(cameras, images, xyz, \
-                    xyz_hash_scale = chunk.node.hashScale.value, all_points = chunk.node.allPoints.value)
+                    xyz_hash_scale = chunk.node.hashScale.value, all_points = chunk.node.allPoints.value, \
+                    save_grid_pts = save_grid_pts, save_grid_mean_pts = save_grid_mean_pts, \
+                    save_depthmaps = save_depthmaps, out_path=chunk.node.output.value)
 
                 chunk.logger.info('Update points in 3D and their observations.')
                 images, points3D = colmap.compose_images_and_points3D_from_visibilty(images, visibility_map, new_xyz)
