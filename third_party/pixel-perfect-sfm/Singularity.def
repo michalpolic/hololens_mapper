@@ -41,7 +41,8 @@ libsm6 \
 libxrender1 \
 ffmpeg \
 libatlas-base-dev \
-libsuitesparse-dev
+libsuitesparse-dev \ 
+libmkl-gnu-thread
 rm -rf /var/lib/apt/lists/*
 apt-get clean
 
