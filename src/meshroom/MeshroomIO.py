@@ -2,6 +2,7 @@ import os
 import sys
 import numpy as np
 from plyfile import PlyData, PlyElement
+import trimesh
 
 try:
     import ujson as json
@@ -253,9 +254,8 @@ class MeshroomIO:
         str_structure = MeshroomCpp.encode_structure(np.shape(xyz)[1], \
             int(np.shape(visibility_map)[0] / 4), xyz2, rgb2, visibility_map)
         str_dict = json.dumps(sfm_dict)
-        outfile = open(out_path, 'w')
-        outfile.write(str_dict[0:-3] + str_structure + "}")
-        outfile.close()
+        with open(out_path, 'w')as outfile:
+            outfile.write(str_dict[0:-3] + str_structure + "}")
 
         # visibility_map = np.array(visibility_map)
         # sfm_dict = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
@@ -275,8 +275,8 @@ class MeshroomIO:
 
     def load_obj_vertices(self, obj_file_path):
         print("Load OBJ vertices: " + obj_file_path)
-        f = open(obj_file_path, 'r')
-        lines = f.readlines()
+        with open(obj_file_path, 'r') as f:
+            lines = f.readlines()
         count = 0
         for line in lines:
             if line.startswith('v'):  
@@ -308,7 +308,6 @@ class MeshroomIO:
             if line.startswith('f'):
                 break
 
-        f.close()
         
         # adjust the rbg data type according source values
         if np.max(rgb) > 1:
@@ -336,8 +335,15 @@ class MeshroomIO:
 
     def load_ply_vertices_txt(self, ply_file_path):
         print("Load PLY vertices: " + ply_file_path)
-        f = open(ply_file_path, 'r')
-        lines = f.readlines()
+        try:
+            with open(ply_file_path, 'r') as f:
+                lines = f.readlines()
+        except UnicodeDecodeError:  # binary_little_endian format
+            trimesh_pcd = trimesh.load(ply_file_path)
+            xyz = np.array(trimesh_pcd.vertices.T)
+            rgb = np.array(trimesh_pcd.colors[:, :3].T)
+            return (xyz, rgb)
+
         count = 0
         for line in lines:
             count += 1

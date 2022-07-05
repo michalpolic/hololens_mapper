@@ -342,7 +342,7 @@ class HoloIO:
             points3D - the Colmap structure with points in 3D
         """
         cameras_dict = self.read_hololens_csv(csv_file_paths)
-        cameras = self.get_hololens_camera()
+        cameras = [self.get_hololens_camera()]
         images = self.get_hololens_images(cameras_dict)
         points3D = self.get_hololens_points3D()
         

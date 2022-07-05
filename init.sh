@@ -38,16 +38,27 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(una
     echo "TODO: containarize Poselib into Docker"
     echo "TODO: containarize pixel-perfect-sfm into Docker"
 fi
-echo "Compiling C++ codes"
+
+# create common conda enviroment
+conda env create -f environment.yml
+conda activate meshroom
+
 # compile the C++ codes
 mkdir ./src/utils/srcRenderDepth/build
 cd ./src/utils/srcRenderDepth/build
 cmake ..
+cmake -D Python_EXECUTABLE=$(which python) -D pybind11_DIR="$(conda info --json | jq -r '.active_prefix')/share/cmake/pybind11" ..
 cmake --build . --config Release --target install
 echo "RenderDepth done"
+
 cd ../../../..
 mkdir ./src/meshroom/MeshroomCpp/build
 cd ./src/meshroom/MeshroomCpp/build
 cmake ..
 cmake --build . --config Release --target install
+mkdir ./src/meshroom/MeshroomCpp/build
+cd ./src/meshroom/MeshroomCpp/build
+cmake -D Python_EXECUTABLE=$(which python) -D pybind11_DIR="$(conda info --json | jq -r '.active_prefix')/share/cmake/pybind11" ..
+cmake --build . --config Release --target install
 echo "Meshroom done"
+

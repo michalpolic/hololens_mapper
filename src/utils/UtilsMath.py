@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from src.holo.HoloIO import HoloIO
 
-sys.path.append(os.path.dirname(__file__) )
+sys.path.append(os.path.dirname(__file__))
 import renderDepth
 
 
@@ -22,12 +22,51 @@ class UtilsMath:
     def q2r(self, q):
         q = q / linalg.norm(np.matrix(q))
         return np.matrix([
-            [q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3], 2 * (q[1] * q[2] - q[0] * q[3]),
-             2 * (q[1] * q[3] + q[0] * q[2])],
-            [2 * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] - q[1] * q[1] + q[2] * q[2] - q[3] * q[3],
-             2 * (q[2] * q[3] - q[0] * q[1])],
-            [2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]),
-             q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]]])
+            [
+                q[0] ** 2 + q[1] ** 2 - q[2] ** 2 - q[3] ** 2,
+                2 * (q[1] * q[2] - q[0] * q[3]),
+                2 * (q[1] * q[3] + q[0] * q[2])
+            ],
+            [
+                2 * (q[1] * q[2] + q[0] * q[3]),
+                q[0] ** 2 - q[1] ** 2 + q[2] ** 2 - q[3] ** 2,
+                2 * (q[2] * q[3] - q[0] * q[1])
+            ],
+            [
+                2 * (q[1] * q[3] - q[0] * q[2]),
+                2 * (q[2] * q[3] + q[0] * q[1]),
+                q[0] ** 2 - q[1] ** 2 - q[2] ** 2 + q[3] ** 2
+            ]
+        ])
+
+
+    def a2h(self, pts):
+        """Affine to homogeneous coordinates, (3, N) -> (4, N) shape."""
+        return np.vstack((pts, np.ones((1, pts.shape[1]))))
+
+    def h2a(self, pts):
+        """Homogeneous to affine coordinates, (4, N) -> (3, N) shape."""
+        return (pts / pts[3,:])[:3,:]
+
+
+    def clip_view_frustrum(self, xyz, rgb, affine_transform):
+        """Clip points and colors to view frustrum (without znear and zfar clipping)."""
+        pairs = np.array([[0, 1, 2, 3], [1, 2, 3, 0]])
+        pts_cam = np.array([[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]).T
+        pts_world = self.h2a(affine_transform @ self.a2h(pts_cam))
+        R = affine_transform[:3, :3].T
+        t = affine_transform[:3, -1:]
+
+        Ndpts = xyz.shape[1]
+        vpts = xyz - t
+        D = np.ones((1, Ndpts), dtype=np.bool)
+        for j in range(1, 4):
+            v2 = pts_world[:, pairs[0, j]] - t
+            v1 = pts_world[:, pairs[1, j]] - t
+            D = D & (((v2[0] * v1[1]) * vpts[2, :] - (v2[2] * v1[1]) * vpts[0, :] +
+                    (v2[2] * v1[0]) * vpts[1, :] - (v2[0] * v1[2]) * vpts[1, :] +
+                    (v2[1] * v1[2]) * vpts[0, :] - (v2[1] * v1[0]) * vpts[2, :]) > 0)
+        return xyz[:, D], rgb[:, D]
 
 
     def r2q(self, R):
@@ -212,14 +251,13 @@ class UtilsMath:
         depth = np.linalg.norm(xyz - C, axis=0)
 
         # get data in image
-        filter = np.array(renderDepth.is_visible(h, w, np.shape(uv)[1], uv), dtype=np.bool8)
-        filter = filter & (np.array(uvl[2,:])[0] > 0)
-        depth_filtered = depth[filter]
-        uv_filtered = uv[::,filter]
-        xyz_filtered = xyz[::,filter]
-        xyz_ids = renderDepth.get_ids(np.shape(uv)[1])
+        f = renderDepth.is_visible(h, w, uv) & (np.array(uvl[2,:])[0] < 0)
+        depth_filtered = depth[f]
+        uv_filtered = uv[:, f]
+        xyz_filtered = xyz[:, f]
+        xyz_ids = np.arange(np.shape(uv)[1], dtype=np.float64)
 
-        xyz_ids_filtered = xyz_ids[filter]
+        xyz_ids_filtered = xyz_ids[f]
         
         # sort points wrt. depth
         depth_order = np.flip(np.argsort(depth_filtered))
@@ -293,15 +331,110 @@ class UtilsMath:
 
         return visibility_xyz
 
+    def render_image(self, data, max_radius=5):
+        """Render image the same way as the rest of this codebase."""
+        K   = data["K"]
+        R   = data["R"]
+        C   = data["C"]
+        h   = data["h"]
+        w   = data["w"]
+        xyz = data["xyz"]
+        rgb = data["rgb"]
+
+        # project points
+        xyz_t = xyz - C
+        uvl = K * R * xyz_t.copy()
+        uv = (uvl / uvl[2, :])[:2, :]
+        u = uv[0, :]
+        v = uv[1, :]
+        depth = np.linalg.norm(xyz_t, axis=0)
+
+        # get data in image
+        filtering = np.array((u >= 0) & (v >= 0) & (u < w) & (v < h) & (uvl[2, :] < 0)).squeeze()
+        depth_filtered = depth[filtering.squeeze()]
+        # sort according to depth
+        ordering = np.flip(np.argsort(depth_filtered))
+
+        depth = depth_filtered[ordering.squeeze()]
+        uv = uv[:, filtering][:, ordering]
+        rgb = rgb[:, filtering][:, ordering]
+
+        # trivial linear interpolation
+        k = (max_radius - 1) / (max(depth) - min(depth))
+        q = 1 - k * min(depth)
+        radii = np.round((k * depth + q + 1) / 2).astype(np.uint16)
+
+        # run cpp to render visibility information
+        img = renderDepth.render_image(h, w, uv, radii, rgb)
+
+        return img
+
+    def render_colmap_image(self, data, max_radius=5):
+        """Render image so that it agrees with artwin reference images."""
+        K   = data["K"]
+        R   = data["R"]
+        C   = data["C"]
+        h   = data["h"]
+        w   = data["w"]
+        xyz = data["xyz"]
+        rgb = data["rgb"]
+
+        # project points
+        camera2world = np.eye(4)
+        camera2world[:3, :3] = R.T
+        camera2world[:3, -1:] = C
+        camera2world[:, 1:3] *= -1
+
+        xyz_camera_homogeneous = np.linalg.inv(camera2world) @ self.a2h(xyz)
+        xyz_camera = self.h2a(xyz_camera_homogeneous)
+        depth = np.linalg.norm(xyz_camera, axis=0)
+
+        # focal_length = (float(K[0, 0]) + float(K[1, 1])) / 2
+        # df = depth > focal_length
+        # print(max(depth))
+        # print(min(depth))
+        # depth = depth[df]
+        # xyz_camera = xyz_camera[:, df]
+
+        uv_homogeneous = K @ xyz_camera
+        uv = (uv_homogeneous / uv_homogeneous[2, :])[:2, :]
+        u = uv[0, :]
+        v = uv[1, :]
+
+        # get data in image
+        filtering = np.array((u >= 0) & (v >= 0) & (u < w) & (v < h) & (uv_homogeneous[2, :] < 0)).squeeze()
+        depth_filtered = depth[filtering.squeeze()]
+        # sort according to depth
+        ordering = np.flip(np.argsort(depth_filtered))
+
+        depth = depth_filtered[ordering.squeeze()]
+        uv = uv[:, filtering][:, ordering]
+        rgb = rgb[:, filtering][:, ordering]
+
+        # Linear interpolation between points (min(depth), min_radius) and (max(depth), max_radius),
+        # coefficients computation
+        min_radius = 5
+        k = (max_radius - min_radius) / (max(depth) - min(depth))
+        q = min_radius - k * min(depth)
+        # Linear interpolation itself + ensuring only odd radii are present (C++ impl requirement)
+        radii = np.round((k * depth + q + 1) / 2).astype(np.uint16)
+
+        # run cpp to render visibility information
+        uv[0,:] = w - uv[0,:]  # Flip so that it agrees with reference images from artwin
+        img = renderDepth.render_image(h, w, uv, radii, rgb)
+
+        return img
+
 
     def get_calibration_matrix(self, camera):
-        focal_length = camera["f"]
-        if isinstance(focal_length, list):
-            if len(focal_length) > 1:
-                focal_length = (focal_length[0] + focal_length[1]) / 2
-            else:
-                focal_length = focal_length[0]
-        return np.matrix([[focal_length, 0, camera["pp"][0]],[0, focal_length, camera["pp"][1]],[0, 0, 1]])
+        try:
+            fx, fy = camera["f"][0], camera["f"][1]
+        except TypeError:
+            fx, fy = camera["f"], camera["f"]
+        return np.matrix([
+            [fx, 0,  camera["pp"][0]],
+            [0,  fy, camera["pp"][1]],
+            [0,  0,  1]])
 
     def hash_points(self,  xyz, xyz_hash_scale = -1.):
         new_xyz_mean = []
@@ -349,7 +482,7 @@ class UtilsMath:
 
             return (np.reshape(new_xyz_grid, (3,-1), order='F'), np.reshape(new_xyz_mean, (3,-1), order='F'), ids_old_to_new_xyz) 
         else:
-            ids_old_to_new_xyz = renderDepth.get_ids(np.shape(xyz)[1])
+            ids_old_to_new_xyz = np.arange(np.shape(xyz)[1], dtype=np.float64)
             return (xyz, xyz, ids_old_to_new_xyz)
 
 
@@ -406,7 +539,7 @@ class UtilsMath:
             for cam in cameras:
                 cameras_hash[int(cam["camera_id"])] = cam
 
-        visibility_xyz = [] 
+        visibility_xyz = []
         all_data = []        
         for image in images.values():
             camera = cameras_hash[int(image["camera_id"])]
