@@ -1,3 +1,4 @@
+from cmath import inf
 import sys
 import math
 import os
@@ -70,7 +71,8 @@ class HoloIO2:
             csvfile.close()
 
 
-    def compose_common_pointcloud(self, pointclouds_dir, logger=None):
+    def compose_common_pointcloud(self, pointclouds_dir, logger=None, \
+        camera_centers = None, mindepth = 0, maxdepth = np.Inf):
         """Read and concatenate the pointcloud in Long Throw Depth folder.
         Input: 
             pointclouds_dir - path to pointclouds directory
@@ -88,10 +90,24 @@ class HoloIO2:
                         logger.info(f'Loading: {filename}')
 
                     plydata = PlyData.read(pointclouds_dir + filename)
-                    for pt in plydata['vertex'].data:
-                        xyz.append(pt[0])
-                        xyz.append(pt[1])
-                        xyz.append(pt[2])
+                    if camera_centers:
+                        depth_timestamp = int(filename[:-4])
+                        camera_timestamps = np.array(list(camera_centers.keys()))
+                        closest_pose = camera_timestamps[
+                            np.argmin(np.abs(camera_timestamps - depth_timestamp))]
+                        camera_center = camera_centers[closest_pose]
+
+                        for pt in plydata['vertex'].data:
+                            cam2pt_distance = np.linalg.norm(camera_center - [pt[0],pt[1],pt[2]])
+                            if cam2pt_distance > mindepth and cam2pt_distance < maxdepth:
+                                xyz.append(pt[0])
+                                xyz.append(pt[1])
+                                xyz.append(pt[2])
+                    else:
+                        for pt in plydata['vertex'].data:
+                            xyz.append(pt[0])
+                            xyz.append(pt[1])
+                            xyz.append(pt[2])
 
         return np.array(xyz,dtype=float).reshape((3,-1),order='F') 
 
