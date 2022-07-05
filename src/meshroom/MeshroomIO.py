@@ -287,7 +287,7 @@ class MeshroomIO:
 
         count2 = 0
         xyz = np.zeros((3,count), dtype=float)
-        rgb = np.zeros((3,count), dtype=np.uint8)
+        rgb = np.zeros((3,count), dtype=float)
         for line in lines:
             if line.startswith('v'):    
                 pt_str = line[2:].split(' ')
@@ -295,13 +295,13 @@ class MeshroomIO:
                 xyz[1][count2] = float(pt_str[1])
                 xyz[2][count2] = float(pt_str[2])
                 if len(pt_str) >= 6:
-                    rgb[0][count2] = np.uint8(float(pt_str[3]))
-                    rgb[1][count2]  = np.uint8(float(pt_str[4]))
-                    rgb[2][count2] = np.uint8(float(pt_str[5]))
+                    rgb[0][count2] = float(pt_str[3])
+                    rgb[1][count2]  = float(pt_str[4])
+                    rgb[2][count2] = float(pt_str[5])
                 else:
-                    rgb[0][count2] = np.uint8(255)
-                    rgb[1][count2]  = np.uint8(255)
-                    rgb[2][count2] = np.uint8(255)
+                    rgb[0][count2] = -1
+                    rgb[1][count2]  = -1
+                    rgb[2][count2] = -1
                 count2 += 1
                 continue
 
@@ -309,6 +309,14 @@ class MeshroomIO:
                 break
 
         f.close()
+        
+        # adjust the rbg data type according source values
+        if np.max(rgb) > 1:
+            rgb[rgb == -1] = 255
+            rgb = rgb.astype(np.uint8)
+        else:
+            rgb[rgb == -1] = 1
+
         return (xyz, rgb)
 
     def load_ply_vertices(self, ply_file_path): 
