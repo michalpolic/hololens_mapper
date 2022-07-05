@@ -1,10 +1,13 @@
 __pycache__*/
 build*/
 tmp*/
+tmp*
 *.so
+*.pyd
 *.sif
 launch.json
 settings.json
 MeshroomCache*/
 .vscode*/
+VGG16-NetVLAD-Pitts30K.mat
 .ipynb_checkpoints/

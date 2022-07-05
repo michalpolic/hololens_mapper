@@ -13,7 +13,7 @@ class UtilsContainers:
             lib_prefix - path to library in the container if executable is not in the path
             logger - object for Meshroom loging
         """
-        assert(container_type == "docker" or container_type == "singularity", f"The container type {container_type} is unknown.")
+        assert (container_type == "docker" or container_type == "singularity"), f"The container type {container_type} is unknown."
         
         self._container_type = container_type
         self._image = image
@@ -30,7 +30,7 @@ class UtilsContainers:
             Working directory is mounted to /data dir. You have to use path to data in format /data/<rel_path>.
         """
         if self._container_type == "docker":
-            command_line = f"docker run --rm -v {self._working_dir}:/data {self._image} {self._lib_prefix}{command}"    # --gpus all 
+            command_line = f"docker run --rm --gpus all -v {self._working_dir}:/data {self._image} {self._lib_prefix}{command}"    # 
         if self._container_type == "singularity":
             command_line = f"singularity exec --nv -B {self._working_dir}:/data {self._image} {self._lib_prefix}{command}"
 

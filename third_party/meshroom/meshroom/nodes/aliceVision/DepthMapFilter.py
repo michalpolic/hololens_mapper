@@ -6,9 +6,8 @@ from meshroom.core import desc
 class DepthMapFilter(desc.CommandLineNode):
     commandLine = 'aliceVision_depthMapFiltering {allParams}'
     gpu = desc.Level.NORMAL
-    size = desc.DynamicNodeSize('input')
-    parallelization = desc.Parallelization(blockSize=10)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
+    # parallelization = desc.Parallelization(blockSize=10)
+    # commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
 
     category = 'Dense Reconstruction'
     documentation = '''
@@ -17,6 +16,27 @@ This allows to filter unstable points before starting the fusion of all depth ma
 '''
 
     inputs = [
+        desc.StringParam(
+            name="containerName", 
+            label="AliceVision container",
+            description="If you would like to run the comnands inside a container, "
+                "set the path (Singularity) or name (Docker) of the container to run.", 
+            value="", 
+            uid=[],
+            advanced=True,
+            group='container_setting',
+        ),
+        desc.StringParam(
+            name="containerPrefix", 
+            label="Container prefix",
+            description="If you would like to run the comnands inside a container, "
+                "set the internal path to executables inside the container. "
+                "If the container is build with executables in path, let this variable empty.", 
+            value="", 
+            uid=[],
+            advanced=True,
+            group='container_setting',
+        ),
         desc.File(
             name='input',
             label='SfMData',

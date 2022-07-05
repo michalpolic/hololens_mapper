@@ -24,6 +24,27 @@ Many cameras are contributing to the low frequencies and only the best ones cont
 '''
 
     inputs = [
+        desc.StringParam(
+            name="containerName", 
+            label="AliceVision container",
+            description="If you would like to run the comnands inside a container, "
+                "set the path (Singularity) or name (Docker) of the container to run.", 
+            value="", 
+            uid=[],
+            advanced=True,
+            group='container_setting',
+        ),
+        desc.StringParam(
+            name="containerPrefix", 
+            label="Container prefix",
+            description="If you would like to run the comnands inside a container, "
+                "set the internal path to executables inside the container. "
+                "If the container is build with executables in path, let this variable empty.", 
+            value="", 
+            uid=[],
+            advanced=True,
+            group='container_setting',
+        ),
         desc.File(
             name='input',
             label='Dense SfMData',
@@ -50,6 +71,7 @@ Many cameras are contributing to the low frequencies and only the best ones cont
             label='Ref Mesh',
             description='Optional input mesh to compute height maps and normal maps. If not provided, no additional maps with geometric information will be generated.',
             value='',
+            group='',
             uid=[0],
         ),
         desc.ChoiceParam(
@@ -77,6 +99,7 @@ Many cameras are contributing to the low frequencies and only the best ones cont
             value='obj',
             values=('obj', 'gltf', 'fbx', 'stl'),
             exclusive=True,
+            group='',
             uid=[0],
         ),
         desc.GroupAttribute(name="colorMapping", label="Color Mapping", description="Color Map Parameters",

@@ -1,0 +1,8 @@
+name: poselib2
+channels:
+  - conda-forge
+  - defaults
+  - anaconda
+dependencies:
+  - python=3.8
+  - pybind11

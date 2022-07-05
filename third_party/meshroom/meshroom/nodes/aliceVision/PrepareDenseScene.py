@@ -1,13 +1,13 @@
 __version__ = "3.0"
 
-from meshroom.core import desc
+from meshroom.core import desc, Version
 
 
 class PrepareDenseScene(desc.CommandLineNode):
     commandLine = 'aliceVision_prepareDenseScene {allParams}'
-    size = desc.DynamicNodeSize('input')
-    parallelization = desc.Parallelization(blockSize=40)
-    commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
+    # size = desc.DynamicNodeSize('input')
+    # parallelization = desc.Parallelization(blockSize=40)
+    # commandLineRange = '--rangeStart {rangeStart} --rangeSize {rangeBlockSize}'
 
     category = 'Dense Reconstruction'
     documentation = '''
@@ -15,6 +15,27 @@ This node export undistorted images so the depth map and texturing can be comput
 '''
 
     inputs = [
+        desc.StringParam(
+            name="containerName", 
+            label="AliceVision container",
+            description="If you would like to run the comnands inside a container, "
+                "set the path (Singularity) or name (Docker) of the container to run.", 
+            value="", 
+            uid=[],
+            advanced=True,
+            group='container_setting',
+        ),
+        desc.StringParam(
+            name="containerPrefix", 
+            label="Container prefix",
+            description="If you would like to run the comnands inside a container, "
+                "set the internal path to executables inside the container. "
+                "If the container is build with executables in path, let this variable empty.", 
+            value="", 
+            uid=[],
+            advanced=True,
+            group='container_setting',
+        ),
         desc.File(
             name='input',
             label='SfMData',

@@ -1,23 +1,24 @@
 import ctypes
 import pathlib
 import numpy as np
-from numpy import linalg
+from numpy import Inf, linalg
 import numpy.matlib
 from scipy.io import savemat
 import scipy.spatial as spatial
 import os
 import sys
 import multiprocessing as mp
+import cv2
+import matplotlib.pyplot as plt
 
+from PIL import Image
 from src.holo.HoloIO import HoloIO
 
 sys.path.append(os.path.dirname(__file__))
 import renderDepth
 
 
-
 class UtilsMath:
-
     def q2r(self, q):
         q = q / linalg.norm(np.matrix(q))
         return np.matrix([
@@ -76,12 +77,12 @@ class UtilsMath:
             col_id = np.argmax(nS)
             q = np.append([0], S[::,col_id] / nS[col_id])
         else:
-            r = np.sqrt(c)/2
-            q = np.matrix([[r],
-                [(R[2,1]-R[1,2])/r],
-                [(R[0,2]-R[2,0])/r],
-                [(R[1,0]-R[0,1])/r]])
-            q = q / np.linalg.norm(q, 2)
+            r = np.sqrt(np.abs(c))
+            q = np.matrix([[r/2],
+                [(R[2,1]-R[1,2])/r/2],
+                [(R[0,2]-R[2,0])/r/2],
+                [(R[1,0]-R[0,1])/r/2]])
+        q = q / np.linalg.norm(q, 2)
         return q
 
     def extract_camera_name(self, cameara_path):
@@ -100,15 +101,98 @@ class UtilsMath:
         return (colmap_C, holo_C)
 
 
+    def estimate_colmap_to_colmap_transformation(self, reference_images, transformed_images):
+        reference_C = np.array([]).reshape(3,0)
+        transformed_C = np.array([]).reshape(3,0)
+
+        reference_images_by_name = {}
+        for img in reference_images.values():
+            reference_images_by_name[img['name'].replace('\\','/')] = img
+
+        for img in transformed_images.values():
+            transformed_img_name = img['name'].replace('\\','/')
+            if transformed_img_name in reference_images_by_name:
+                ref_img = reference_images_by_name[transformed_img_name]
+                reference_C = np.concatenate((reference_C, ref_img["C"]), axis=1)
+                transformed_C = np.concatenate((transformed_C, img["C"]), axis=1)
+
+        # savemat('/local1/projects/artwin/mapping/hololens_mapper/pipelines/MeshroomCache/HlocLocalizer/78e3afadb7ad4b73fff4d28b47372162efb55e9e', \
+        #     {'reference_C':reference_C, 'transformed_C': transformed_C})
+
+        return self.estimate_euclidean_transformation(reference_C, transformed_C)
+
+
+    def merge_common_cameras(self, cameras1, cameras2, eps = 10^-4):
+        common_cameras = {}
+        cam2_to_common_ids = {}
+        
+        max_id = np.max(list(cameras1.keys()))
+        common_cameras = cameras1
+        for cam2_id in cameras2:
+            cam2 = cameras2[cam2_id]
+            pp1 = np.matrix(cam2['pp'])
+            rd1 = np.matrix(cam2['rd'])
+            unknown_camera = True
+            for cam in common_cameras.values():
+                pp2 = np.matrix(cam['pp'])
+                rd2 = np.matrix(cam['rd'])
+                if cam2['model'] == cam['model'] and cam2['width'] == cam['width'] and \
+                    cam2['height'] == cam['height'] and abs(cam2['f']-cam['f']) < eps and \
+                    np.linalg.norm(pp1 - pp2) < 2*eps and np.linalg.norm(rd1 - rd2) < 2*eps:
+                    unknown_camera = False
+                    break
+
+            if unknown_camera:
+                cam2_to_common_ids[cam2['camera_id']] = max_id+1
+                cam2['camera_id'] = max_id+1
+                common_cameras[max_id+1] = cam2
+                max_id += 1
+
+        return (common_cameras, cam2_to_common_ids)
+                    
+
+    def align_local_and_global_sfm(self, db_cameras, db_images, db_points3D, q_cameras, q_images, q_points3D, transform):
+        cameras, qcam_to_cam_id = self.merge_common_cameras(db_cameras, q_cameras)
+
+        images = {}
+        for qimg_id in q_images:
+            qimg = q_images[qimg_id]
+            qimg['camera_id'] = str(qcam_to_cam_id[int(qimg['camera_id'])])
+            qimg['C'] = transform['R'].T * (qimg['C'] - np.matrix(transform['t']).T)
+            qimg['R'] = qimg['R'] * transform['R']
+            #qimg['point3D_ids'] = [-1 for i in range(len(qimg['point3D_ids']))]
+            images[qimg_id] = qimg
+            
+        max_id = np.max(list(images.keys()))
+        for dbimg_id in db_images:
+            dbimg = db_images[dbimg_id]
+            if dbimg_id in images.keys():
+                dbimg['image_id'] = max_id + 1
+                max_id += 1
+            dbimg['point3D_ids'] = [-1 for i in range(len(dbimg['point3D_ids']))]
+            images[dbimg['image_id']] = dbimg
+
+        points3D = []
+        for pt3D in q_points3D:
+            X = transform['R'].T * (np.matrix(pt3D['X']).reshape(3,1) - np.matrix(transform['t']).T)
+            pt3D['X'] = np.matrix.tolist(X.T)[0]
+            points3D.append(pt3D)
+
+        return (cameras, images, points3D)
+
+
     def estimate_colmap_to_holo_transformation(self, colmap_cameras, holo_cameras):
         print('Estimate COLMAP to HoloLens transformation.')
         colmap_C, holo_C = self.compose_coresponding_camera_centers(colmap_cameras, holo_cameras)
+        return self.estimate_euclidean_transformation(holo_C, colmap_C)
 
+
+    def estimate_euclidean_transformation(self, X_ref, X_transformed):
         # scale input points
-        mc = np.mean(colmap_C, axis=1)
-        mh = np.mean(holo_C, axis=1)
-        c0 = colmap_C - mc
-        h0 = holo_C - mh
+        mc = np.mean(X_transformed, axis=1)
+        mh = np.mean(X_ref, axis=1)
+        c0 = X_transformed - mc
+        h0 = X_ref - mh
         normc = np.sqrt(np.sum(np.multiply(c0,c0)))
         normh = np.sqrt(np.sum(np.multiply(h0,h0)))
         c0 = c0 * (1/normc)
@@ -134,39 +218,31 @@ class UtilsMath:
 
         return colmap_points
 
-    def transform_colmap_images(self, colmap_cameras, transform):
-        for i in range(0,len(colmap_cameras)):
-            colmap_cameras[i]["R"] = colmap_cameras[i]["R"] * transform["rotation"].T
-            colmap_cameras[i]["C"] =  transform["scale"] * transform["rotation"] * colmap_cameras[i]["C"] + transform["translation"]
+    def transform_pointcloud(self, xyz, transform):
+        for i in range(0,np.shape(xyz)[1]):
+            xyz[:,i] = np.asarray(transform["scale"] * transform["rotation"] * np.matrix(xyz[:,i]).T + transform["translation"]).T[0]
+        return xyz
 
-        return colmap_cameras 
+    def transform_colmap_images(self, cameras, transform):
+        for cam_id in cameras:
+            cameras[cam_id]["R"] = cameras[cam_id]["R"] * transform["rotation"].T
+            cameras[cam_id]["C"] =  transform["scale"] * transform["rotation"] * cameras[cam_id]["C"] + transform["translation"]
+        return cameras 
 
 
-    def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts, rgb = None):
+    def filter_dense_pointcloud_noise_KDtree(self, xyz, radius, npts, rgb = np.array(0)):
         print('Filter noise in dense pointcloud using KDtree.')
         xyzT = xyz.T
         point_tree = spatial.cKDTree(xyzT)
         num_neighbours = point_tree.query_ball_point(xyzT, radius, workers = -1, return_length = True)
         filter = [num_neighbours[i] > npts for i in range(np.shape(xyz)[1])]
         xyz = xyz[::,filter]
-        if rgb != None and rgb.any():
+        if rgb.any():
             rgb = rgb[::,filter]
         return (xyz, rgb)
 
 
-    def estimate_visibility_for_image(self, data):
-        img_id = data["image_id"]
-        print(f'Estimate visibility for image: {img_id}')
-        K  = data["K"]
-        R  = data["R"]
-        C  = data["C"]
-        h  = data["h"]
-        w  = data["w"]
-        xyz  = data["xyz"]
-        t  = data["t"]
-        distance_threshold = data["dt"]
-        visibility_xyz = []
-
+    def get_sorted_and_filtered_observations_and_depth(self, xyz, K, R, C, w, h):
         # project points
         uvl = K * R * (xyz - C)
         u = uvl[0,::] / uvl[2,::]
@@ -189,19 +265,69 @@ class UtilsMath:
         uv_sorted = uv_filtered[::,depth_order]
         xyz_sorted = xyz_filtered[::,depth_order]
         xyz_ids_sorted = xyz_ids_filtered[depth_order]
+        
+        return (uv_sorted, depth_sorted, xyz_ids_sorted)
+
+
+    def estimate_visibility_for_image(self, data):
+        img_id = data["image_id"]
+        print(f'Estimate visibility for image: {img_id}')
+        K  = data["K"] 
+        R  = data["R"] 
+        C  = data["C"] 
+        h  = data["h"]
+        w  = data["w"]
+        xyz  = data["xyz"] 
+        new_xyz_grid =  data["new_xyz_grid"] 
+        new_xyz_mean =  data["new_xyz_mean"] 
+        ids_old_to_new_xyz =  data["ids_old_to_new_xyz"] 
+        t  = data["t"]
+        distance_threshold = data["dt"] 
+
+        # if all_points = True return visibility to all xyz, othervise new_xyz_mean
+        all_points = data["all_points"]  
+        visibility_xyz = [] 
+        save_depthmaps = data['save_depthmaps']
+        depthmaps_path = data['depthmaps_path']
+        img_name = data['image_name']
+        renderScale = data['renderScale']
 
         # run cpp to render visibility information
-        holo_depth_img = renderDepth.render(h, w, np.shape(uv_sorted)[1], np.shape(t)[1], \
-                 uv_sorted.reshape(1,-1), depth_sorted, t.reshape(1,-1)) 
+        t[0,::] = t[0,::]*renderScale*1.3
+        uv_sorted, depth_sorted, _ = self.get_sorted_and_filtered_observations_and_depth(new_xyz_grid, K, R, C, w, h)
+        holo_depth_img = renderDepth.render(renderScale * h, renderScale * w, \
+            np.shape(renderScale * uv_sorted)[1], np.shape(t)[1], \
+            renderScale * uv_sorted.reshape(1,-1), depth_sorted, t.reshape(1,-1)) 
         
-        #  test
-        # holo_depth_img2 = holo_depth_img.reshape(h,w)
-        # mdic = {"holo_depth_img": holo_depth_img2, "uv": uv_sorted, "depth": depth_sorted, "t": t}
-        # savemat("/local/artwin/mapping/codes/mapper/src/utils/renderDepth/matlab_matrix.mat", mdic)
-        
+
+        # downscale the depth
+        if renderScale == 1:
+            np_depthmap = holo_depth_img.reshape(h, w).astype('float16')
+            downscaled_holo_depth_img = holo_depth_img
+        else:
+            holo_depth_img2 = holo_depth_img.reshape(renderScale * h, renderScale * w).astype('float32')
+            upscaled_depthmap = Image.fromarray(holo_depth_img2, mode='F')
+            depthmap = upscaled_depthmap.resize((w,h), resample=Image.BICUBIC)
+            np_depthmap = numpy.array(depthmap).astype('float16')
+            downscaled_holo_depth_img = np_depthmap.astype('float64').reshape(-1,)
+
+        #  debug output
+        if save_depthmaps:
+            folder, name = os.path.split(img_name)
+            np.save(os.path.join(depthmaps_path, name[:-4] + ".npy"), np_depthmap)
+            plt.imsave(os.path.join(depthmaps_path, name[:-4] + ".png"), np_depthmap)
+
+
+        if all_points:
+            uv_sorted, depth_sorted, xyz_ids_sorted = self.get_sorted_and_filtered_observations_and_depth( \
+                xyz, K, R, C, w, h)
+        else:
+            uv_sorted, depth_sorted, xyz_ids_sorted = self.get_sorted_and_filtered_observations_and_depth( \
+                new_xyz_mean, K, R, C, w, h)
+
         visibility_xyz = renderDepth.compose_visibility(int(img_id), w, np.shape(uv_sorted)[1], \
-            np.floor(uv_sorted).reshape(1,-1), depth_sorted, holo_depth_img, \
-            xyz_ids_sorted, distance_threshold)
+                np.floor(uv_sorted).reshape(1,-1), depth_sorted, downscaled_holo_depth_img, \
+                xyz_ids_sorted, distance_threshold)
 
         return visibility_xyz
 
@@ -383,42 +509,228 @@ class UtilsMath:
         return np.array(radius_thresholds).reshape((2,-1),order='F')
 
 
-    def estimate_visibility(self, cameras, images, xyz, xyz_hash_scale = -1, distance_threshold = 0.1, all_points = False):
+    def estimate_visibility(self, cameras, images, xyz, xyz_hash_scale = -1, all_points = False, 
+        save_grid_pts = False, save_grid_mean_pts = False, save_depthmaps = False, out_path='',
+        renderScale = 1):
+        
         # hash points
         new_xyz_grid, new_xyz_mean, ids_old_to_new_xyz = self.hash_points(xyz, xyz_hash_scale)
 
-        # holoio = HoloIO()
-        # holoio.write_pointcloud_to_file(new_xyz_grid, "d:/tmp/hololens_mapper/pipelines/MeshroomCache/HoloLensIO/b18939407270cdb88931e57772a1383582c6a1c5/model_grid.obj" )
-        # holoio.write_pointcloud_to_file(new_xyz_mean, "d:/tmp/hololens_mapper/pipelines/MeshroomCache/HoloLensIO/b18939407270cdb88931e57772a1383582c6a1c5/model_mean.obj" )
+        # debug output
+        depthmaps_path = ''
+        if not out_path and (save_grid_pts or save_grid_mean_pts or save_depthmaps):
+            print('Missing the output path for depthmaps or points. The result will not be saved.')
+        if out_path:
+            holoio = HoloIO()
+            if save_grid_pts:
+                holoio.write_pointcloud_to_file(new_xyz_grid, os.path.join(out_path,"pts_grid.obj"))
+            if save_grid_mean_pts:
+                holoio.write_pointcloud_to_file(new_xyz_mean, os.path.join(out_path,"pts_mean.obj"))
 
-        # calculate projection scales
-        t = np.array([[8.0, 5.6, 3.2, 0.8, 0],[1, 3, 5, 7, 9]])  # TODO: d1 / d * f ... px size for d, d1 is size of radius in space
-
+            if save_depthmaps:
+                depthmaps_path = os.path.join(out_path, 'depth_maps')
+                if not os.path.isdir(depthmaps_path):
+                    os.mkdir(depthmaps_path)
+            
         # hash cameras
-        cameras_hash = {}
-        for cam in cameras:
-            cameras_hash[cam["camera_id"]] = cam
+        cameras_hash = cameras
+        if isinstance(cameras, list):
+            cameras_hash = {}
+            for cam in cameras:
+                cameras_hash[int(cam["camera_id"])] = cam
 
         visibility_xyz = []
-        all_data = []
-        for image in images:
-            camera = cameras_hash[image["camera_id"]]
+        all_data = []        
+        for image in images.values():
+            camera = cameras_hash[int(image["camera_id"])]
             t = self.distance_to_radius_mapping(camera['f'], xyz_hash_scale)
             all_data.append({"image_id": image["image_id"], \
                 "K": self.get_calibration_matrix(camera), "R": image["R"], \
                 "C": image["C"], "h": camera["height"], \
-                "w": camera["width"], "xyz": new_xyz_grid, "t": t, "dt": distance_threshold})
-        test = self.estimate_visibility_for_image(all_data[0])
+                "w": camera["width"], "xyz": xyz, "new_xyz_grid": new_xyz_grid, \
+                "new_xyz_mean": new_xyz_mean, "ids_old_to_new_xyz": ids_old_to_new_xyz, \
+                "t": t, "dt": 1.0/xyz_hash_scale, "all_points": all_points, \
+                'save_depthmaps':save_depthmaps, 'depthmaps_path':depthmaps_path, \
+                'image_name':image["name"], 'renderScale': renderScale})
+        # test = self.estimate_visibility_for_image(all_data[0])
+        # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/LibrarySmall_Holo2/data.mat", all_data[0])
 
-        chunksize = mp.cpu_count()
+
+        chunksize = 16  #mp.cpu_count()
         with mp.Pool(chunksize) as pool:
             for ind, res in enumerate(pool.imap(self.estimate_visibility_for_image, all_data), chunksize):
                 for i in range(0,len(res)):
                     visibility_xyz.append(res[i])       # pt3d_id = res[4*i + 0]    img_id = res[4*i + 1]    u = res[4*i + 2]    v = res[4*i + 3]
-                    
-        return visibility_xyz
+
+        if all_points: 
+            return (visibility_xyz, xyz)
+        else:
+            return (visibility_xyz, new_xyz_mean)
 
 
-
-
+    def get_view_graph(self, images, points3D):
         
+        # images may have any ids
+        images_to_ids = {}  
+        i = 0
+        for image in images.values(): 
+            images_to_ids[image['image_id']] = i
+            i += 1
+
+        view_graph = np.zeros((i,i),dtype=int)
+        for pt in points3D:
+            pt_visible_in_images = list(map(int, pt['img_pt'][0::2]))
+
+            for i in range(len(pt_visible_in_images)):
+                if pt_visible_in_images[i] in images_to_ids:
+                    image_id1 = images_to_ids[pt_visible_in_images[i]]
+                    for j in range(i+1,len(pt_visible_in_images)):
+                        if pt_visible_in_images[j] in images_to_ids:
+                            image_id2 = images_to_ids[pt_visible_in_images[j]]
+                            # print('image_id2:' + str(image_id2) + '\n')
+                            # if image_id1 == 0 and image_id2 == 1309:
+                            #     print('xxx')
+                            view_graph[image_id1, image_id2] += 1
+        
+        return (images_to_ids, view_graph)
+
+
+    def add_colors_to_dict(self, colors_of_points3D, distance_of_points3D, rgb, img, points3D):
+        for i, pt_id in enumerate(img['point3D_ids']):
+            if not pt_id in colors_of_points3D:
+                colors_of_points3D[pt_id] = []
+                distance_of_points3D[pt_id] = []
+            pt_rgb = rgb[int(round(img['uvs'][2*i+1])),int(round(img['uvs'][2*i])),:]    
+            colors_of_points3D[pt_id].append(pt_rgb[0])
+            colors_of_points3D[pt_id].append(pt_rgb[1])
+            colors_of_points3D[pt_id].append(pt_rgb[2])
+            d_tmp = (points3D[pt_id]['X'] - img['C'].T)
+            distance_of_points3D[pt_id].append(np.sqrt(d_tmp * d_tmp.T)[0,0])
+        return (colors_of_points3D,distance_of_points3D)
+
+
+    def estimate_colors_of_points3D(self, images_folder, images, points3D):
+        colors_of_points3D = {}
+        gray_of_points3D = {}
+        distance_of_rgb_points3D = {}
+        distance_of_gray_points3D = {}
+
+        for img in images.values():
+            img_data = cv2.imread(images_folder + "/" + img["name"])
+            if not 'vlc' in img["name"]:
+                colors_of_points3D, distance_of_rgb_points3D = \
+                    self.add_colors_to_dict(colors_of_points3D, distance_of_rgb_points3D, img_data, img, points3D)
+            else:
+                gray_of_points3D, distance_of_gray_points3D = \
+                    self.add_colors_to_dict(gray_of_points3D, distance_of_gray_points3D, img_data, img, points3D)
+        
+        for pt in points3D:
+            found_colors = False
+            if pt['point3D_id'] in colors_of_points3D.keys():
+                found_colors = True
+                pt_colors = np.reshape(np.matrix(colors_of_points3D[pt['point3D_id']]),(3,-1), order='F')
+                distances = np.matrix(distance_of_rgb_points3D[pt['point3D_id']])
+            else: 
+                if pt['point3D_id'] in gray_of_points3D.keys():
+                    found_colors = True
+                    pt_colors = np.reshape(np.array(gray_of_points3D[pt['point3D_id']]),(3,-1))
+                    distances = np.matrix(distance_of_gray_points3D[pt['point3D_id']])
+            if found_colors:
+                pt['rgb'] = np.matrix.tolist(pt_colors[:,np.argmin(distances)])
+                # score = 1/distances
+                # weights = np.exp(score)/np.sum(np.exp(score))
+                # pt_rgb = np.round(np.sum(np.multiply(pt_colors,np.matlib.repmat(weights,3,1)), axis=1).T)
+                # pt['rgb'] = np.matrix.tolist(pt_rgb.astype(dtype=int))[0]
+
+        return points3D
+
+
+    shared_array = None
+
+    def add_colors_to_array(self, data):
+        rgb = cv2.imread(data["path"])
+        for i in range(len(data['point3D_ids'])):
+            pt_id = data['point3D_ids'][i]
+            if pt_id >= 0:
+                d_tmp = np.array([self.shared_array[1,pt_id] - data['C'][0,0], 
+                    self.shared_array[2,pt_id] - data['C'][1,0], 
+                    self.shared_array[3,pt_id] - data['C'][2,0]])
+                d = np.sqrt(np.sum(d_tmp * d_tmp))
+
+                if d < self.shared_array[0,pt_id]:
+                    pt_bgr = rgb[int(round(data['uvs'][2*i+1])),int(round(data['uvs'][2*i])),:]    
+                    if self.shared_array[4,pt_id] != self.shared_array[5,pt_id] or self.shared_array[5,pt_id] != self.shared_array[6,pt_id]:
+                        if pt_bgr[0] != pt_bgr[1] or pt_bgr[1] != pt_bgr[2]:
+                            self.shared_array[4,pt_id] = pt_bgr[2]
+                            self.shared_array[5,pt_id] = pt_bgr[1]
+                            self.shared_array[6,pt_id] = pt_bgr[0]
+                            self.shared_array[0,pt_id] = d
+                    else:
+                        self.shared_array[4,pt_id] = pt_bgr[2]
+                        self.shared_array[5,pt_id] = pt_bgr[1]
+                        self.shared_array[6,pt_id] = pt_bgr[0]
+                        self.shared_array[0,pt_id] = d
+
+    def init_shared_array_for_coloring_points(self, shared_array_base, points3D):
+        self.shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
+        self.shared_array = self.shared_array.reshape(7, -1)
+        for pt in points3D:
+            self.shared_array[0,pt['point3D_id']] = Inf
+            self.shared_array[1,pt['point3D_id']] = pt['X'][0]
+            self.shared_array[2,pt['point3D_id']] = pt['X'][1]
+            self.shared_array[3,pt['point3D_id']] = pt['X'][2]
+            self.shared_array[4,pt['point3D_id']] = pt['rgb'][0]
+            self.shared_array[5,pt['point3D_id']] = pt['rgb'][1]
+            self.shared_array[6,pt['point3D_id']] = pt['rgb'][2]
+
+    def estimate_colors_of_points3D_fast(self, images_folder, images, points3D):
+        max_pt_id = -1
+        for pt in points3D:
+            if pt['point3D_id'] > max_pt_id:
+                max_pt_id = pt['point3D_id']
+        shared_array_base = mp.Array(ctypes.c_double, 7*(max_pt_id + 1))  # [distance, x, y, z, r, g, b]
+        self.init_shared_array_for_coloring_points(shared_array_base, points3D)
+
+        all_data = []
+        for img in images.values():
+            all_data.append({'path': (images_folder + "/" + img["name"]).replace("\\","/"), \
+                'uvs': img['uvs'], 'point3D_ids': img['point3D_ids'], 'C': img['C']})
+
+        # pool = mp.Pool(processes=mp.cpu_count())
+        # self.add_colors_to_array(all_data[0])     # test
+        # # pool.map(self.add_colors_to_array, all_data)
+
+        for data in all_data:
+            self.add_colors_to_array(data)
+        
+        for pt in points3D:
+            pt['X'][0] = self.shared_array[1,pt['point3D_id']]
+            pt['X'][1] = self.shared_array[2,pt['point3D_id']]
+            pt['X'][2] = self.shared_array[3,pt['point3D_id']]
+            pt['rgb'][0] = int(self.shared_array[4,pt['point3D_id']])
+            pt['rgb'][1] = int(self.shared_array[5,pt['point3D_id']])
+            pt['rgb'][2] = int(self.shared_array[6,pt['point3D_id']])
+
+        return points3D
+
+    def update_camera_ids(self, cameras, images):
+        '''Update the camera ids. Change camera ids if some images are missing in SfM.'''
+        # compose new camera ids, if some camera miss, the ids will go from zero to len(cameras)
+        camera_keys = list(cameras.keys())
+        camera_map = dict()
+        for i in range(0,len(camera_keys)):
+            camera_map[camera_keys[i]] = i
+
+        # get dict of cameras with new ids
+        new_cameras = dict()
+        for camera in cameras.values():
+            camera['camera_id'] = camera_map[camera['camera_id']]
+            new_cameras[camera['camera_id']] = camera
+        
+        # update references in the images 
+        new_images = dict()
+        for img in images.values():
+            img['camera_id'] = str(camera_map[int(img['camera_id'])])
+            new_images[img['image_id']] = img
+
+        return (new_cameras, new_images)

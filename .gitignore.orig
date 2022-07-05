@@ -1,0 +1,16 @@
+__pycache__*/
+build*/
+tmp*/
+tmp*
+*.so
+*.pyd
+*.sif
+launch.json
+settings.json
+MeshroomCache*/
+.vscode*/
+<<<<<<< HEAD
+VGG16-NetVLAD-Pitts30K.mat
+=======
+.ipynb_checkpoints/
+>>>>>>> origin/master

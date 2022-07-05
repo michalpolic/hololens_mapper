@@ -9,6 +9,7 @@ dependencies:
   - pytorch
   - torchvision
   - trimesh=3.9.36
+  - numpy
   - pip  
   - pip:
       - PyQt5==5.15.0
@@ -28,6 +29,9 @@ dependencies:
       - markdown==2.6.11
       - requests==2.22.0
       - pybind11==2.8.1
+      - opencv-python
+      - plyfile
+      - open3d
   # Debugging & development
   - jedi-language-server=0.34.11
   - jupyterlab-lsp=3.9.1

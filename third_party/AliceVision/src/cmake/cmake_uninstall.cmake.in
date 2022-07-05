@@ -1,0 +1,26 @@
+# because the main project is under src we need to go down one level, hence the /../
+set(installManifestFile "@PROJECT_BINARY_DIR@/../install_manifest.txt")
+
+if(NOT EXISTS ${installManifestFile})
+  message(FATAL_ERROR "Cannot find install manifest: ${installManifestFile}")
+endif()
+
+file(READ ${installManifestFile} files)
+# string(REGEX REPLACE " " ";" files "${files}")
+string(REGEX REPLACE "\n" ";" file_list "${files}")
+foreach(file ${file_list})
+  message(STATUS "Uninstalling $ENV{DESTDIR}${file}")
+  if(EXISTS "$ENV{DESTDIR}${file}")
+    exec_program(
+        "@CMAKE_COMMAND@" ARGS "-E remove $ENV{DESTDIR}${file}"
+        OUTPUT_VARIABLE rm_out
+        RETURN_VALUE rm_retval
+    )
+    if(NOT "${rm_retval}" STREQUAL 0)
+      message(FATAL_ERROR "Problem when removing $ENV{DESTDIR}${file}")
+    endif()
+  else()
+    message(STATUS "File $ENV{DESTDIR}${file} does not exist.")
+  endif()
+endforeach()
+

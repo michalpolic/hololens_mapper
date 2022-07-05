@@ -155,8 +155,25 @@ inline py::array_t<bool> is_visible(int img_height, int img_width, py::array_t<d
     return visible;
 }
 
-inline py::array_t<double> compose_visibility(int img_id, int width, int uv_length, py::array_t<double> uv,
-    py::array_t<double> gtd, py::array_t<double> md, py::array_t<double> ptsids, double threshold){
+py::array_t<double> get_ids(int n){
+
+    // output
+    py::array_t<double> ids(n);
+    auto idsbuf = ids.request();
+    double *idsptr = (double *) idsbuf.ptr;
+
+    // set zeros to img
+    for (int i = 0; i < n; ++i){
+        idsptr[i] = i;
+    }
+
+    // save the output
+    return ids;
+}
+
+inline py::array_t<double> compose_visibility(int img_id, int width, 
+    int uv_length, py::array_t<double> uv, py::array_t<double> gtd,
+     py::array_t<double> md, py::array_t<double> ptsids, double threshold){
 
     // input
     auto uvbuf = uv.request();
@@ -199,5 +216,6 @@ PYBIND11_MODULE(renderDepth, m) {
     m.def("render", &render, py::return_value_policy::move);
     m.def("render_image", &render_image, py::return_value_policy::move);
     m.def("is_visible", &is_visible, py::return_value_policy::move);
+    m.def("get_ids", &get_ids, py::return_value_policy::move);
     m.def("compose_visibility", &compose_visibility, py::return_value_policy::move);
 }

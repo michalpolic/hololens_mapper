@@ -1,0 +1,112 @@
+# Config file for AliceVision library - Find AliceVision & dependencies.
+#
+# This file is used by CMake when find_package(AliceVision) is invoked (and
+# the directory containing this file is present in CMAKE_MODULE_PATH
+# (if AliceVision was installed), or exists in the local CMake package registry if
+# the AliceVision build directory was exported.
+#
+# This module defines the targets needed to compile and link against the library.
+# The target(s) automatically propagate the dependencies of the library.
+#
+# In your CMakeLists.txt file just add the dependency
+#
+# find_package(AliceVision CONFIG REQUIRED)
+# message(STATUS "Found AliceVision : ${AliceVision_FOUND}")
+# message(STATUS "Found AliceVision version: ${AliceVision_VERSION}")
+#
+# Then in order to link your executable to one of the modules of the library (say,
+# aliceVision_sfmDataIO), only target_link_libraries() is needed to specify the
+# dependency.
+#
+# add_executable(test yourfile.cpp)
+#
+# Then to the library
+#
+# target_link_libraries(test PUBLIC aliceVision_sfmDataIO)
+#
+# Note that target_include_directories() is not necessary.
+#
+# Beside the Cmake automatically generated variables such as AliceVision_FOUND and
+# AliceVision_VERSION, this module also defines some convenient variables that
+# defines some properties and option with which the library was built:
+#
+# ALICEVISION_HAVE_CCTAG   -  TRUE if the library is built with CCTAG support
+# ALICEVISION_HAVE_APRILTAG-  TRUE if the library is built with AprilTag support
+# ALICEVISION_HAVE_POPSIFT -  TRUE if the library is built with PopSift support
+# ALICEVISION_HAVE_OPENCV  -  TRUE if the library is built with OpenCV support
+# ALICEVISION_HAVE_OPENMP  -  TRUE if the library is built with openMP support
+# ALICEVISION_HAVE_OPENGV  -  TRUE if the library is built with openGV support
+# ALICEVISION_HAVE_ALEMBIC -  TRUE if the library is built with Alembic support
+#
+################################################################################
+
+@PACKAGE_INIT@.
+
+## Public dependencies that needs to be propagated
+include(CMakeFindDependencyMacro)
+
+set(Ceres_DIR @Ceres_DIR@)
+find_dependency(Ceres)
+
+# whether it is built with CCTags
+set(ALICEVISION_HAVE_CCTAG @ALICEVISION_HAVE_CCTAG@)
+
+if(ALICEVISION_HAVE_CCTAG)
+  set(CCTag_DIR @CCTag_DIR@)
+  find_dependency(CCTag 1.0.0)
+endif()
+
+# whether it is built with AprilTag
+set(ALICEVISION_HAVE_APRILTAG @ALICEVISION_HAVE_APRILTAG@)
+
+if(ALICEVISION_HAVE_APRILTAG)
+  set(apriltag_DIR @apriltag_DIR@)
+  find_dependency(apriltag)
+endif()
+
+# whether it is built with Popsift
+set(ALICEVISION_HAVE_POPSIFT @ALICEVISION_HAVE_POPSIFT@)
+
+if(ALICEVISION_HAVE_POPSIFT)
+  find_dependency(PopSift 1.0.0)
+endif()
+
+# whether it is built with OpenGV
+set(ALICEVISION_HAVE_OPENGV @ALICEVISION_HAVE_OPENGV@)
+
+if(ALICEVISION_HAVE_OPENGV)
+  find_dependency(opengv 1.0)
+endif()
+
+# whether it is built with OpenCV
+set(ALICEVISION_HAVE_OPENCV @ALICEVISION_HAVE_OPENCV@)
+
+if(ALICEVISION_HAVE_OPENCV)
+  set(OpenCV_DIR @OpenCV_DIR@)
+  find_dependency(OpenCV)
+endif()
+
+set(ALICEVISION_HAVE_OPENMP @ALICEVISION_HAVE_OPENMP@)
+
+if(ALICEVISION_HAVE_OPENMP)
+  find_dependency(OpenMP)
+  # TODO: this would not be necessary if the flags were declared properly for each target
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
+find_dependency(Boost COMPONENTS @ALICEVISION_BOOST_COMPONENTS@)
+set(BOOST_NO_CXX11 @BOOST_NO_CXX11@)
+if(BOOST_NO_CXX11)
+ add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+endif()
+
+# propagate other building options
+set(ALICEVISION_HAVE_OPENGV @ALICEVISION_HAVE_OPENGV@)
+set(ALICEVISION_HAVE_ALEMBIC @ALICEVISION_HAVE_ALEMBIC@)
+
+message(STATUS "Found AliceVision version: ${@exportedProjectName@_VERSION}")
+
+include("${CMAKE_CURRENT_LIST_DIR}/@targetsExportName@.cmake")
+check_required_components("@exportedProjectName@")
+

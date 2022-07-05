@@ -1,0 +1,22 @@
+name: patchmatchnet2
+channels:
+  - pytorch
+  - anaconda
+  - defaults
+  - pytorch-nightly
+  - conda-forge
+dependencies:
+  - mkl=2020
+  - python=3.8
+  - pytorch=1.11
+  - torchvision
+  - torchaudio
+  - cudatoolkit=11.3
+  - pip  
+  - git  
+  - pip:
+      - opencv-python
+      - numpy
+      - plyfile
+      - pillow
+      - tensorboard
