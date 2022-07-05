@@ -82,6 +82,19 @@ different format.
             uid=[0], 
             range=(1, 10000, 1),
         ),
+        desc.IntParam(
+            name='renderScale', 
+            label='Rendering scale', 
+            description='''
+            This setting allows rendering at larger scale, i.e., the depth thresholds
+            for individual 2D point sizes, e.g., 1, 3, 5, ..., will be callculated for 
+            upscaled image. Further, the depthmap is downscaled to original size. 
+            If we assume renderScale = 4, we will be able to interpolate the points 
+            circles of sizes 0.25, 0.75, 1.25, etc. for originaly assumed 1, 3, 5, etc.''', 
+            value=1, 
+            uid=[0], 
+            range=(1, 10, 1),
+        ),
         desc.BoolParam(
             name='allPoints', 
             label='Estimate visibility for all points',
@@ -258,7 +271,8 @@ different format.
                 visibility_map, new_xyz = utils_math.estimate_visibility(cameras, images, xyz, \
                     xyz_hash_scale = chunk.node.hashScale.value, all_points = chunk.node.allPoints.value, \
                     save_grid_pts = save_grid_pts, save_grid_mean_pts = save_grid_mean_pts, \
-                    save_depthmaps = save_depthmaps, out_path=chunk.node.output.value)
+                    save_depthmaps = save_depthmaps, out_path=chunk.node.output.value, \
+                    renderScale = chunk.node.renderScale.value)
 
                 chunk.logger.info('Update points in 3D and their observations.')
                 images, points3D = colmap.compose_images_and_points3D_from_visibilty(images, visibility_map, new_xyz)

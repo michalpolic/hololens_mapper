@@ -9,7 +9,9 @@ import os
 import sys
 import multiprocessing as mp
 import cv2
+import matplotlib.pyplot as plt
 
+from PIL import Image
 from src.holo.HoloIO import HoloIO
 
 sys.path.append(os.path.dirname(__file__) )
@@ -250,29 +252,43 @@ class UtilsMath:
         save_depthmaps = data['save_depthmaps']
         depthmaps_path = data['depthmaps_path']
         img_name = data['image_name']
+        renderScale = data['renderScale']
 
         # run cpp to render visibility information
+        t[0,::] = t[0,::]*renderScale*1.3
         uv_sorted, depth_sorted, _ = self.get_sorted_and_filtered_observations_and_depth(new_xyz_grid, K, R, C, w, h)
-        holo_depth_img = renderDepth.render(h, w, np.shape(uv_sorted)[1], np.shape(t)[1], \
-                 uv_sorted.reshape(1,-1), depth_sorted, t.reshape(1,-1)) 
+        holo_depth_img = renderDepth.render(renderScale * h, renderScale * w, \
+            np.shape(renderScale * uv_sorted)[1], np.shape(t)[1], \
+            renderScale * uv_sorted.reshape(1,-1), depth_sorted, t.reshape(1,-1)) 
         
+
+        # downscale the depth
+        if renderScale == 1:
+            np_depthmap = holo_depth_img.reshape(h, w).astype('float16')
+            downscaled_holo_depth_img = holo_depth_img
+        else:
+            holo_depth_img2 = holo_depth_img.reshape(renderScale * h, renderScale * w).astype('float32')
+            upscaled_depthmap = Image.fromarray(holo_depth_img2, mode='F')
+            depthmap = upscaled_depthmap.resize((w,h), resample=Image.BICUBIC)
+            np_depthmap = numpy.array(depthmap).astype('float16')
+            downscaled_holo_depth_img = np_depthmap.astype('float64').reshape(-1,)
+
         #  debug output
         if save_depthmaps:
-            holo_depth_img2 = holo_depth_img.reshape(h,w).astype('float16')
-            #mdic = {"holo_depth_img": holo_depth_img2, "uv": uv_sorted, "depth": depth_sorted, "t": t}
             folder, name = os.path.split(img_name)
-            if 'pv' in folder:
-                out_fn = os.path.join(depthmaps_path, f"{name}.npy")
-                np.save(out_fn, holo_depth_img2)
-        #  /debug output
+            np.save(os.path.join(depthmaps_path, name[:-4] + ".npy"), np_depthmap)
+            plt.imsave(os.path.join(depthmaps_path, name[:-4] + ".png"), np_depthmap)
+
 
         if all_points:
-            uv_sorted, depth_sorted, xyz_ids_sorted = self.get_sorted_and_filtered_observations_and_depth(xyz, K, R, C, w, h)
+            uv_sorted, depth_sorted, xyz_ids_sorted = self.get_sorted_and_filtered_observations_and_depth( \
+                xyz, K, R, C, w, h)
         else:
-            uv_sorted, depth_sorted, xyz_ids_sorted = self.get_sorted_and_filtered_observations_and_depth(new_xyz_mean, K, R, C, w, h)
+            uv_sorted, depth_sorted, xyz_ids_sorted = self.get_sorted_and_filtered_observations_and_depth( \
+                new_xyz_mean, K, R, C, w, h)
 
         visibility_xyz = renderDepth.compose_visibility(int(img_id), w, np.shape(uv_sorted)[1], \
-                np.floor(uv_sorted).reshape(1,-1), depth_sorted, holo_depth_img, \
+                np.floor(uv_sorted).reshape(1,-1), depth_sorted, downscaled_holo_depth_img, \
                 xyz_ids_sorted, distance_threshold)
 
         return visibility_xyz
@@ -361,7 +377,8 @@ class UtilsMath:
 
 
     def estimate_visibility(self, cameras, images, xyz, xyz_hash_scale = -1, all_points = False, 
-        save_grid_pts = False, save_grid_mean_pts = False, save_depthmaps = False, out_path=''):
+        save_grid_pts = False, save_grid_mean_pts = False, save_depthmaps = False, out_path='',
+        renderScale = 1):
         
         # hash points
         new_xyz_grid, new_xyz_mean, ids_old_to_new_xyz = self.hash_points(xyz, xyz_hash_scale)
@@ -379,7 +396,8 @@ class UtilsMath:
 
             if save_depthmaps:
                 depthmaps_path = os.path.join(out_path, 'depth_maps')
-                os.mkdir(depthmaps_path)
+                if not os.path.isdir(depthmaps_path):
+                    os.mkdir(depthmaps_path)
             
         # hash cameras
         cameras_hash = cameras
@@ -398,8 +416,9 @@ class UtilsMath:
                 "C": image["C"], "h": camera["height"], \
                 "w": camera["width"], "xyz": xyz, "new_xyz_grid": new_xyz_grid, \
                 "new_xyz_mean": new_xyz_mean, "ids_old_to_new_xyz": ids_old_to_new_xyz, \
-                "t": t, "dt": 1.1/xyz_hash_scale, "all_points": all_points, \
-                'save_depthmaps':save_depthmaps, 'depthmaps_path':depthmaps_path, 'image_name':image["name"]})
+                "t": t, "dt": 1.0/xyz_hash_scale, "all_points": all_points, \
+                'save_depthmaps':save_depthmaps, 'depthmaps_path':depthmaps_path, \
+                'image_name':image["name"], 'renderScale': renderScale})
         # test = self.estimate_visibility_for_image(all_data[0])
         # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/LibrarySmall_Holo2/data.mat", all_data[0])
 
