@@ -1,5 +1,9 @@
-import renderDepth
+import os
+import sys
 import numpy as np
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+import renderDepth
+
 
 # input data 
 img_height = 5
@@ -12,4 +16,4 @@ t_length = np.shape(t)[1]
 
 
 res = renderDepth.render(img_height, img_width, uv_length, t_length, uv.reshape(1,-1), d, t.reshape(1,-1))
-print(res.reshape(img_height, img_width))
+print(res)

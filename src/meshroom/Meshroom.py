@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from src.utils.UtilsSingularity import UtilsSingularity
+from src.utils.UtilsContainers import UtilsContainers
 
 class Meshroom():
 
@@ -128,12 +128,12 @@ class Meshroom():
 
     def meshing2(self, input_path, output_path, mesh_path):
         self.create_cache_folders(output_path)
-        params = {"input": "/host_pwd/" + input_path, 
-            "output": "/host_pwd/" + output_path,
-            "outputMesh": "/host_pwd/" + mesh_path,
+        params = {"input": input_path, 
+            "output": output_path,
+            "outputMesh": mesh_path,
             "estimateSpaceFromSfM": True,
             "addLandmarksToTheDensePointCloud": True,
-            "colorizeOutput": False,
+            "colorizeOutput": True,
             "saveRawDensePointCloud": True,
             "maxNbConnectedHelperPoints": -1,  
             "verboseLevel": "info"}

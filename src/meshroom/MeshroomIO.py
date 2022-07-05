@@ -1,11 +1,12 @@
 import os
 import sys
 import numpy as np
+import trimesh
 try:
     import ujson as json
 except ImportError:
     import json
-
+import src.meshroom.MeshroomCpp as MeshroomCpp
 
 class MeshroomIO:
 
@@ -60,12 +61,13 @@ class MeshroomIO:
                 "viewId": str(img['image_id']),
                 "poseId": str(img['image_id']),
                 "intrinsicId": str(img['camera_id']),
-                "path": pv_path + img['name'],
+                "path": pv_path + img['name'].replace('\\','/'),
                 "width": str(camera['width']),
                 "height": str(camera['height'])
             })
 
             R = img['R']
+            R = R * np.linalg.det(R)
             C = img['C']
             sfm_dict["poses"].append({
                 "poseId": str(img['image_id']),
@@ -125,6 +127,7 @@ class MeshroomIO:
         print("Finding obs for feature point and num. of images.") 
         max_img_id = 0
         obs_for_feature = [[] for _ in range(0,np.shape(xyz)[1])]
+        visibility_map = visibility_map.astype(dtype=int)
         for i in range(0,int(len(visibility_map)/4)):
             k = visibility_map[4*i]
             obs_for_feature[k].append(visibility_map[4*i + 1])
@@ -134,8 +137,8 @@ class MeshroomIO:
                 max_img_id = visibility_map[4*i + 1]
         
         print("Setting the observations ids.") 
-        images_obs = [{} for _ in range(0,max_img_id+1)]
-        images_obs_max = [0 for _ in range(0,max_img_id+1)]
+        images_obs = [{} for _ in range(max_img_id+1)]
+        images_obs_max = [0 for _ in range(max_img_id+1)]
         for i in range(0,int(len(visibility_map)/4)):
             img_id = visibility_map[4*i + 1]
             images_obs[img_id][self.get_obs_hash(visibility_map[4*i+2],visibility_map[4*i+3])] = images_obs_max[img_id]
@@ -178,20 +181,39 @@ class MeshroomIO:
             json.dump(sfm_dict, outfile)
 
 
-    def save_merged_mvs_to_json(self, out_path, pv_path, camera, images, xyz, visibility_map):
+    def save_merged_mvs_to_json(self, out_path, pv_path, camera, images, xyz, visibility_map, rgb):
         print("Saving Holo + MVS to Meshroom JSON.")
         sfm_dict = self.init_sfm_structure(camera)
         sfm_dict = self.add_views_to_sfm_structure(sfm_dict, pv_path, images, camera)
-        sfm_dict = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
-        outfile = open(out_path, 'w', buffering=4096)
-        outfile.write(json.dumps(sfm_dict))
-        outfile.close()
+        
+        rgb2 = np.ndarray.tolist(np.ndarray.flatten(rgb.astype(dtype=np.float64).T))
+        xyz2 = np.ndarray.tolist(np.ndarray.flatten(np.array(xyz).T))
+        str_structure = MeshroomCpp.encode_structure(np.shape(xyz)[1], \
+            int(np.shape(visibility_map)[0] / 4), xyz2, rgb2, visibility_map)
+        str_dict = json.dumps(sfm_dict)
+        with open(out_path, 'w')as outfile:
+            outfile.write(str_dict[0:-3] + str_structure + "}")
+
+        # visibility_map = np.array(visibility_map)
+        # sfm_dict = self.add_xyz_to_sfm_structure(sfm_dict, xyz, visibility_map)
+        # str_dict = json.dumps(sfm_dict)
+        # outfile = open(out_path, 'w')
+        # outfile.write(str_dict)
+        # outfile.close()
+
+
+    def load_vertices(self, file_path):
+        if file_path[-4::] == ".obj":
+            return self.load_obj_vertices(file_path)
+        if file_path[-4::] == ".ply":
+            return self.load_ply_vertices(file_path)
+        return np.array((0,3))
 
 
     def load_obj_vertices(self, obj_file_path):
         print("Load OBJ vertices: " + obj_file_path)
-        f = open(obj_file_path, 'r')
-        lines = f.readlines()
+        with open(obj_file_path, 'r') as f:
+            lines = f.readlines()
         count = 0
         for line in lines:
             if line.startswith('v'):  
@@ -202,25 +224,40 @@ class MeshroomIO:
 
         count2 = 0
         xyz = np.zeros((3,count), dtype=float)
+        rgb = np.zeros((3,count), dtype=np.uint8)
         for line in lines:
             if line.startswith('v'):    
                 pt_str = line[2:].split(' ')
                 xyz[0][count2] = float(pt_str[0])
                 xyz[1][count2] = float(pt_str[1])
                 xyz[2][count2] = float(pt_str[2])
+                if len(pt_str) >= 6:
+                    rgb[0][count2] = np.uint8(float(pt_str[3]))
+                    rgb[1][count2]  = np.uint8(float(pt_str[4]))
+                    rgb[2][count2] = np.uint8(float(pt_str[5]))
+                else:
+                    rgb[0][count2] = np.uint8(255)
+                    rgb[1][count2]  = np.uint8(255)
+                    rgb[2][count2] = np.uint8(255)
                 count2 += 1
                 continue
 
             if line.startswith('f'):
                 break
 
-        f.close()
-        return xyz
+        return (xyz, rgb)
 
     def load_ply_vertices(self, ply_file_path):
         print("Load PLY vertices: " + ply_file_path)
-        f = open(ply_file_path, 'r')
-        lines = f.readlines()
+        try:
+            with open(ply_file_path, 'r') as f:
+                lines = f.readlines()
+        except UnicodeDecodeError:  # binary_little_endian format
+            trimesh_pcd = trimesh.load(ply_file_path)
+            xyz = np.array(trimesh_pcd.vertices.T)
+            rgb = np.array(trimesh_pcd.colors[:, :3].T)
+            return (xyz, rgb)
+
         count = 0
         for line in lines:
             count += 1
@@ -229,6 +266,7 @@ class MeshroomIO:
 
         count2 = 0
         xyz = np.zeros((3,len(lines) - count), dtype=float)
+        rgb = np.zeros((3,len(lines) - count), dtype=np.uint8)
         for line in lines:
             count2 += 1
             if count2 <= count:
@@ -247,5 +285,14 @@ class MeshroomIO:
                 xyz[1][count2 - count - 1]  = float(pt_str[1])
                 xyz[2][count2 - count - 1] = float(pt_str[2]) 
 
+                if len(pt_str) >= 6:
+                    rgb[0][count2 - count - 1] = np.uint8(pt_str[3])
+                    rgb[1][count2 - count - 1]  = np.uint8(pt_str[4])
+                    rgb[2][count2 - count - 1] = np.uint8(pt_str[5])  
+                else:
+                    rgb[0][count2 - count - 1] = np.uint8(255)
+                    rgb[1][count2 - count - 1]  = np.uint8(255)
+                    rgb[2][count2 - count - 1] = np.uint8(255)
+
         f.close()
-        return xyz
+        return (xyz, rgb)

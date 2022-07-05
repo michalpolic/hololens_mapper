@@ -4,7 +4,11 @@
 import os
 import json
 
-import simpleFarm
+try:
+    import simpleFarm
+except ImportError:
+    pass
+
 from meshroom.core.desc import Level
 from meshroom.core.submitter import BaseSubmitter
 

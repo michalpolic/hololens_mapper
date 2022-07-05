@@ -1,2 +1,29 @@
-singularity build ./alicevision.sif docker://alicevision/meshroom:2021.1.0-av2.4.0-centos7-cuda10.2
-singularity build ./colmap.sif docker://uodcvip/colmap:latest
+#!/usr/bin/env bash
+
+if [ "$(uname)" == "Darwin" || "$(expr substr $(uname -s) 1 5)" == "Linux"]; then
+    # Singularity containers
+    singularity build ./alicevision.sif docker://alicevision/meshroom:2021.1.0-av2.4.0-centos7-cuda10.2
+    singularity build ./colmap.sif docker://uodcvip/colmap:latest
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT"]; then
+    # Docker images
+    docker pull alicevision/meshroom:2021.1.0-av2.4.0-centos7-cuda10.2
+    docker pull uodcvip/colmap:latest
+fi
+
+# create common conda enviroment
+conda env create -f environment.yml
+conda activate meshroom
+
+# compile the C++ codes
+# renderDepth.cpp
+mkdir ./src/utils/renderDepth/build
+cd ./src/utils/renderDepth/build
+cmake -D Python_EXECUTABLE=$(which python) -D pybind11_DIR="$(conda info --json | jq -r '.active_prefix')/share/cmake/pybind11" ..
+cmake --build . --config Release --target install
+
+cd ../../../..
+mkdir ./src/meshroom/MeshroomCpp/build
+cd ./src/meshroom/MeshroomCpp/build
+cmake -D Python_EXECUTABLE=$(which python) -D pybind11_DIR="$(conda info --json | jq -r '.active_prefix')/share/cmake/pybind11" ..
+cmake --build . --config Release --target install
+

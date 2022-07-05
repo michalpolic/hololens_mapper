@@ -3,9 +3,9 @@ import os
 import numpy as np
 from argparse import Namespace
 
-from utils.common.setup_helper import load_weights
-from utils.datasets.preprocess import load_im_flexible, load_im_tensor
-from networks.patch2pix import Patch2Pix
+from patch2pix.utils.common.setup_helper import load_weights
+from patch2pix.utils.datasets.preprocess import load_im_flexible, load_im_tensor
+from patch2pix.networks.patch2pix import Patch2Pix
 
 def init_patch2pix_matcher(args):  
     net = load_model(args.ckpt, method='patch2pix')

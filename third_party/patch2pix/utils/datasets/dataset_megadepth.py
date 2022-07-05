@@ -3,9 +3,9 @@ from PIL import Image
 import numpy as np
 import torch.utils.data as data
 
-from utils.datasets.preprocess import get_tuple_transform_ops
-from utils.eval.measure import sampson_distance
-from utils.eval.geometry import pose2fund
+from patch2pix.utils.datasets.preprocess import get_tuple_transform_ops
+from patch2pix.utils.eval.measure import sampson_distance
+from patch2pix.utils.eval.geometry import pose2fund
 
 class ImMatchDatasetMega(data.Dataset):
     '''Data wrapper for train image-matching with triplets'''

@@ -3,3 +3,8 @@ build*/
 tmp*/
 *.so
 *.sif
+launch.json
+settings.json
+MeshroomCache*/
+.vscode*/
+.ipynb_checkpoints/

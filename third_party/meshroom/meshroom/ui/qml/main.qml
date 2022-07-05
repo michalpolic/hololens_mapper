@@ -58,6 +58,8 @@ ApplicationWindow {
         category: 'UILayout'
         property alias showLiveReconstruction: liveSfMVisibilityCB.checked
         property alias showGraphEditor: graphEditorVisibilityCB.checked
+        property alias showImageViewer: imageViewerVisibilityCB.checked
+        property alias showViewer3D: viewer3DVisibilityCB.checked
     }
 
     Component.onDestruction: {
@@ -436,6 +438,10 @@ ApplicationWindow {
                     text: "Camera Tracking (experimental)"
                     onTriggered: ensureSaved(function() { _reconstruction.new("cameratracking") })
                 }
+                Action {
+                    text: "Photogrammetry Draft (No CUDA)"
+                    onTriggered: ensureSaved(function() { _reconstruction.new("photogrammetrydraft") })
+                }
             }
             Action {
                 id: openActionItem
@@ -574,6 +580,18 @@ ApplicationWindow {
             MenuItem {
                 id: liveSfMVisibilityCB
                 text: "Live Reconstruction"
+                checkable: true
+                checked: false
+            }
+            MenuItem {
+                id: imageViewerVisibilityCB
+                text: "Image Viewer"
+                checkable: true
+                checked: false
+            }
+            MenuItem {
+                id: viewer3DVisibilityCB
+                text: "3D Viewer"
                 checkable: true
                 checked: false
             }
@@ -738,10 +756,12 @@ ApplicationWindow {
                 }
 
                 function viewIn3D(attribute, mouse) {
-                    var loaded = viewer3D.view(attribute);
+                    if(!panel3dViewer)
+                        return false;
+                    var loaded = panel3dViewer.viewer3D.view(attribute);
                     // solo media if Control modifier was held
                     if(loaded && mouse && mouse.modifiers & Qt.ControlModifier)
-                        viewer3D.solo(attribute);
+                        panel3dViewer.viewer3D.solo(attribute);
                     return loaded;
                 }
 

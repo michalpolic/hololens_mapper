@@ -1,17 +1,22 @@
 from posixpath import join
+import os
 import sys
 from itertools import compress
-sys.path.append('./lib/patch2pix')
-
 from argparse import Namespace
-import os
 import numpy as np
-import pydegensac
 from pathlib import Path
-from lib.patch2pix.utils.common.plotting import plot_matches
-from lib.patch2pix.utils.eval.model_helper import *
-from lib.SuperGluePretrainedNetwork.models.matching import Matching
-from lib.SuperGluePretrainedNetwork.models.utils import (compute_pose_error, compute_epipolar_error,
+
+dir_path_root = __file__
+for i in range(3):
+    dir_path_root = os.path.dirname(dir_path_root)
+sys.path.append(dir_path_root + "/third_party")
+sys.path.append(dir_path_root + "/third_party/patch2pix")
+
+# import pydegensac
+from patch2pix.utils.common.plotting import plot_matches
+from patch2pix.utils.eval.model_helper import *
+from SuperGluePretrainedNetwork.models.matching import Matching
+from SuperGluePretrainedNetwork.models.utils import (compute_pose_error, compute_epipolar_error,
                           estimate_pose, make_matching_plot,
                           error_colormap, AverageTimer, pose_auc, read_image,
                           rotate_intrinsics, rotate_pose_inplane,

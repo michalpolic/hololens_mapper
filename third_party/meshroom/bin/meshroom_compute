@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 import argparse
 import sys
+import os
 
+dir_path = __file__
+dir_path = os.path.dirname(dir_path)
+dir_path = os.path.dirname(dir_path)
+sys.path.append(dir_path)
 import meshroom
 meshroom.setupEnvironment()
 
 import meshroom.core.graph
-import meshroom.core.taskManager
 from meshroom.core.node import Status
 
 
@@ -67,6 +71,4 @@ else:
     if args.toNode:
         toNodes = graph.findNodes([args.toNode])
 
-    taskManager = meshroom.core.taskManager.TaskManager()
-    taskManager.compute(graph, toNodes=toNodes, forceCompute=args.forceCompute, forceStatus=args.forceStatus)
-
+    meshroom.core.graph.executeGraph(graph, toNodes=toNodes, forceCompute=args.forceCompute, forceStatus=args.forceStatus)

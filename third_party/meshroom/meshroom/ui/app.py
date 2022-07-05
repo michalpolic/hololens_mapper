@@ -284,7 +284,7 @@ class MeshroomApp(QApplication):
             return md
         return markdown(md)
 
-    @Property(QJsonValue, constant=True)
+    #@Property(QJsonValue, constant=True)
     def systemInfo(self):
         import platform
         import sys
@@ -292,8 +292,9 @@ class MeshroomApp(QApplication):
             'platform': '{} {}'.format(platform.system(), platform.release()),
             'python': 'Python {}'.format(sys.version.split(" ")[0])
         }
+    systemInfo = Property(QJsonValue, constant=True)
 
-    @Property("QVariantList", constant=True)
+    #@Property("QVariantList", constant=True)
     def licensesModel(self):
         """
         Get info about open-source licenses for the application.
@@ -315,6 +316,7 @@ class MeshroomApp(QApplication):
                 "onlineUrl": "https://raw.githubusercontent.com/alicevision/AliceVision/develop/COPYING.md"
             }
         ]
+    licensesModel = Property("QVariantList", constant=True)
 
     recentProjectFilesChanged = Signal()
     recentProjectFiles = Property("QVariantList", _recentProjectFiles, notify=recentProjectFilesChanged)
