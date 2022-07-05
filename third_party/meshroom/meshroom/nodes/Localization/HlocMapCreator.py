@@ -44,6 +44,13 @@ This node creates HLOC map out of the images and COLMAP SfM.
             value="",
             uid=[0],
         ),
+        desc.BoolParam(
+            name='copyDensePts', 
+            label='Copy dense points',
+            description='''Copy dense point cloud if available in COLMAP SfM folder.''',
+            value=False, 
+            uid=[0]
+        ),
         desc.ChoiceParam(
             name='verboseLevel',
             label='Verbose Level',
@@ -109,6 +116,10 @@ This node creates HLOC map out of the images and COLMAP SfM.
 
             # build the map
             hloc.build_map('/data','/data')
+
+            # copy dense point cloud if available
+            if chunk.node.copyDensePts.value and os.path.isfile(chunk.node.inputSfM.value + '/model.obj'):
+                copy2(chunk.node.inputSfM.value + '/model.obj' , out_dir)
 
             chunk.logger.info('HLOC map composer done.')
           

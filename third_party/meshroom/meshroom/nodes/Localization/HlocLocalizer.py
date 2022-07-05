@@ -11,6 +11,7 @@ import shutil
 import sys
 import numpy as np
 from pathlib import Path
+from shutil import copy2
 
 # import mapper packages
 dir_path = __file__
@@ -61,6 +62,13 @@ Runs Hloc localization on input images.
             value='True',
             uid=[],
         ),
+        desc.BoolParam(
+            name='copyDensePts', 
+            label='Copy dense points',
+            description='''Copy dense point cloud if available in map folder.''',
+            value=False, 
+            uid=[0]
+        ),
         desc.ChoiceParam(
             name='verboseLevel',
             label='Verbose Level',
@@ -94,6 +102,13 @@ Runs Hloc localization on input images.
             value=os.path.join(desc.Node.internalFolder,'query_localization_results.txt'),
             uid=[],
         ),
+        desc.File(
+            name='densePts',
+            label='Dense point cloud',
+            description='',
+            value=os.path.join(desc.Node.internalFolder,'model.obj'),
+            uid=[],
+        )
     ]
 
     def copy_map_images(self, images, map_folder, output_folder):
@@ -187,6 +202,10 @@ Runs Hloc localization on input images.
                 with open(chunk.node.image_pairs.value, 'a') as image_pairs_file:
                     image_pairs_file.write(''.join(db_pairs))
                     image_pairs_file.write(''.join(q_pairs))
+
+            # copy dense point cloud if available
+            if chunk.node.copyDensePts.value and os.path.isfile(chunk.node.hlocMapDir.value + '/model.obj'):
+                copy2(chunk.node.hlocMapDir.value + '/model.obj' , output_folder)
 
             chunk.logger.info('Localization done.') 
 
