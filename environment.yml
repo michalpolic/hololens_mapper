@@ -22,3 +22,4 @@ dependencies:
       - requests==2.22.0
       - opencv-python
       - plyfile
+      - open3d

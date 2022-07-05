@@ -6,6 +6,7 @@ import shutil
 import glob
 import os
 import sys
+import numpy as np
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 # import mapper packages
@@ -31,7 +32,7 @@ Parameters = [
 
 class PointcloudComposer(desc.Node):
     size = desc.DynamicNodeSize("parameters")
-    category = 'InputPreprocessing'
+    category = 'Input Preprocessing'
     documentation = '''
 This node creates single sparse/dense pointcloud out of the input recording directory.
 Supported recodring direcotries are HoloLens, HoloLens 2. 
@@ -59,6 +60,22 @@ HoloLens 2:
             value='HoloLens',
             values=['HoloLens', 'HoloLens2', 'COLMAP', 'ORB SLAM', 'BAD SLAM','IOS AR', 'Android AR'],
             exclusive=True,
+            uid=[0],
+        ),
+        desc.FloatParam(
+            name='mindepth',
+            label='Minimal depth',
+            description='The threshold for minimal assumed depth. Smaller values will be filtered out.',
+            value=0.0,
+            range=(0.0, 25, 0.01),
+            uid=[0],
+        ),
+        desc.FloatParam(
+            name='maxdepth',
+            label='Maximal depth',
+            description='The threshold for maximal assumed depth. Larger values will be filtered out.',
+            value=25.0,
+            range=(0.5, 100, 0.1),
             uid=[0],
         ),
         desc.ListAttribute(
@@ -102,6 +119,7 @@ HoloLens 2:
 
         # compose pointcloud from depthmaps
         chunk.logger.info('Reading HoloLens depthmaps.')
+        chunk.logger.warning('The depth filtering for HoloLens is not implemented.')
 
         holo_io = HoloIO()
         xyz = holo_io.compose_common_pointcloud(chunk.node.recordingDir.value + "/long_throw_depth", 
@@ -110,12 +128,26 @@ HoloLens 2:
         return xyz
 
 
-    def compose_pointcloud_from_hololens2_recording(self, chunk, params):
+    def compose_pointcloud_from_hololens2_recording(self, chunk, params, mindepth, maxdepth):
         # compose pointcloud from depthmaps
         chunk.logger.info('Reading HoloLens2 pointclouds.')
 
+        # load camera centers
+        camera_centers = {}
+        rig2campath = os.path.join(chunk.node.recordingDir.value, "Depth Long Throw_extrinsics.txt")
+        rig2world_path = os.path.join(chunk.node.recordingDir.value, "Depth Long Throw_rig2world.txt")
+        rig2cam = np.loadtxt(str(rig2campath), delimiter=',').reshape((4, 4))
+        data = np.loadtxt(str(rig2world_path), delimiter=',')
+        for value in data:
+            timestamp = int(value[0])
+            world2rig = np.linalg.inv(value[1:].reshape((4, 4)))
+            world2cam = rig2cam @ world2rig
+            camera_centers[timestamp] = - world2cam[0:3,0:3].T @ world2cam[0:3,3]
+
         holo2_io = HoloIO2()
-        xyz = holo2_io.compose_common_pointcloud(chunk.node.recordingDir.value + "/Depth Long Throw", logger=chunk.logger) 
+        xyz = holo2_io.compose_common_pointcloud(
+            chunk.node.recordingDir.value + "/Depth Long Throw", logger=chunk.logger, \
+                camera_centers = camera_centers, mindepth = mindepth, maxdepth = maxdepth) 
 
         return xyz    
 
@@ -130,11 +162,13 @@ HoloLens 2:
             
             # process
             params = chunk.node.parameters.getPrimitiveValue(exportDefault=True)
+            mindepth = chunk.node.mindepth.value
+            maxdepth = chunk.node.maxdepth.value
             if chunk.node.recordingSource.value == 'HoloLens':
                 xyz = self.compose_pointcloud_from_hololens_recording(chunk, params)
 
             if chunk.node.recordingSource.value == 'HoloLens2':
-                xyz = self.compose_pointcloud_from_hololens2_recording(chunk, params)
+                xyz = self.compose_pointcloud_from_hololens2_recording(chunk, params, mindepth, maxdepth)
 
             if chunk.node.recordingSource.value in ['COLMAP', 'ORB SLAM', 'BAD SLAM','IOS AR', 'Android AR']:
                 chunk.logger.warning('This input is not supported yet.')

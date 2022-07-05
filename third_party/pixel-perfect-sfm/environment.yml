@@ -1,0 +1,26 @@
+name: pixel-perfect-sfm2
+channels:
+  - pytorch
+  - anaconda
+  - defaults
+  - pytorch-nightly
+  - conda-forge
+dependencies:
+  - mkl=2020
+  - python=3.8
+  - pytorch=1.11
+  - torchvision
+  - torchaudio
+  - cudatoolkit=11.3
+  - pip  
+  - git
+  - pip:
+      - numpy
+      - tqdm>=4.36.0
+      - matplotlib
+      - plotly
+      - scipy
+      - h5py
+      - omegaconf
+      - packaging
+      

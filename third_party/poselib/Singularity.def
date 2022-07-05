@@ -1,0 +1,84 @@
+Bootstrap: docker
+From: nvidia/cuda:11.3.1-devel-ubuntu20.04
+
+%files
+./third_party/poselib /app
+
+%post
+export DEBIAN_FRONTEND=noninteractive
+
+# update Nvidia package keys'
+apt-key del 7fa2af80
+rm /etc/apt/sources.list.d/cuda.list
+dpkg -i /app/cuda-keyring_1.0-1_all.deb
+
+apt-get update && apt-get -y upgrade
+apt-get -y install \
+build-essential \
+wget \
+bzip2 \
+ca-certificates \
+libglib2.0-0 \
+libxext6 \
+libsm6 \
+libxrender1 \
+git \
+ffmpeg
+rm -rf /var/lib/apt/lists/*
+apt-get clean
+
+# install last cmake
+apt-get update && \
+apt-get install -y software-properties-common lsb-release && \
+apt-get clean all
+wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6AF7F09730B3F0A4
+apt-get update
+apt-get -y install cmake
+cmake --version
+
+# install eigen 3.4.0
+git clone https://gitlab.com/libeigen/eigen.git
+cd eigen
+git checkout tags/3.4.0
+mkdir build
+cd build
+cmake ..
+make install
+
+#Installing Anaconda 3 
+wget -c https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+/bin/bash Anaconda3-2020.02-Linux-x86_64.sh -bfp /usr/local
+
+#Conda configuration of channels from .condarc file
+conda config --file /root/.condarc --add channels defaults
+conda config --file /root/.condarc --add channels conda-forge
+conda update conda
+
+conda env create -f /app/environment.yml
+echo ". /usr/local/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+echo "conda activate poselib2" >> $SINGULARITY_ENVIRONMENT
+conda init bash
+. /usr/local/etc/profile.d/conda.sh
+conda activate poselib2
+
+# build poselib
+mkdir /app/_build
+mkdir /app/_install
+cd /app
+cmake -S . -B _build/ -DPYTHON_PACKAGE=ON -DCMAKE_INSTALL_PREFIX=_install
+cmake --build _build/ --target install -j 8
+cmake --build _build/ --target pip-package
+cmake --build _build/ --target install-pip-package
+
+
+%environment
+export PYTHONPATH=/app
+
+%runscript
+cd /app
+exec "$@"
+
+%startscript
+cd /app

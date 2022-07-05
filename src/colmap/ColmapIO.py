@@ -201,7 +201,7 @@ class ColmapIO:
 
             observations = []
             for i in range(len(img["point3D_ids"])):
-                observations.extend([img['uvs'][2*i], img['uvs'][2*i + 1], img['point3D_ids'][i]])
+                observations.extend([img['uvs'][2*i], img['uvs'][2*i + 1], int(img['point3D_ids'][i])])
             line = " ".join(map(str, observations))
             images_file.write(line + "\n")
 
@@ -323,6 +323,26 @@ class ColmapIO:
             cursor.execute(sqlite_insert, data_tuple)
         con.commit()
         con.close()
+
+
+    def write_tentative_matches_into_file(self, file_path, images, matches):
+        out_file = open(file_path, "w")
+        
+        raw_matches = []
+        for pair_id in matches:
+            img1_id, img2_id = self.pair_id_to_image_ids(pair_id)
+            raw_matches.append(f"{images[img1_id]['name']} {images[img2_id]['name']}\n") 
+
+            corresp_ids = np.array([matches[pair_id]["obs_ids1"], matches[pair_id]["obs_ids2"]]).T.astype(dtype='uint32')
+            if img1_id > img2_id:
+                corresp_ids = corresp_ids[:, [1, 0]]
+            for i in range(np.shape(corresp_ids)[0]):
+                raw_matches.append(f"{corresp_ids[i][0]} {corresp_ids[i][1]}\n")
+            raw_matches.append("\n")
+
+        out_file.write("".join(raw_matches))
+        out_file.close()        
+
 
     def insert_inliers_into_database(self, physical_database_path, matches):
         con = sqlite3.connect(physical_database_path)
