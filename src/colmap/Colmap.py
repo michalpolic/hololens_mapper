@@ -18,12 +18,13 @@ class Colmap():
         self._colmap_container = colmap_container
         self._utils_math = UtilsMath()
 
-    def extract_features(self, database_path, image_path):
+    def extract_features(self, database_path, image_path, settings={}):
         self._colmap_container.command_dict("colmap feature_extractor", 
             {"database_path": database_path, 
             "image_path": image_path,
             "ImageReader.camera_model": "RADIAL",
-            "ImageReader.single_camera_per_folder": 1
+            "ImageReader.single_camera_per_folder": 1,
+            **settings
             })
 
     def exhaustive_matcher(self, database_path):

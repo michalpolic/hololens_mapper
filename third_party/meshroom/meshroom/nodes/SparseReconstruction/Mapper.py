@@ -38,11 +38,20 @@ This node COLMAP mapper on database which contains matches.
             uid=[0],
         ),
         desc.File(
-            name='imagesFolder',
-            label='Directory with images',
+            name='imageDirectory',
+            label='Image Directory',
             description='''
-            The directory containing input images.
-            The subdirectories are specified in images.txt.''',
+            The directory containing input image folders.
+            Select a file specifying the subdirectories from with images are taken in "Image Folder Names".''',
+            value='',
+            uid=[0],
+        ),
+        desc.File(
+            name='imageFolderNames',
+            label='Image Folder Names',
+            description='''
+            A textfile containing the list of folder names, which have images.
+            If not supplied, the folder default hololens folder structure is assumed.''',
             value='',
             uid=[0],
         ),
@@ -83,8 +92,10 @@ This node COLMAP mapper on database which contains matches.
             if not chunk.node.databaseFile:
                 chunk.logger.warning('Database file is missing.')
                 return
-            if not chunk.node.imagesFolder:
+            if not chunk.node.imageDirectory:
                 chunk.logger.warning('Folder with images is missing. They will not be in copied in cache folder.')
+            if not chunk.node.imageFolderNames or chunk.node.imageFolderNames.value == '':
+                chunk.logger.warning('File specifying folder names missing, assuming default hololens folder structure.')
             if not chunk.node.output.value:
                 return
 
@@ -93,8 +104,13 @@ This node COLMAP mapper on database which contains matches.
             out_dir = chunk.node.output.value
             holo_io = HoloIO()
             copy2(chunk.node.databaseFile.value, out_dir)
-            if chunk.node.imagesFolder:
-                holo_io.copy_sfm_images(chunk.node.imagesFolder.value, out_dir)
+            # get folder names and copy image to out dir
+            if chunk.node.imageFolderNames and chunk.node.imageFolderNames.value != '':
+                with open(chunk.node.imageFolderNames.value, "r") as f:
+                    img_folders = f.read().splitlines()
+                holo_io.copy_sfm_images(chunk.node.imageDirectory.value, out_dir, imgs_dir_list=img_folders)
+            else:
+                holo_io.copy_sfm_images(chunk.node.imageDirectory.value, out_dir)
 
             # run standard matching
             chunk.logger.info('Init COLMAP container')
