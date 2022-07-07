@@ -33,13 +33,6 @@ Runs Hloc localization on input images.
 
     inputs = [
         desc.File(
-            name='queryFile',
-            label='Query file path',
-            description='Path to Hloc query file (.txt)',
-            value='',
-            uid=[0],
-        ),
-        desc.File(
             name='hlocMapDir',
             label='Hloc Map directory',
             description='Hloc map directory (database, images, features)',
@@ -47,8 +40,15 @@ Runs Hloc localization on input images.
             uid=[0],
         ),
         desc.File(
+            name='queryFile',
+            label='Query file path',
+            description='Path to Hloc query file (.txt)',
+            value='',
+            uid=[0],
+        ),
+        desc.File(
             name='localSfM',
-            label='SfM folder',
+            label='Local SfM',
             description='Path to folder with images and local SfM.',
             value='',
             uid=[0],
@@ -182,7 +182,7 @@ Runs Hloc localization on input images.
                 um = UtilsMath()
                 if chunk.node.localSfM.value:
                     holo_io = HoloIO()
-                    holo_io.copy_sfm_images(chunk.node.localSfM.value, output_folder)
+                    holo_io.copy_all_images(chunk.node.localSfM.value, output_folder)
                     
                     chunk.logger.info('Updating the local sfm ...') 
                     hloc = Hloc()

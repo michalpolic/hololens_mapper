@@ -138,7 +138,7 @@ This node load SfM structures and remove images which you select.
 
             # output structures
             if chunk.node.cpoyImagesToOutput.value:
-                holo_io.copy_sfm_images(chunk.node.inputFolder.value, chunk.node.output.value)
+                holo_io.copy_all_images(chunk.node.inputFolder.value, chunk.node.output.value)
 
             chunk.logger.info("Saving COLMAP SfM.")
             colmap_io.write_model(chunk.node.output.value, cameras, images, points3D)

@@ -75,7 +75,7 @@ fused pointcloud file.
             # copy required resources
             out_dir = chunk.node.output.value
             holo_io = HoloIO()
-            holo_io.copy_sfm_images(chunk.node.colmapFolder.value, out_dir)
+            holo_io.copy_all_images(chunk.node.colmapFolder.value, out_dir)
             copy2(chunk.node.colmapFolder.value + '/cameras.txt', out_dir)
             copy2(chunk.node.colmapFolder.value + '/images.txt', out_dir)
             copy2(chunk.node.colmapFolder.value + '/points3D.txt', out_dir)

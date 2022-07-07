@@ -141,7 +141,7 @@ This node compute tentative matches between selected / all pairs of images.
             chunk.logger.info('Start matching.')
             out_dir = chunk.node.output.value
             holo_io = HoloIO()
-            holo_io.copy_sfm_images(chunk.node.imagesFolder.value, out_dir)
+            holo_io.copy_all_images(chunk.node.imagesFolder.value, out_dir)
             if chunk.node.imagePairs:
                 copy2(chunk.node.imagePairs.value, out_dir)
                 rel_path_to_img_pairs = '/data/' + os.path.basename(chunk.node.imagePairs.value)

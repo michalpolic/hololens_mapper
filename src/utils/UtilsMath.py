@@ -251,19 +251,20 @@ class UtilsMath:
         depth = np.linalg.norm(xyz - C, axis=0)
 
         # get data in image
-        f = renderDepth.is_visible(h, w, uv) & (np.array(uvl[2,:])[0] < 0)
-        depth_filtered = depth[f]
-        uv_filtered = uv[:, f]
-        xyz_filtered = xyz[:, f]
-        xyz_ids = np.arange(np.shape(uv)[1], dtype=np.float64)
+        filter = np.array(renderDepth.is_visible(h, w, np.shape(uv)[1], uv), dtype=np.bool8)
+        filter = filter & (np.array(uvl[2,:])[0] > 0)
+        depth_filtered = depth[filter]
+        uv_filtered = uv[::,filter]
+        xyz_filtered = xyz[::,filter]
+        xyz_ids = renderDepth.get_ids(np.shape(uv)[1])
 
-        xyz_ids_filtered = xyz_ids[f]
+        xyz_ids_filtered = xyz_ids[filter]
         
         # sort points wrt. depth
         depth_order = np.flip(np.argsort(depth_filtered))
         depth_sorted = depth_filtered[depth_order]
         uv_sorted = uv_filtered[::,depth_order]
-        xyz_sorted = xyz_filtered[::,depth_order]
+        # xyz_sorted = xyz_filtered[::,depth_order]
         xyz_ids_sorted = xyz_ids_filtered[depth_order]
         
         return (uv_sorted, depth_sorted, xyz_ids_sorted)
@@ -427,14 +428,14 @@ class UtilsMath:
 
 
     def get_calibration_matrix(self, camera):
-        try:
-            fx, fy = camera["f"][0], camera["f"][1]
-        except TypeError:
-            fx, fy = camera["f"], camera["f"]
-        return np.matrix([
-            [fx, 0,  camera["pp"][0]],
-            [0,  fy, camera["pp"][1]],
-            [0,  0,  1]])
+        focal_length = camera["f"]
+        if isinstance(focal_length, list):
+            if len(focal_length) > 1:
+                focal_length = (focal_length[0] + focal_length[1]) / 2
+            else:
+                focal_length = focal_length[0]
+        return np.matrix([[focal_length, 0, camera["pp"][0]],[0, focal_length, camera["pp"][1]],[0, 0, 1]])
+
 
     def hash_points(self,  xyz, xyz_hash_scale = -1.):
         new_xyz_mean = []

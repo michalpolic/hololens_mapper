@@ -104,7 +104,7 @@ This node COLMAP mapper on database which contains matches.
             colmap_io = ColmapIO()
             
             chunk.logger.info('Load sfm models.')
-            holo_io.copy_sfm_images(chunk.node.sfmTransform.value, chunk.node.output.value)
+            holo_io.copy_all_images(chunk.node.sfmTransform.value, chunk.node.output.value)
             cameras, images, points3D = colmap_io.load_model(chunk.node.sfmTransform.value)
             _, ref_images, _ = colmap_io.load_model(chunk.node.sfmReference.value)
 

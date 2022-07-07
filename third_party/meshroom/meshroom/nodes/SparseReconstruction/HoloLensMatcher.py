@@ -116,7 +116,7 @@ This node compute matches between all pairs of HoloLens rgb images.
             chunk.logger.info('Start matching.')
             out_dir = chunk.node.output.value
             holo_io = HoloIO()
-            holo_io.copy_sfm_images(chunk.node.imagesFolder.value, out_dir)
+            holo_io.copy_all_images(chunk.node.imagesFolder.value, out_dir)
 
             if chunk.node.imagePairs:
                 copy2(chunk.node.imagePairs.value, out_dir)

@@ -447,18 +447,14 @@ class HoloIO:
         points3D = []
         return points3D
 
-    def copy_sfm_images(self, source_dir, destination_dir, \
-        imgs_dir_list = ["pv", "vlc_ll", "vlc_lf", "vlc_rf", "vlc_rr"]):
-        
-        if not source_dir[-1] == '/':
-            source_dir = source_dir + '/'
-        if not destination_dir[-1] == '/':
-            destination_dir = destination_dir + '/'
-        
-        for imgs_dir in imgs_dir_list:
-            if os.path.isdir(source_dir + imgs_dir):
-                Path(destination_dir + imgs_dir).mkdir(parents=True, exist_ok=True)
-                copy_tree(source_dir + imgs_dir, destination_dir + imgs_dir)   
+    def copy_all_images(self, source_dir, destination_dir):
+        Path(destination_dir).mkdir(parents=True, exist_ok=True)
+        for f in os.listdir(source_dir):
+            new_path = os.path.join(source_dir, f)
+            if os.path.isfile(new_path) and f.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif', '.pgm')):
+                shutil.copy2(new_path,destination_dir)
+            if os.path.isdir(new_path):
+                self.copy_all_images(new_path, os.path.join(destination_dir, f)) 
 
     def convert_images_to_jpeg(self, working_dir, images):
         for img in images.values():

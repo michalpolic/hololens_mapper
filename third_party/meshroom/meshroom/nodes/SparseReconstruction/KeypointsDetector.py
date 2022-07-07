@@ -29,21 +29,11 @@ The database is in the COLMAP format.
 
     inputs = [
         desc.File(
-            name='inputSfM',
-            label='Input SfM',
+            name='imagesFolder',
+            label='Directory with images',
             description='''
-            The directory containing rough input SfM in COLMAP format. 
-            The camera models are in cameras.txt, poses are in images.txt 
-            and points in points3D.txt.''',
-            value='',
-            uid=[0],
-        ),
-        desc.File(
-            name='imageFolderNames',
-            label='Image Folder Names',
-            description='''
-            A textfile containing the list of folder names, which have images.
-            If not supplied, the folder default hololens folder structure is assumed.''',
+            The directory containing input images.
+            The subdirectories are specified in images.txt.''',
             value='',
             uid=[0],
         ),
@@ -97,14 +87,9 @@ The database is in the COLMAP format.
         try:
             chunk.logManager.start(chunk.node.verboseLevel.value)
             
-            if not chunk.node.inputSfM:
-                chunk.logger.warning('COLMAP SfM directory is missing.')
-                return
             if not chunk.node.imagesFolder:
                 chunk.logger.warning('Folder with images is missing.')
                 return
-            if not chunk.node.imageFolderNames or chunk.node.imageFolderNames.value == '':
-                chunk.logger.warning('File specifying folder names missing, assuming default hololens folder structure.')
             if not chunk.node.output.value:
                 return
 
@@ -112,13 +97,8 @@ The database is in the COLMAP format.
             out_dir = os.path.dirname(chunk.node.output.value)
             holo_io = HoloIO()
 
-            # get folder names and copy image to out dir
-            if chunk.node.imageFolderNames and chunk.node.imageFolderNames.value != '':
-                with open(chunk.node.imageFolderNames.value, "r") as f:
-                    img_folders = f.read().splitlines()
-                holo_io.copy_sfm_images(chunk.node.imageDirectory.value, out_dir, imgs_dir_list=img_folders)
-            else:
-                holo_io.copy_sfm_images(chunk.node.imageDirectory.value, out_dir)
+            # copy images/image_pairs.txt to working directory
+            holo_io.copy_all_images(chunk.node.imagesFolder.value, out_dir)
             
             # init contriners
             chunk.logger.info('Init COLMAP container')
@@ -138,11 +118,7 @@ The database is in the COLMAP format.
             # COLMAP detector
             if chunk.node.algorithm.value == 'SIFT':
                 chunk.logger.info('COLMAP --> compute SIFT features')
-                additional_settings = {
-                    "ImageReader.camera_model": "OPENCV_FISHEYE",
-                    "ImageReader.camera_params": '"1.1886892840742685e+03, 1.1893016496137716e+03, 1.6319484444597201e+03, 1.2428175443297432e+03, -6.5074864654844314e-02, 2.2948182911307041e-02, -3.9319897787193784e-03, -3.7411424922587362e-03"'
-                }
-                colmap.extract_features('/data/database.db', '/data', settings=additional_settings)           # COLMAP feature extractor
+                colmap.extract_features('/data/database.db', '/data')           # COLMAP feature extractor
             
             # remove images in cache
             if chunk.node.removeImages.value:
