@@ -31,7 +31,6 @@ dependencies:
       - opencv-python
       - plyfile
       - open3d
-      - trimesh=3.9.36
   # Debugging & development
   - jedi-language-server=0.34.11
   - jupyterlab-lsp=3.9.1

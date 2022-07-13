@@ -556,12 +556,15 @@ class UtilsMath:
         # test = self.estimate_visibility_for_image(all_data[0])
         # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/LibrarySmall_Holo2/data.mat", all_data[0])
 
+        for i in range(len(all_data)):
+            visibility_xyz.extend(self.estimate_visibility_for_image(all_data[i]))
 
-        chunksize = 16  #mp.cpu_count()
-        with mp.Pool(chunksize) as pool:
-            for ind, res in enumerate(pool.imap(self.estimate_visibility_for_image, all_data), chunksize):
-                for i in range(0,len(res)):
-                    visibility_xyz.append(res[i])       # pt3d_id = res[4*i + 0]    img_id = res[4*i + 1]    u = res[4*i + 2]    v = res[4*i + 3]
+        # chunksize = 16  #mp.cpu_count()
+        # with mp.Pool(chunksize) as pool:
+        #     for ind, res in enumerate(pool.imap(self.estimate_visibility_for_image, all_data), chunksize):
+        #         visibility_xyz.extend(res)              # pt3d_id = res[4*i + 0]    img_id = res[4*i + 1]    u = res[4*i + 2]    v = res[4*i + 3]
+                # for i in range(0,len(res)):
+                #     visibility_xyz.append(res[i])       # pt3d_id = res[4*i + 0]    img_id = res[4*i + 1]    u = res[4*i + 2]    v = res[4*i + 3]
 
         if all_points: 
             return (visibility_xyz, xyz)

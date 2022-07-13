@@ -4,21 +4,21 @@
         "releaseVersion": "2021.1.0",
         "fileVersion": "1.1",
         "nodesVersions": {
+            "IOConvertor": "0.1",
             "PointcloudComposer": "0.1",
-            "TentativeMatcher": "0.1",
-            "HoloLens2Downloader": "0.1",
+            "Mapper": "0.1",
+            "Matcher": "0.1",
             "KeyframeSelector": "0.1",
             "DensePonitcloudsConcatenator": "0.1",
             "DensePointcloudFilter": "0.1",
-            "HoloLens1Downloader": "0.1",
             "Patchmatchnet": "0.1",
-            "HlocLocalizer": "0.1",
             "ModelsAligner": "0.1",
+            "HlocLocalizer": "0.1",
+            "TentativeMatcher": "0.1",
+            "HoloLens1Downloader": "0.1",
+            "HoloLens2Downloader": "0.1",
             "KeypointsDetector": "0.1",
-            "MatchingPairsSelector": "0.1",
-            "IOConvertor": "0.1",
-            "Matcher": "0.1",
-            "Mapper": "0.1"
+            "MatchingPairsSelector": "0.1"
         }
     },
     "graph": {

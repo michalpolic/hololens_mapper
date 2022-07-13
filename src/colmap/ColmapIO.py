@@ -45,6 +45,12 @@ class ColmapIO:
                 camera['height'] = int(p[3])
                 
                 known_camera_model = False
+                if camera['model'] == "SIMPLE_PINHOLE":
+                    known_camera_model = True
+                    camera['f'] = float(p[4])
+                    camera['pp'] = [float(p[5]), float(p[6])]
+                    camera['rd'] = []
+
                 if camera['model'] == "PINHOLE":
                     known_camera_model = True
                     camera['f'] = [float(p[4]), float(p[5])]
@@ -71,6 +77,7 @@ class ColmapIO:
         first_row = True
         for line in data_lines:
             if len(line) == 0:
+                first_row = not first_row
                 continue
             if line[0] == "#":
                 continue
