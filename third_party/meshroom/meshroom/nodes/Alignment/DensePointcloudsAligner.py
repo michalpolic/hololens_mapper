@@ -30,7 +30,7 @@ class ICP(enum.Enum):
     SICP = 6
     SICP_P2P = 7
 
-class DensePonitcloudsAligner(desc.Node):
+class DensePointcloudsAligner(desc.Node):
 
     category = 'Alignment'
     documentation = '''

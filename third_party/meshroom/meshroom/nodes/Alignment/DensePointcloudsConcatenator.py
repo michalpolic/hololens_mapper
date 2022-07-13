@@ -20,7 +20,7 @@ from src.utils.UtilsMath import UtilsMath
 from src.meshroom.MeshroomIO import MeshroomIO
 from src.utils.UtilsContainers import UtilsContainers
 
-class DensePonitcloudsConcatenator(desc.Node):
+class DensePointcloudsConcatenator(desc.Node):
 
     category = 'Alignment'
     documentation = '''Loads two dense pointclouds and merge them into one.'''
