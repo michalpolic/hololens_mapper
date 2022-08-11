@@ -120,7 +120,7 @@ class UtilsMath:
         # savemat('/local1/projects/artwin/mapping/hololens_mapper/pipelines/MeshroomCache/HlocLocalizer/78e3afadb7ad4b73fff4d28b47372162efb55e9e', \
         #     {'reference_C':reference_C, 'transformed_C': transformed_C})
 
-        return self.estimate_euclidean_transformation(reference_C, transformed_C)
+        return self.estimate_similarity_transformation(reference_C, transformed_C)
 
 
     def merge_common_cameras(self, cameras1, cameras2, eps = 10^-4):
@@ -185,10 +185,10 @@ class UtilsMath:
     def estimate_colmap_to_holo_transformation(self, colmap_cameras, holo_cameras):
         print('Estimate COLMAP to HoloLens transformation.')
         colmap_C, holo_C = self.compose_coresponding_camera_centers(colmap_cameras, holo_cameras)
-        return self.estimate_euclidean_transformation(holo_C, colmap_C)
+        return self.estimate_similarity_transformation(holo_C, colmap_C)
 
 
-    def estimate_euclidean_transformation(self, X_ref, X_transformed):
+    def estimate_similarity_transformation(self, X_ref, X_transformed):
         # scale input points
         mc = np.mean(X_transformed, axis=1)
         mh = np.mean(X_ref, axis=1)
