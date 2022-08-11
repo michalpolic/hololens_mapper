@@ -9,7 +9,7 @@ mkdir ./third_party/Hierarchical-Localization/third_party/netvlad
 wget --no-check-certificate https://cvg-data.inf.ethz.ch/hloc/netvlad/Pitts30K_struct.mat -O ./third_party/Hierarchical-Localization/third_party/netvlad/VGG16-NetVLAD-Pitts30K.mat
 echo "Wget done"
 # create containers
-if [ "$(uname) == Darwin" || "$(expr substr $(uname -s) 1 5)" == "Linux"]; then
+if [ "$(uname) == Darwin" ] || [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     # Singularity containers
     echo "Init singularity containers"
     singularity build ./alicevision.sif docker://alicevision/meshroom:2021.1.0-av2.4.0-centos7-cuda10.2
@@ -28,7 +28,7 @@ if [ "$(uname) == Darwin" || "$(expr substr $(uname -s) 1 5)" == "Linux"]; then
     echo "pixel-perfect-sfm done"
     #singularity build --fakeroot ./predator.sif ./third_party/OverlapPredator/Singularity.def
     #echo "Overlap Predator done"
-elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" || "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT"]; then
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ] || [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
     # Docker images
     docker pull alicevision/meshroom:2021.1.0-av2.4.0-centos7-cuda10.2
     docker pull uodcvip/colmap:latest
