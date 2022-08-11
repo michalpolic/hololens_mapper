@@ -16,6 +16,7 @@ for i in range(6):
 sys.path.append(dir_path)
 from src.holo.HoloIO import HoloIO
 from src.holo.HoloIO2 import HoloIO2
+from src.utils.UtilsMath import UtilsMath
 
 Parameters = [
     desc.ChoiceParam(
@@ -78,6 +79,19 @@ HoloLens 2:
             range=(0.5, 100, 0.1),
             uid=[0],
         ),
+        desc.IntParam(
+            name='hashScale', 
+            label='Points hash scale', 
+            description='''
+            Points hash scale is an multiple of original pointcloud. 
+            The pointcloud will be sparser with given distace between two neighbouring points.
+            For example, if the pointcloud is in meters, scale 100 creates an 
+            hashed point cloud in centimeters grid before projection to images.
+            For value < 1 return the original point cloud.''', 
+            value=-1, 
+            uid=[0], 
+            range=(-1, 10000, 1),
+        ),
         desc.ListAttribute(
             name="parameters",
             elementDesc=desc.GroupAttribute(name="parameters", label="Parameters", description="", groupDesc=Parameters),
@@ -124,7 +138,9 @@ HoloLens 2:
         holo_io = HoloIO()
         xyz = holo_io.compose_common_pointcloud(chunk.node.recordingDir.value + "/long_throw_depth", 
             uvfile_path, chunk.node.recordingDir.value + "/long_throw_depth.csv", logger=chunk.logger) 
-
+        if chunk.node.hashScale.value > 0:
+            utils_math = UtilsMath()
+            pts, _, _ = utils_math.hash_points(pts, chunk.node.hashScale.value)
         return xyz
 
 
@@ -147,7 +163,8 @@ HoloLens 2:
         holo2_io = HoloIO2()
         xyz = holo2_io.compose_common_pointcloud(
             chunk.node.recordingDir.value + "/Depth Long Throw", logger=chunk.logger, \
-                camera_centers = camera_centers, mindepth = mindepth, maxdepth = maxdepth) 
+            camera_centers = camera_centers, mindepth = mindepth, maxdepth = maxdepth, \
+            hash_scale = chunk.node.hashScale.value) 
 
         return xyz    
 

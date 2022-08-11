@@ -10,6 +10,7 @@ import sys
 import multiprocessing as mp
 import cv2
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from PIL import Image
 from src.holo.HoloIO import HoloIO
@@ -272,7 +273,7 @@ class UtilsMath:
 
     def estimate_visibility_for_image(self, data):
         img_id = data["image_id"]
-        print(f'Estimate visibility for image: {img_id}')
+        # print(f'Estimate visibility for image: {img_id}')
         K  = data["K"] 
         R  = data["R"] 
         C  = data["C"] 
@@ -556,7 +557,7 @@ class UtilsMath:
         # test = self.estimate_visibility_for_image(all_data[0])
         # savemat(f"/local1/projects/artwin/outputs/hololens_mapper/LibrarySmall_Holo2/data.mat", all_data[0])
 
-        for i in range(len(all_data)):
+        for i in tqdm(range(len(all_data))):
             visibility_xyz.extend(self.estimate_visibility_for_image(all_data[i]))
 
         # chunksize = 16  #mp.cpu_count()

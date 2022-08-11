@@ -9,6 +9,7 @@ dependencies:
   - pytorch
   - torchvision
   - numpy
+  - tqdm
   - pip  
   - pip:
       - PyQt5==5.15.0
@@ -31,6 +32,7 @@ dependencies:
       - opencv-python
       - plyfile
       - open3d
+      - igraph
   # Debugging & development
   - jedi-language-server=0.34.11
   - jupyterlab-lsp=3.9.1

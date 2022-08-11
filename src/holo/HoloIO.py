@@ -399,6 +399,8 @@ class HoloIO:
             camera - the Colmap structure with camera info
         """
         camera = {}
+        if 'intrinsicId' not in intrinsics:
+            return camera
         camera['camera_id'] = int(intrinsics["intrinsicId"])
         camera['width'] = int(intrinsics["width"])
         camera['height'] = int(intrinsics["height"])

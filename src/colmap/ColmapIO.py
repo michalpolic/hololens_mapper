@@ -173,6 +173,8 @@ class ColmapIO:
             params.extend(cam['pp'])    
 
             known_camera_model = False
+            if cam['model'] == "SIMPLE_PINHOLE":
+                known_camera_model = True
             if cam['model'] == "PINHOLE":
                 known_camera_model = True
             if cam['model'] == "RADIAL":

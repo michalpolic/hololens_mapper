@@ -53,6 +53,34 @@ Runs Hloc localization on input images.
             value='',
             uid=[0],
         ),
+        desc.ChoiceParam(
+            name='imageDescriptor',
+            label='Image descriptor',
+            description='''Select the algorithm for describing the images.''',
+            value='netvlad',
+            values=['netvlad', 'dir'],
+            exclusive=True,
+            uid=[0],
+        ),
+        desc.ChoiceParam(
+            name='keypointDetector',
+            label='Keypoint detector',
+            description='''Select the keypoint detector.''',
+            value='superpoint-n4096-r1024',
+            values=['superpoint-n4096-r1024', 'superpoint-n4096-r1600', \
+                'r2d2-n5000-r1024','d2net-r1600','sift-r1600'],
+            exclusive=True,
+            uid=[0],
+        ),
+        desc.ChoiceParam(
+            name='matcher',
+            label='Matcher',
+            description='''Select the matching algorithm.''',
+            value='superglue',
+            values=['superglue', 'NN-superpoint', 'NN-ratio', 'NN-mutual'],
+            exclusive=True,
+            uid=[0],
+        ),
         desc.BoolParam(
             name='imagesRig',
             label='Use rig of images',
@@ -131,6 +159,18 @@ Runs Hloc localization on input images.
         
         return list_image_pairs
 
+    def rewrite_keypoint_detector_to_hloc_config_name(self, readable_name):
+        if readable_name == 'superpoint-n4096-r1024':
+            return 'superpoint_aachen'
+        if readable_name == 'superpoint-n4096-r1600':
+            return 'superpoint_inloc'
+        if readable_name == 'r2d2-n5000-r1024':
+            return 'r2d2'
+        if readable_name == 'd2net-r1600':
+            return 'd2net-ss'
+        if readable_name == 'sift-r1600':
+            return 'sift'
+
 
     def processChunk(self, chunk):
         try:
@@ -152,6 +192,10 @@ Runs Hloc localization on input images.
             relative_query_file = query_file.replace(cache_dir, '/data')
             relative_corresp_path = os.path.join(relative_output_folder,'corresp_2d-3d.npy')
             relative_query_poses_path = relative_query_file.replace('hloc_queries.txt', 'hloc_queries_poses.txt')
+            image_descriptor = chunk.node.imageDescriptor.value
+            keypoint_detector = self.rewrite_keypoint_detector_to_hloc_config_name( \
+                chunk.node.keypointDetector.value)
+            matcher = chunk.node.matcher.value
 
             chunk.logger.info('Init containers ...')
             if sys.platform == 'win32':
@@ -165,7 +209,8 @@ Runs Hloc localization on input images.
 
 
             chunk.logger.info('Running localization ...')   
-            hloc_container.command('sh /app/eval.sh ' + relative_map_folder + ' ' + relative_query_file + ' ' + relative_output_folder)
+            hloc_container.command('sh /app/eval.sh ' + relative_map_folder + ' ' + relative_query_file + ' ' + \
+                relative_output_folder  + ' ' + image_descriptor  + ' ' + keypoint_detector  + ' ' + matcher)
             
 
             if chunk.node.imagesRig.value:

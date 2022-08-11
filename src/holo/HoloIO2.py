@@ -7,9 +7,11 @@ import re
 import multiprocessing as mp
 from distutils.dir_util import copy_tree
 from plyfile import PlyData, PlyElement
+from tqdm import tqdm
 
 import numpy as np
 from src.holo.HoloIO import HoloIO
+from src.utils.UtilsMath import UtilsMath
 
 class HoloIO2:
 
@@ -23,7 +25,8 @@ class HoloIO2:
         Output: 
             camerainfo - dictionary camerainfo['name'] -> {array of camera parameters} 
         """
-        assert os.path.isfile(file_path), f"the csv file {file_path} does not exist"
+        file_path = Path(file_path)
+        assert file_path.is_file(), f"the csv file {file_path} does not exist"
 
         try:
             skipped = ''
@@ -70,46 +73,54 @@ class HoloIO2:
         finally:
             csvfile.close()
 
+    def load_ply(self, path: str) -> np.array:
+        """Read the pointcloud from given path.
+        Input: 
+            path - path to pointcloud PLY file
+        Output: 
+            pts - n points in (3,n) numpy array 
+        """
+        assert Path(path).is_file(), f"The PLY file {path} does not exist."
+        plydata = PlyData.read(path)
+        x = map(lambda pt: pt[0], plydata['vertex'].data)
+        y = map(lambda pt: pt[1], plydata['vertex'].data)
+        z = map(lambda pt: pt[2], plydata['vertex'].data)
+        xyz = list(x) + list(y) + list(z)
+        return np.array(xyz,dtype=float).reshape((3,-1),order='C')
 
-    def compose_common_pointcloud(self, pointclouds_dir, logger=None, \
-        camera_centers = None, mindepth = 0, maxdepth = np.Inf):
+    def compose_common_pointcloud(self, pointclouds_dir = str, logger=None, \
+        camera_centers: np.array = None, mindepth: float = 0, maxdepth: float = np.Inf, \
+        hash_scale: float = -1):
         """Read and concatenate the pointcloud in Long Throw Depth folder.
         Input: 
             pointclouds_dir - path to pointclouds directory
         Output: 
             xyz - single common pointcloud
         """
-        if not pointclouds_dir[-1] == '/':
-            pointclouds_dir = pointclouds_dir + '/'
+        pointclouds_path = Path(pointclouds_dir)
+        ply_files = np.sort(np.array([f for f in os.listdir(pointclouds_dir) \
+            if (pointclouds_path / f).is_file() and f[-4:] == '.ply']))
 
-        xyz = []
-        for r, d, f in os.walk(pointclouds_dir):
-            for filename in f:
-                if ".ply" in filename:
-                    if logger:
-                        logger.info(f'Loading: {filename}')
-
-                    plydata = PlyData.read(pointclouds_dir + filename)
-                    if camera_centers:
-                        depth_timestamp = int(filename[:-4])
-                        camera_timestamps = np.array(list(camera_centers.keys()))
-                        closest_pose = camera_timestamps[
-                            np.argmin(np.abs(camera_timestamps - depth_timestamp))]
-                        camera_center = camera_centers[closest_pose]
-
-                        for pt in plydata['vertex'].data:
-                            cam2pt_distance = np.linalg.norm(camera_center - [pt[0],pt[1],pt[2]])
-                            if cam2pt_distance > mindepth and cam2pt_distance < maxdepth:
-                                xyz.append(pt[0])
-                                xyz.append(pt[1])
-                                xyz.append(pt[2])
-                    else:
-                        for pt in plydata['vertex'].data:
-                            xyz.append(pt[0])
-                            xyz.append(pt[1])
-                            xyz.append(pt[2])
-
-        return np.array(xyz,dtype=float).reshape((3,-1),order='F') 
+        print('Loading ply files ... ')
+        all_pts = np.zeros((3,0))
+        for filename in tqdm(ply_files):
+            pts = self.load_ply(str(pointclouds_path / filename))
+            if camera_centers:
+                depth_timestamp = int(filename[:-4])
+                camera_timestamps = np.array(list(camera_centers.keys()))
+                closest_pose = camera_timestamps[
+                    np.argmin(np.abs(camera_timestamps - depth_timestamp))]
+                camera_center = camera_centers[closest_pose]
+                cam2pt_distance2 = np.sum((pts - camera_center.reshape((3,1)))**2,axis=0) 
+                filter = (cam2pt_distance2 > mindepth**2) * (cam2pt_distance2 < maxdepth**2)
+                pts = pts[:,filter]  
+            all_pts = np.append(all_pts, pts, 1)
+        
+        if hash_scale > 0:
+            utils_math = UtilsMath()
+            all_pts, _, _ = utils_math.hash_points(all_pts, hash_scale)
+            
+        return all_pts 
 
 
     def get_pv_rig2world(self, data):
@@ -132,7 +143,8 @@ class HoloIO2:
             images - the Colmap structure with images parameters
         """
         images = []
-        img_timestamps = list(map(int, [f[0:-4] for f in os.listdir(recording_dir + imgs_dir)]))
+        img_timestamps = list(map(int, [f.replace('.jpg','').replace('.png','').replace('.pgm','').replace('.bytes','') \
+            for f in os.listdir(recording_dir + imgs_dir)]))
         for txt_params in rig2world.values():
             data = list(map(float, txt_params.split(",")))
             rig2world = self.get_pv_rig2world(data) if pv else self.get_vlc_rig2world(data)  
@@ -170,11 +182,13 @@ class HoloIO2:
         extrinsics = ''
         images_dir = ''
         images_ext = ''
+        recording_path = Path(recording_dir)
         if tracking_file == 'pv':
             images_ext = 'png'
-            pv_files = [f for f in os.listdir(recording_dir) if len(f)>7 and f[-7:]=='_pv.txt']
+            pv_files = [f for f in os.listdir(recording_path) if len(f)>7 and f[-7:]=='_pv.txt']
             assert len(pv_files) > 0, 'Failed to find the tracking info for PV camera in recording dir.'
-            rig2world = recording_dir + pv_files[0]
+            rig2world = recording_path / pv_files[0]
+            images_dir = 'PV'
         else:
             if len(tracking_file) == 0 or tracking_file not in ['vlc_ll','vlc_lf','vlc_rf','vlc_rr']:
                 assert False, 'Missing vlc camera abreviation in tracking files.'
@@ -187,9 +201,13 @@ class HoloIO2:
                 images_dir = 'VLC RF'
             if tracking_file == 'vlc_rr':
                 images_dir = 'VLC RR'
-            rig2world = recording_dir + images_dir + '_rig2world.txt'
-            extrinsics = recording_dir + images_dir + '_extrinsics.txt'
-        return (rig2world, extrinsics, tracking_file, images_ext)
+            rig2world = recording_path / (images_dir + '_rig2world.txt')
+            extrinsics = recording_path / (images_dir + '_extrinsics.txt')
+        
+        if Path(recording_path / images_dir).is_dir():
+            return (rig2world, extrinsics, images_dir, images_ext)
+        else:
+            return (rig2world, extrinsics, tracking_file, images_ext)
 
 
     def load_model(self, recording_dir, intrinsics):
@@ -208,22 +226,27 @@ class HoloIO2:
         cameras = []
         images = []
         holo_io = HoloIO()
+        camera_index = 0
         for camera_params in intrinsics:
             rig2world_file, extrinsics_file, imgs_dir, imgs_ext = \
                 self.get_tracking_files_for_shortcuts(recording_dir, camera_params["trackingFile"])
             
-            if os.path.exists(rig2world_file):
+            if rig2world_file.is_file():
                 # add camera to cameras
                 cameras.append(holo_io.get_hololens_camera_from_intrinsics(camera_params))
+                if 'intrinsicId' in camera_params:
+                    camera_index = camera_params["intrinsicId"]
+                else:
+                    camera_index += 1
 
                 # add images to images
-                rig2world, _ = self.read_csv(rig2world_file, (1 if len(extrinsics_file) == 0 else 0))
+                rig2world, _ = self.read_csv(rig2world_file, (1 if len(str(extrinsics_file)) == 0 else 0))
                 extrinsics = np.eye(4)
-                if len(extrinsics_file) > 0 and Path(extrinsics_file).exists():
+                if len(str(extrinsics_file)) > 0 and extrinsics_file.is_file():
                     extrinsics = np.loadtxt(extrinsics_file, delimiter=',').reshape(4,4)
                 images.extend(self.get_hololens_images(rig2world, extrinsics, recording_dir, imgs_dir, 
-                    imgs_ext, camera_id = camera_params["intrinsicId"], image_id = len(images), 
-                    pv = (True if len(extrinsics_file) == 0 else False)))
+                    imgs_ext, camera_id = camera_index, image_id = len(images), 
+                    pv = (True if len(str(extrinsics_file)) == 0 else False)))
 
         images_dict = {}
         for img in images:

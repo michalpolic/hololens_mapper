@@ -9,6 +9,15 @@ from hloc import localize_sfm
 map_folder = sys.argv[1]
 query_file = sys.argv[2]
 output_folder = sys.argv[3]
+image_descriptor = 'netvlad'
+keypoint_detector = 'feats-r2d2-n5000-r1024'
+matcher = 'superglue'
+if len(sys.argv) >= 4:
+    image_descriptor = sys.argv[4]
+if len(sys.argv) >= 5:
+    keypoint_detector = sys.argv[5]
+if len(sys.argv) >= 6:
+    matcher = sys.argv[6]
 
 map_path = Path(map_folder) 
 db_images_path = map_path
@@ -16,9 +25,9 @@ query_folder_path = Path(query_file).parent
 query_images_path = query_folder_path
 
 # setting 
-retrieval_conf = extract_features.confs['netvlad']
-feature_conf = extract_features.confs['superpoint_aachen']
-matcher_conf = match_features.confs['superglue']
+retrieval_conf = extract_features.confs[image_descriptor]
+feature_conf = extract_features.confs[keypoint_detector]
+matcher_conf = match_features.confs[matcher]
 
 # database features and descriptors
 reference_sfm = map_path / 'sfm_superpoint+superglue'

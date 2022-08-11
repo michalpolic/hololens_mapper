@@ -11,8 +11,8 @@
         "HoloLens1Downloader_1": {
             "nodeType": "HoloLens1Downloader",
             "position": [
-                781,
-                -33
+                0,
+                0
             ],
             "parallelization": {
                 "blockSize": 0,
@@ -20,13 +20,13 @@
                 "split": 1
             },
             "uids": {
-                "0": "b2d0fc9708ae42e21faec37d994a68d3311df672"
+                "0": "20d3e1ee213079602877c9fb554734e91647b33a"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "username": "IMPACT",
                 "password": "Praha123",
-                "ip": "192.168.68.110",
+                "ip": "10.37.1.101",
                 "recordingsFolder": "d:/tmp/HoloLensRecording",
                 "download": true,
                 "delete": false,
