@@ -320,7 +320,10 @@ different format.
 
             if 'LQuery' in chunk.node.outputSfMFormat.value:
                 chunk.logger.info('Composing the localization query file.')
-                holo_io.copy_all_images(chunk.node.inputFolder.value, os.path.join(chunk.node.output.value,'query'))
+                if not chunk.node.copyImagesToOutput.value:
+                    holo_io.copy_all_images(chunk.node.inputFolder.value, os.path.join(chunk.node.output.value,'query'))
+                else:
+                    holo_io.copy_all_images(chunk.node.output.value, os.path.join(chunk.node.output.value,'query'))
                 hloc.compose_localization_query_from_model(chunk.node.output.value, cameras, images)
                 
 
