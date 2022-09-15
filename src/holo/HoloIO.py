@@ -455,7 +455,7 @@ class HoloIO:
             new_path = os.path.join(source_dir, f)
             if os.path.isfile(new_path) and f.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif', '.pgm')):
                 shutil.copy2(new_path,destination_dir)
-            if os.path.isdir(new_path):
+            if os.path.isdir(new_path) and not new_path == destination_dir:
                 self.copy_all_images(new_path, os.path.join(destination_dir, f)) 
 
     def convert_images_to_jpeg(self, working_dir, images):
