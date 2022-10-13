@@ -5,6 +5,7 @@ tmp*
 *.so
 *.pyd
 *.sif
+*.pyc
 launch.json
 settings.json
 MeshroomCache*/
