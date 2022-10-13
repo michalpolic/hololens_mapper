@@ -7,6 +7,14 @@ import glob
 import os
 import sys
 import numpy as np
+from numpy import asarray
+from PIL import Image
+from scipy.spatial.transform import Rotation
+from scipy.io import savemat
+from tqdm import tqdm
+import xml.etree.ElementTree as ET
+from pathlib import Path
+import cv2
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 # import mapper packages
@@ -16,6 +24,7 @@ for i in range(6):
 sys.path.append(dir_path)
 from src.holo.HoloIO import HoloIO
 from src.holo.HoloIO2 import HoloIO2
+from src.arfundation.ARFundationIO import ARFundationIO
 from src.utils.UtilsMath import UtilsMath
 
 Parameters = [
@@ -24,7 +33,7 @@ Parameters = [
         label='Name',
         description='The parameter name.',
         value='HoloLens: UVfile',
-        values=['HoloLens: UVfile'],
+        values=['HoloLens: UVfile', 'ARFoundation: DataXML', 'ARFoundation: DepthScale'],
         exclusive=True,
         uid=[],
         ),
@@ -59,7 +68,7 @@ HoloLens 2:
             label='Recording source',
             description='The device/algorithm used to create recording folder.',
             value='HoloLens',
-            values=['HoloLens', 'HoloLens2', 'COLMAP', 'ORB SLAM', 'BAD SLAM','IOS AR', 'Android AR'],
+            values=['HoloLens', 'HoloLens2', 'COLMAP', 'ORB-SLAM', 'BAD-SLAM', 'ARFoundation'],
             exclusive=True,
             uid=[0],
         ),
@@ -168,6 +177,116 @@ HoloLens 2:
 
         return xyz    
 
+    def compose_pointcloud_from_ar_recording(self, chunk, params, mindepth, maxdepth, scale = 1/16):
+        # check the decoding params for depthmaps
+        data_path = None
+        for param in params:
+            if param['name'] == 'ARFoundation: DataXML':
+                data_path = param['value']
+            if param['name'] == 'ARFoundation: DepthScale':
+                data_path = param['value']
+        if data_path == None:
+            chunk.logger.error('Missing camera data for decoding depthmaps.')
+            return
+
+        # load the camera poses
+        ar = ARFundationIO()
+        utils_math = UtilsMath()
+        xml = ET.parse(data_path).getroot() 
+        poses = {}
+        for pose in xml.findall('pose'):
+            index, tx, ty, tz, qw, qx, qy, qz = ar.get_pose_parameters(pose)
+            R = utils_math.q2r(np.array(list(map(float,[qw, qx, qy, qz]))))
+            t = np.matrix(list(map(float,[tx, ty, tz]))).T
+            C = -R.T * t
+            poses[int(index)] = {'R': R, 't':t, 'C': C}
+
+        # convert depth to world
+        depth_record = xml.find('depth')
+        width, height = (int(depth_record.attrib['width']), int(depth_record.attrib['height']))
+        new_width = int(scale * width)
+        new_height = int(scale * height)
+        xv, yv = np.meshgrid(np.arange(0, new_width, 1), np.arange(0, new_height, 1))
+        u = np.reshape((xv, yv), (2, new_width*new_height))
+        u = np.r_[u, [np.ones(new_width*new_height)]]
+        for xml_record in tqdm(xml.findall('depth')):    
+            depth = np.load(Path(chunk.node.recordingDir.value) / 'depth' \
+                / (xml_record.attrib['index'].zfill(5) + '.npy'))
+            
+            (Path(chunk.node.output.value).parent / 'depth').mkdir(exist_ok=True)
+            savemat(Path(chunk.node.output.value).parent / 'depth' \
+                / (xml_record.attrib['index'].zfill(5) + '.mat'), {"depth": depth})
+
+            # new_depth = cv2.resize(depth, dsize=(new_width, new_height), interpolation=cv2.INTER_AREA)
+            
+
+        pass
+        
+
+        # # meshgrid
+        
+        # w, h = 2048, 1536
+        # pixel = w*h
+        # nx = np.arange(0, w, 1)
+        # ny = np.arange(0, h, 1)
+        # xv, yv = np.meshgrid(nx, ny)
+
+        # u = np.reshape((xv, yv), (2, pixel))
+        # u = np.r_[u, [np.ones(pixel, dtype="int")]]
+        
+
+        # # calibration matrix
+        # focal_x = 1588.85   #chunk.node.parameters.value
+        # focal_y = 1588.85
+        # p_point_x = 950.1543
+        # p_point_y =  714.7916
+        # K = [[focal_x, 0, p_point_x],
+        #     [0, focal_y, p_point_y],
+        #     [0, 0, 1]]
+        # inv_K = np.linalg.inv(K)
+
+        # m = inv_K @ u
+        
+
+        # # load the depthmaps in [meters]
+        # depth_images_path = chunk.node.recordingDir.value   #depth.png
+        # depth_images = []
+        # Images = os.listdir(depth_images_path)
+
+        # for i in Images:
+        #     if i.find(".png") >= 0:
+        #         img = Image.open(i)
+        #         depth_images.append(img)
+
+        # depths = []
+        # for i in depth_images:
+        #     depths.append(asarray(i))
+
+        # a = 0
+        # new_depths = []
+        # for i in depths:
+        #     for j in depths[a]:
+        #         f = struct.unpack('>f', bytes(j))
+        #         new_depths.append(f)
+        #     a += 1
+        
+        # n = []
+            
+
+        # xyz = []
+        # index = 0
+        # for i in inv_rotation_matrices:
+        #     for j in n:
+        #         rot = i * j
+        #         x = rot + camera_centers[index][0]
+        #         y = rot + camera_centers[index][1]
+        #         z = rot + camera_centers[index][2]
+        #         xyz.append([x, y, z])
+        #     index += 1
+        # # together - do the transformation into the world coordinate system
+
+        # # return points in 3D
+        
 
     def processChunk(self, chunk):
         try:
@@ -187,7 +306,10 @@ HoloLens 2:
             if chunk.node.recordingSource.value == 'HoloLens2':
                 xyz = self.compose_pointcloud_from_hololens2_recording(chunk, params, mindepth, maxdepth)
 
-            if chunk.node.recordingSource.value in ['COLMAP', 'ORB SLAM', 'BAD SLAM','IOS AR', 'Android AR']:
+            if chunk.node.recordingSource.value == 'ARFoundation':
+                xyz = self.compose_pointcloud_from_ar_recording(chunk, params, mindepth, maxdepth)
+
+            if chunk.node.recordingSource.value in ['COLMAP', 'ORB-SLAM', 'BAD-SLAM']:
                 chunk.logger.warning('This input is not supported yet.')
                 return
 

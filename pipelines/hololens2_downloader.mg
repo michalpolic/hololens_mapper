@@ -20,14 +20,14 @@
                 "split": 1
             },
             "uids": {
-                "0": "67ee3189f347e96389879870792feefb50aa03eb"
+                "0": "a556b3062821f93c6db901baabde15a7f6107c96"
             },
             "internalFolder": "{cache}/{nodeType}/{uid0}/",
             "inputs": {
                 "username": "IMPACT",
                 "password": "Praha123",
                 "ip": "127.0.0.1:10080",
-                "recordingsFolder": "D:/tmp/HoloLens2Recording__BD",
+                "recordingsFolder": "D:/tmp/HoloLens2Recording__OK2",
                 "download": true,
                 "delete": true,
                 "verboseLevel": "info"
