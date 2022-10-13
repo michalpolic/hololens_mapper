@@ -1,10 +1,12 @@
 import os
 import sys
+import io
 import numpy as np
 from tqdm import tqdm
 from PIL import Image
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from scipy.io import savemat
 
 class ARFundationIO:
 
@@ -35,11 +37,13 @@ class ARFundationIO:
                 with open(color_images_path, mode='rb') as file:
                     numpy_data = np.fromfile(file, np.dtype('B'), \
                         int(xml_record.attrib['length']), sep='', offset=int(xml_record.attrib['position']))
-                np_image = np.reshape(numpy_data, (int(xml_record.attrib['height']), int(xml_record.attrib['width']), 4))
-                img_name = xml_record.attrib['index'].zfill(5) + '.png'
-                image_path = Path(output_folder) / 'images' / img_name
-                image_path.parent.mkdir(parents=True, exist_ok=True)
-                Image.fromarray(np_image).save(image_path)
+                    #np_image = np.reshape(numpy_data, (int(xml_record.attrib['height']), int(xml_record.attrib['width']), 4))
+                    img_name = xml_record.attrib['index'].zfill(5) + '.jpg'
+                    image_path = Path(output_folder) / 'images' / img_name
+                    image_path.parent.mkdir(parents=True, exist_ok=True)
+                    # Image.fromarray(np_image).save(image_path)
+                    image = Image.open(io.BytesIO(numpy_data))
+                    image.transpose(Image.FLIP_TOP_BOTTOM).save(image_path)
 
                 # add the image.txt record
                 index, tx, ty, tz, qw, qx, qy, qz = self.get_pose_parameters(id_to_pose[xml_record.attrib['index']])
@@ -56,7 +60,9 @@ class ARFundationIO:
                     int(xml_record.attrib['length']), sep='', offset=int(xml_record.attrib['position']))
             np_image = np.reshape(np.frombuffer(numpy_data, dtype=np.float32), \
                  (int(xml_record.attrib['height']), int(xml_record.attrib['width'])))
-            image_path = Path(output_folder) / 'depth' / (xml_record.attrib['index'].zfill(5) + '.npy')
-            image_path.parent.mkdir(parents=True, exist_ok=True)
-            np.save(image_path, np_image)
+            np_depthmap_path = Path(output_folder) / 'depth' / (xml_record.attrib['index'].zfill(5) + '.npy')
+            np_depthmap_path.parent.mkdir(parents=True, exist_ok=True)
+            np.save(np_depthmap_path, np_image)
+            mat_depthmap_path = Path(output_folder) / 'depth' / (xml_record.attrib['index'].zfill(5) + '.mat')
+            savemat(mat_depthmap_path, {"depth": np_image})
 
