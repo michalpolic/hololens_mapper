@@ -34,6 +34,54 @@ fused pointcloud file.
             value="",
             uid=[0],
         ),
+        desc.IntParam(
+            name='numViews', 
+            label='Number of neighbouring views', 
+            description='The number of assumed neighbouring views in PatchmatchNet.', 
+            value=7, 
+            uid=[0], 
+            range=(3, 30, 1),
+        ),
+        desc.IntParam(
+            name='imageMaxDim', 
+            label='Max. image dimension', 
+            description='The maximal dimension of image edges.', 
+            value=2048, 
+            uid=[0], 
+            range=(256, 4096, 1),
+        ),
+        desc.IntParam(
+            name='geoMaskThres', 
+            label='Geometric mask threshold', 
+            description='The threshold for geometric consistency filtering. More details in PatchmatchNet paper.', 
+            value=5, 
+            uid=[0], 
+            range=(1, 20, 1),
+        ),
+        desc.FloatParam(
+            name='photoThres', 
+            label='Photometric consistency threshold', 
+            description='The threshold for photometric consistency filtering. More details in PatchmatchNet paper.', 
+            value=0.8, 
+            uid=[0], 
+            range=(0.01, 1, 0.01),
+        ),
+        desc.FloatParam(
+            name='geoPixelThres', 
+            label='Geometric pixel threshold', 
+            description='The pixel threshold for geometric consistency filtering. More details in PatchmatchNet paper.', 
+            value=1.0, 
+            uid=[0], 
+            range=(0.1, 10, 0.1),
+        ),
+        desc.FloatParam(
+            name='geoDepthThres', 
+            label='Geometric depth threshold', 
+            description='The depth threshold for geometric consistency filtering. More details in PatchmatchNet paper.', 
+            value=0.01, 
+            uid=[0], 
+            range=(0.001, 1, 0.001),
+        ),
         desc.ChoiceParam(
             name='verboseLevel',
             label='Verbose Level',
@@ -106,12 +154,13 @@ fused pointcloud file.
                 {"input_folder": "/data/dense", 
                 "output_folder": "/data",
                 "checkpoint_path": "/app/checkpoints/params_000007.ckpt",
-                "num_views": 7,
-                "image_max_dim": 2048,
-                "geo_mask_thres": 5,
-                "photo_thres": 0.8
+                "num_views": chunk.node.numViews.value,
+                "image_max_dim": chunk.node.imageMaxDim.value,
+                "geo_mask_thres": chunk.node.geoMaskThres.value,
+                "photo_thres": chunk.node.photoThres.value,
+                "geo_pixel_thres": chunk.node.geoPixelThres.value,
+                "geo_depth_thres": chunk.node.geoDepthThres.value
                 })
-            
 
             chunk.logger.info('Patchmatchnet done.')
           

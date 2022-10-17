@@ -11,6 +11,8 @@ from plyfile import PlyData, PlyElement
 from typing import Tuple
 from torch.utils.data import DataLoader
 import multiprocessing as mp
+import scipy.io
+from pathlib import Path
 
 from datasets.data_io import read_cam_file, read_image, read_map, read_pair_file, save_image, save_map
 from datasets.mvs import MVSDataset
@@ -81,8 +83,12 @@ def save_depth(args):
                 os.makedirs(os.path.dirname(confidence_filename), exist_ok=True)
                 # save depth maps
                 save_map(depth_filename, depth_est.squeeze(0))
+                scipy.io.savemat(os.path.join(args.output_folder, \
+                    filename.format("depth_est", ".mat")), {'depth_mvs':depth_est})
                 # save confidence maps
                 save_map(confidence_filename, photometric_confidence)
+                scipy.io.savemat(os.path.join(args.output_folder, \
+                    filename.format("confidence", ".mat")), {'confidence_mvs':confidence})
 
 
 # project the reference point cloud into the source view, then project back
@@ -92,7 +98,8 @@ def reproject_with_depth(
     extrinsics_ref: np.ndarray,
     depth_src: np.ndarray,
     intrinsics_src: np.ndarray,
-    extrinsics_src: np.ndarray
+    extrinsics_src: np.ndarray,
+    cache_path: Path
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Project the reference points to the source view, then project back to calculate the reprojection error
 
@@ -133,17 +140,25 @@ def reproject_with_depth(
 
     # source 3D space
     # NOTE that we should use sampled source-view depth_here to project back
-    xyz_src = np.matmul(np.linalg.inv(intrinsics_src),
+    xyz_src2 = np.matmul(np.linalg.inv(intrinsics_src),
                         np.vstack((xy_src, np.ones_like(x_ref))) * sampled_depth_src.reshape([-1]))
     # reference 3D space
     xyz_reprojected = np.matmul(np.matmul(extrinsics_ref, np.linalg.inv(extrinsics_src)),
-                                np.vstack((xyz_src, np.ones_like(x_ref))))[:3]
+                                np.vstack((xyz_src2, np.ones_like(x_ref))))[:3]
     # source view x, y, depth
     depth_reprojected = xyz_reprojected[2].reshape([height, width]).astype(np.float32)
     k_xyz_reprojected = np.matmul(intrinsics_ref, xyz_reprojected)
     xy_reprojected = k_xyz_reprojected[:2] / k_xyz_reprojected[2:3]
     x_reprojected = xy_reprojected[0].reshape([height, width]).astype(np.float32)
     y_reprojected = xy_reprojected[1].reshape([height, width]).astype(np.float32)
+
+    # scipy.io.savemat(str(cache_path / 'debug.mat'), {'depth_ref':depth_ref, 'intrinsics_ref': intrinsics_ref, \
+    #     'extrinsics_ref':extrinsics_ref, 'depth_src':depth_src, 'intrinsics_src': intrinsics_src, \
+    #     'extrinsics_src':extrinsics_src, 'depth_reprojected':depth_reprojected, 'x_reprojected':x_reprojected, \
+    #     'y_reprojected':y_reprojected, 'x_ref': x_ref, 'y_ref': y_ref, 'xyz_ref':xyz_ref, \
+    #     'xyz_src': xyz_src, 'xy_src': xy_src, 'x_src':x_src, 'y_src':y_src, \
+    #     'sampled_depth_src': sampled_depth_src, 'xyz_src2': xyz_src2, 'xyz_reprojected': xyz_reprojected, \
+    #     'k_xyz_reprojected': k_xyz_reprojected, 'xy_reprojected': xy_reprojected})
 
     return depth_reprojected, x_reprojected, y_reprojected
 
@@ -157,6 +172,7 @@ def check_geometric_consistency(
         extrinsics_src: np.ndarray,
         geo_pixel_thres: float,
         geo_depth_thres: float,
+        cache_path: Path
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Check geometric consistency and return valid points
 
@@ -169,6 +185,7 @@ def check_geometric_consistency(
         extrinsics_src: camera extrinsic of the source view, of shape (4, 4)
         geo_pixel_thres: geometric pixel threshold
         geo_depth_thres: geometric depth threshold
+        cache_path: path used to save debug arrays
 
     Returns:
         Tuple[np.ndarray, np.ndarray]:
@@ -178,7 +195,7 @@ def check_geometric_consistency(
     width, height = depth_ref.shape[1], depth_ref.shape[0]
     x_ref, y_ref = np.meshgrid(np.arange(0, width), np.arange(0, height))
     depth_reprojected, x2d_reprojected, y2d_reprojected = reproject_with_depth(
-        depth_ref, intrinsics_ref, extrinsics_ref, depth_src, intrinsics_src, extrinsics_src)
+        depth_ref, intrinsics_ref, extrinsics_ref, depth_src, intrinsics_src, extrinsics_src, cache_path)
 
     # check |p_reproject - p_1| < 1
     dist = np.sqrt((x2d_reprojected - x_ref) ** 2 + (y2d_reprojected - y_ref) ** 2)
@@ -223,8 +240,11 @@ def filter_depth_for_image(data):
 
     # compute the geometric mask
     geo_mask_sum = 0
-    src_views = src_views[0::np.min([20,len(src_views)])]
+    src_views = src_views[0:np.min([args.num_views,len(src_views)])]
     for src_view in src_views:
+        folder_path = Path(args.output_folder) / "cache" / str(ref_view) / str(src_view)
+        # folder_path.mkdir(parents=True, exist_ok=True)
+
         # camera parameters of the source view
         src_image, original_h, original_w = read_image(
             os.path.join(args.input_folder, scan, "images/{:0>8}.jpg".format(src_view)), args.image_max_dim)
@@ -245,7 +265,8 @@ def filter_depth_for_image(data):
             src_intrinsics,
             src_extrinsics,
             args.geo_pixel_thres,
-            args.geo_depth_thres
+            args.geo_depth_thres,
+            folder_path,
         )
         geo_mask_sum += geo_mask.astype(np.int32)
         all_src_view_depth_estimates.append(depth_reprojected)
