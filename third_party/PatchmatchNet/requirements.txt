@@ -5,3 +5,4 @@ numpy
 plyfile
 pillow
 tensorboard
+scipy

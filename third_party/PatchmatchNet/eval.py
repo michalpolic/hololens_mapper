@@ -11,6 +11,7 @@ from plyfile import PlyData, PlyElement
 from typing import Tuple
 from torch.utils.data import DataLoader
 import multiprocessing as mp
+from contextlib import closing
 import scipy.io
 from pathlib import Path
 
@@ -304,7 +305,8 @@ def filter_depth_for_image(data):
     os.makedirs(os.path.join(args.output_folder, scan, "vertices"), exist_ok=True)
     np.save(vertices_file, { "vertices": xyz_world.transpose((1, 0)),
         "vertex_colors": (color * 255).astype(np.uint8) })
-
+    
+    return True
 
 def filter_depth(args, scan: str = ""):
     # the pair file
@@ -326,7 +328,8 @@ def filter_depth(args, scan: str = ""):
     # filter_depth_for_image(not_processed_data[0])
     chunksize = int(mp.cpu_count()*4/5)
     with mp.Pool(chunksize) as pool:
-        pool.map(filter_depth_for_image, not_processed_data)
+        for x in pool.imap_unordered(filter_depth_for_image, not_processed_data):
+            pass
 
     for ref_view, src_views in pair_data:
         vertices_file = os.path.join(args.output_folder, scan, "vertices/{:0>8}.npy".format(ref_view))
