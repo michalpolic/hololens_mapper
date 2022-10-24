@@ -33,6 +33,7 @@ dependencies:
       - plyfile
       - open3d
       - igraph
+      - py7zr
   # Debugging & development
   - jedi-language-server=0.34.11
   - jupyterlab-lsp=3.9.1

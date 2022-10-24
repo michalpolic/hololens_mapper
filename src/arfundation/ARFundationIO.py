@@ -7,6 +7,7 @@ from PIL import Image
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from scipy.io import savemat
+from src.utils.UtilsMath import UtilsMath
 
 class ARFundationIO:
 
@@ -19,6 +20,8 @@ class ARFundationIO:
 
     def convert_rgb_images(self, color_images_path, xml, output_folder):
         print('Convert color.bin to images + images.txt ...')
+        um = UtilsMath()
+        Rz180 = np.matrix([[-1,0,0],[0,-1,0],[0,0,1]])
         id_to_pose = {}
         for pose in xml.findall('pose'):
             id_to_pose[pose.attrib['index']] = pose
@@ -46,8 +49,12 @@ class ARFundationIO:
                     image.transpose(Image.FLIP_TOP_BOTTOM).save(image_path)
 
                 # add the image.txt record
-                index, tx, ty, tz, qw, qx, qy, qz = self.get_pose_parameters(id_to_pose[xml_record.attrib['index']])
-                images_lines.append(f'{index} {qw} {qx} {qy} {qz} {tx} {ty} {tz} 0 images/{img_name}\n \n')
+                index, Cx, Cy, Cz, qw, qx, qy, qz = self.get_pose_parameters(id_to_pose[xml_record.attrib['index']])
+                R = Rz180 * um.q2r(list(map(float,[qw, qx, qy, qz])))
+                C = np.matrix([-float(Cx), float(Cy), float(Cz)]).T
+                t = - R * C
+                q = um.r2q(R)
+                images_lines.append(f'{index} {q[0,0]} {q[1,0]} {q[2,0]} {q[3,0]} {t[0,0]} {t[1,0]} {t[2,0]} 0 images/{img_name}\n \n')
             images_txt = ''.join(images_lines)
             images_file.write(images_txt)
                 
