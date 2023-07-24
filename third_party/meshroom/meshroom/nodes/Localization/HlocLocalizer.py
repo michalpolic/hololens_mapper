@@ -12,6 +12,7 @@ import sys
 import numpy as np
 from pathlib import Path
 from shutil import copy2
+from pathlib import Path
 
 # import mapper packages
 dir_path = __file__
@@ -50,6 +51,13 @@ Runs Hloc localization on input images.
             name='localSfM',
             label='Local SfM',
             description='Path to folder with images and local SfM.',
+            value='',
+            uid=[0],
+        ),
+        desc.File(
+            name='copyResultsTo',
+            label='Export to dir',
+            description='Export the obtained results to specified external directory.',
             value='',
             uid=[0],
         ),
@@ -183,6 +191,7 @@ Runs Hloc localization on input images.
                 return
 
             # setup paths
+            dir_path2 = Path(dir_path)
             output_folder = chunk.node.output.value
             cache_dir = os.path.dirname(os.path.dirname(output_folder))
             map_folder = chunk.node.hlocMapDir.value
@@ -204,8 +213,8 @@ Runs Hloc localization on input images.
                 hloc_container = UtilsContainers('docker', 'hloc', '/host_mnt/' + cache_dir_win)
                 poselib_container = UtilsContainers('docker', 'poselib', '/host_mnt/' + cache_dir_win)
             else:
-                hloc_container = UtilsContainers('singularity', dir_path + '/hloc.sif', cache_dir)
-                poselib_container = UtilsContainers('singularity', dir_path + '/poselib.sif', cache_dir)
+                hloc_container = UtilsContainers('singularity', str(dir_path2 / 'hloc.sif'), cache_dir)
+                poselib_container = UtilsContainers('singularity', str(dir_path2 / 'poselib.sif'), cache_dir)
 
 
             chunk.logger.info('Running localization ...')   
@@ -239,18 +248,26 @@ Runs Hloc localization on input images.
                         q_cameras, q_images, q_points3D, transform)
                     colmap_io.write_model(output_folder, cameras, images, points3D)
 
-                chunk.logger.info('Extract and write down image pairs to match ...') 
-                _, db_view_graph = um.get_view_graph(db_images, db_points3D)
-                db_pairs = self.get_image_pairs_from_viewgraph(db_images, db_view_graph)
-                _, q_view_graph = um.get_view_graph(q_images, q_points3D)
-                q_pairs = self.get_image_pairs_from_viewgraph(q_images, q_view_graph)
-                with open(chunk.node.image_pairs.value, 'a') as image_pairs_file:
-                    image_pairs_file.write(''.join(db_pairs))
-                    image_pairs_file.write(''.join(q_pairs))
+                    chunk.logger.info('Extract and write down image pairs to match ...') 
+                    _, db_view_graph = um.get_view_graph(db_images, db_points3D)
+                    db_pairs = self.get_image_pairs_from_viewgraph(db_images, db_view_graph)
+                    _, q_view_graph = um.get_view_graph(q_images, q_points3D)
+                    q_pairs = self.get_image_pairs_from_viewgraph(q_images, q_view_graph)
+                    with open(chunk.node.image_pairs.value, 'a') as image_pairs_file:
+                        image_pairs_file.write(''.join(db_pairs))
+                        image_pairs_file.write(''.join(q_pairs))
 
             # copy dense point cloud if available
             if chunk.node.copyDensePts.value and os.path.isfile(chunk.node.hlocMapDir.value + '/model.obj'):
                 copy2(chunk.node.hlocMapDir.value + '/model.obj' , output_folder)
+
+            if chunk.node.copyResultsTo.value:
+                output_files = ['cameras.txt', 'images.txt', 'points3D.txt', 'image_pairs.txt', \
+                                'generalized_absolute_pose.txt','query_localization_results.txt']
+                for output_name in output_files:
+                    if os.path.isfile(output_folder + '/' + output_name):
+                        copy2(output_folder + '/' + output_name, chunk.node.copyResultsTo.value + '/' + output_name)
+
 
             chunk.logger.info('Localization done.') 
 
